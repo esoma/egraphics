@@ -24,7 +24,6 @@ repos:
 - hooks:
   - additional_dependencies:
     - emath==0.1.13
-    - eplatform==0.2.1
     args: []
     id: mypy
     exclude: ^(test|examples)/.*
