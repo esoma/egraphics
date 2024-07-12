@@ -20,10 +20,12 @@ repos:
     - flake8-fixme==1.1.1
     id: flake8
   repo: https://github.com/pycqa/flake8
-  rev: 6.1.0
+  rev: 7.0.0
 - hooks:
   - additional_dependencies:
     - emath==0.1.13
+    - egeometry==0.3.0
+    - eplatform==0.2.1
     args: []
     id: mypy
     exclude: ^(test|examples)/.*

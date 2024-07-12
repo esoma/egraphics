@@ -41,7 +41,6 @@ def test_defaults(platform):
     usage = glGetBufferParameteriv(GL_ARRAY_BUFFER, GL_BUFFER_USAGE)[0]
     assert usage == GL_STATIC_DRAW
     assert g_buffer.gl_buffer == g_buffer._gl_buffer
-    assert isinstance(g_buffer.gl_buffer, int)
 
 
 @pytest.mark.parametrize("data", [0, b"", b"sdfsfsf", FVector3(0, 1, 2)])

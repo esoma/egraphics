@@ -12,12 +12,14 @@ __all__ = [
 ]
 
 # egraphics
-from egraphics._state import register_reset_state_callback
 from egraphics._weak_fifo_set import WeakFifoSet
 
 # emath
 from emath import FVector4
 from emath import UVector2
+
+# eplatform
+from eplatform import Platform
 
 # pyopengl
 import OpenGL.GL
@@ -108,7 +110,7 @@ class TextureTarget:
 TextureTarget.TEXTURE_2D = TextureTarget(OpenGL.GL.GL_TEXTURE_2D)
 
 
-@register_reset_state_callback
+@Platform.register_deactivate_callback
 def _reset_texture_target_state() -> None:
     TextureTarget._texture_unit = -1
     for target in TextureTarget._targets:
@@ -409,8 +411,8 @@ class Texture:
         return self._wrap_color
 
 
-@register_reset_state_callback
-def _reset_texture() -> None:
+@Platform.register_deactivate_callback
+def _reset_texture_state() -> None:
     Texture._max_unit = None
     Texture._next_unit = _FIRST_BINDABLE_TEXTURE_UNIT
     Texture._open_units.clear()

@@ -7,8 +7,9 @@ __all__ = [
     "GBufferNature",
 ]
 
-# egraphics
-from ._state import register_reset_state_callback
+
+# eplatform
+from eplatform import Platform
 
 # pyopengl
 from OpenGL.GL import GL_ARRAY_BUFFER
@@ -105,7 +106,7 @@ GBufferTarget.ARRAY = GBufferTarget(GL_ARRAY_BUFFER)
 GBufferTarget.COPY_READ = GBufferTarget(GL_COPY_READ_BUFFER)
 
 
-@register_reset_state_callback
+@Platform.register_deactivate_callback
 def _reset_g_buffer_target_state() -> None:
     for target in GBufferTarget._targets:
         target.g_buffer = None
