@@ -9,6 +9,7 @@ __all__ = [
     "MipmapSelection",
     "reset_state",
     "Texture",
+    "Texture2d",
     "TextureComponents",
     "TextureDataType",
     "TextureFilter",
@@ -32,3 +33,4 @@ from ._texture import TextureFilter
 from ._texture import TextureTarget
 from ._texture import TextureType
 from ._texture import TextureWrap
+from ._texture_2d import Texture2d
