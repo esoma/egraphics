@@ -34,13 +34,13 @@ jobs:
     - name: Install Poetry
       uses: snok/install-poetry@v1
 
-    - name: Install Mesa Linux
+    - name: Prepare Linux Environment
       if: runner.os == 'Linux'
       run: |
         sudo apt-get update
         sudo apt-get install xvfb libglu1-mesa-dev freeglut3-dev mesa-common-dev
 
-    - name: Install Mesa Windows
+    - name: Prepare Windows Environment
       if: runner.os == 'Windows'
       uses: ssciwr/setup-mesa-dist-win@v2
 

@@ -4,6 +4,7 @@
 .coverage
 *.pyc
 *.pyd
+*.so
 *.egg-info
 build/
 dist/
