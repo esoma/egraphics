@@ -25,6 +25,7 @@ __all__ = [
     "set_gl_buffer_target_data",
     "create_gl_copy_read_buffer_memory_view",
     "release_gl_copy_read_buffer_memory_view",
+    "configure_gl_vertex_array_location",
 ]
 
 # python
@@ -71,3 +72,12 @@ def set_gl_buffer_target_data(
 ) -> int: ...
 def create_gl_copy_read_buffer_memory_view(length: int) -> memoryview: ...
 def release_gl_copy_read_buffer_memory_view() -> None: ...
+def configure_gl_vertex_array_location(
+    location: int,
+    size: int,
+    type: GlType,
+    stride: int,
+    offset: int,
+    instancing_divistor: int | None,
+    /,
+) -> None: ...

@@ -180,6 +180,45 @@ release_gl_copy_read_buffer_memory_view(PyObject *module, PyObject *unused)
     Py_RETURN_NONE;
 }
 
+static PyObject *
+configure_gl_vertex_array_location(PyObject *module, PyObject **args, Py_ssize_t nargs)
+{
+    CHECK_UNEXPECTED_ARG_COUNT_ERROR(6);
+
+    GLuint location = PyLong_AsLong(args[0]);
+    CHECK_UNEXPECTED_PYTHON_ERROR();
+
+    GLint count = PyLong_AsLong(args[1]);
+    CHECK_UNEXPECTED_PYTHON_ERROR();
+
+    GLenum type = PyLong_AsLong(args[2]);
+    CHECK_UNEXPECTED_PYTHON_ERROR();
+
+    GLsizei stride = PyLong_AsLong(args[3]);
+    CHECK_UNEXPECTED_PYTHON_ERROR();
+
+    void *offset = (void *)PyLong_AsLong(args[4]);
+    CHECK_UNEXPECTED_PYTHON_ERROR();
+
+    PyObject *py_instancing_divisor = args[5];
+
+    glVertexAttribPointer(location, count, type, GL_FALSE, stride, offset);
+    CHECK_GL_ERROR();
+
+    glEnableVertexAttribArray(location);
+    CHECK_GL_ERROR();
+
+    if (py_instancing_divisor == Py_None)
+    {
+        GLuint instancing_divisor = PyLong_AsLong(py_instancing_divisor);
+        CHECK_UNEXPECTED_PYTHON_ERROR();
+        glVertexAttribDivisor(location, instancing_divisor);
+        CHECK_GL_ERROR();
+    }
+
+    Py_RETURN_NONE;
+}
+
 static PyMethodDef module_PyMethodDef[] = {
     {"activate_gl_vertex_array", activate_gl_vertex_array, METH_O, 0},
     {"create_gl_buffer", create_gl_buffer, METH_NOARGS, 0},
@@ -190,6 +229,7 @@ static PyMethodDef module_PyMethodDef[] = {
     {"set_gl_buffer_target_data", (PyCFunction)set_gl_buffer_target_data, METH_FASTCALL, 0},
     {"create_gl_copy_read_buffer_memory_view", create_gl_buffer_memory_view, METH_O, 0},
     {"release_gl_copy_read_buffer_memory_view", release_gl_copy_read_buffer_memory_view, METH_NOARGS, 0},
+    {"configure_gl_vertex_array_location", (PyCFunction)configure_gl_vertex_array_location, METH_FASTCALL, 0},
     {0},
 };
 

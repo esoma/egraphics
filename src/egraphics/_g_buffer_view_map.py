@@ -14,6 +14,7 @@ from ._egraphics import GL_UNSIGNED_SHORT
 from ._egraphics import GlType
 from ._egraphics import GlVertexArray
 from ._egraphics import activate_gl_vertex_array
+from ._egraphics import configure_gl_vertex_array_location
 from ._egraphics import create_gl_vertex_array
 from ._egraphics import delete_gl_vertex_array
 from ._g_buffer import GBufferTarget
@@ -23,17 +24,10 @@ from ._shader import Shader
 # emath
 import emath
 
-# pyopengl
-from OpenGL.GL import GL_FALSE
-from OpenGL.GL import glEnableVertexAttribArray
-from OpenGL.GL import glVertexAttribDivisor
-from OpenGL.GL import glVertexAttribPointer
-
 # python
 from collections.abc import Mapping
 from collections.abc import Set
 import ctypes
-from ctypes import c_void_p
 from typing import Any
 from typing import ClassVar
 from typing import Final
@@ -129,35 +123,20 @@ class _GlVertexArray:
                 raise ValueError(f"missing attribute: {attribute.name}")
 
             GBufferTarget.ARRAY.g_buffer = buffer_view.g_buffer
-            attr_gl_type = (_BUFFER_VIEW_TYPE_TO_VERTEX_ATTRIB_POINTER[attribute.data_type])[0]
             view_gl_type, count, locations = _BUFFER_VIEW_TYPE_TO_VERTEX_ATTRIB_POINTER[
                 buffer_view.data_type
             ]
             for location_offset in range(locations):
                 location = attribute.location + location_offset
                 offset = buffer_view.offset + ((buffer_view.stride // locations) * location_offset)
-                """
-                if attr_gl_type == GL_DOUBLE and view_gl_type == GL_DOUBLE:
-                    glVertexAttribLPointer(
-                        location, count, view_gl_type, buffer_view.stride, c_void_p(offset)
-                    )
-                elif attr_gl_type in _GL_INT_TYPES and view_gl_type in _GL_INT_TYPES:
-                    glVertexAttribIPointer(
-                        location, count, view_gl_type, buffer_view.stride, c_void_p(offset)
-                    )
-                else:
-                """
-                glVertexAttribPointer(
+                configure_gl_vertex_array_location(
                     location,
                     count,
                     view_gl_type,
-                    GL_FALSE,
                     buffer_view.stride,
-                    c_void_p(offset),
+                    offset,
+                    buffer_view.instancing_divisor,
                 )
-                glEnableVertexAttribArray(location)
-                if buffer_view.instancing_divisor is not None:
-                    glVertexAttribDivisor(location, buffer_view.instancing_divisor)
 
     def _activate(self) -> None:
         if self._active and self._active() is self:
