@@ -4,7 +4,6 @@ __all__ = ["GBufferViewMap"]
 
 # egraphics
 from ._g_buffer import GBufferTarget
-from ._g_buffer import get_g_buffer_gl_buffer
 from ._g_buffer_view import GBufferView
 from ._shader import Shader
 
@@ -14,9 +13,7 @@ import emath
 # pyopengl
 import OpenGL.GL
 from OpenGL.GL import GL_DOUBLE
-from OpenGL.GL import GL_ELEMENT_ARRAY_BUFFER
 from OpenGL.GL import GL_FALSE
-from OpenGL.GL import glBindBuffer
 from OpenGL.GL import glBindVertexArray
 from OpenGL.GL import glDeleteVertexArrays
 from OpenGL.GL import glEnableVertexAttribArray
@@ -110,9 +107,7 @@ class _GlVertexArray:
         self._activate()
 
         if index_g_buffer_view is not None:
-            glBindBuffer(
-                GL_ELEMENT_ARRAY_BUFFER, get_g_buffer_gl_buffer(index_g_buffer_view.g_buffer)
-            )
+            GBufferTarget.ELEMENT_ARRAY.g_buffer = index_g_buffer_view.g_buffer
 
         attributes = shader.attributes
         attribute_names = {a.name for a in shader.attributes}

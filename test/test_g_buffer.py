@@ -1,7 +1,6 @@
 # egraphics
 from egraphics import GBuffer
 from egraphics._g_buffer import _reset_g_buffer_target_state
-from egraphics._g_buffer import get_g_buffer_gl_buffer
 
 # emath
 from emath import FVector3
@@ -15,6 +14,7 @@ from OpenGL.GL import GL_COPY_READ_BUFFER_BINDING
 from OpenGL.GL import GL_DYNAMIC_COPY
 from OpenGL.GL import GL_DYNAMIC_DRAW
 from OpenGL.GL import GL_DYNAMIC_READ
+from OpenGL.GL import GL_ELEMENT_ARRAY_BUFFER_BINDING
 from OpenGL.GL import GL_STATIC_COPY
 from OpenGL.GL import GL_STATIC_DRAW
 from OpenGL.GL import GL_STATIC_READ
@@ -36,7 +36,6 @@ def test_defaults(platform):
     GBuffer.Target.ARRAY.g_buffer = g_buffer
     usage = glGetBufferParameteriv(GL_ARRAY_BUFFER, GL_BUFFER_USAGE)[0]
     assert usage == GL_STATIC_DRAW
-    assert get_g_buffer_gl_buffer(g_buffer) == g_buffer._gl_buffer
 
 
 @pytest.mark.parametrize("data", [0, b"", b"sdfsfsf", FVector3(0, 1, 2)])
@@ -123,6 +122,7 @@ def test_buffer_protocol_0(platform):
     [
         ("ARRAY", GL_ARRAY_BUFFER_BINDING),
         ("COPY_READ", GL_COPY_READ_BUFFER_BINDING),
+        ("ELEMENT_ARRAY", GL_ELEMENT_ARRAY_BUFFER_BINDING),
     ],
 )
 def test_g_buffer_target_default_state(platform, name, buffer_binding):
@@ -136,6 +136,7 @@ def test_g_buffer_target_default_state(platform, name, buffer_binding):
     [
         ("ARRAY", GL_ARRAY_BUFFER_BINDING),
         ("COPY_READ", GL_COPY_READ_BUFFER_BINDING),
+        ("ELEMENT_ARRAY", GL_ELEMENT_ARRAY_BUFFER_BINDING),
     ],
 )
 def test_g_buffer_target_set_g_buffer(platform, name, buffer_binding):

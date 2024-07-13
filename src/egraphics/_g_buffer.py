@@ -14,13 +14,13 @@ from ._egraphics import GL_COPY_READ_BUFFER
 from ._egraphics import GL_DYNAMIC_COPY
 from ._egraphics import GL_DYNAMIC_DRAW
 from ._egraphics import GL_DYNAMIC_READ
+from ._egraphics import GL_ELEMENT_ARRAY_BUFFER
 from ._egraphics import GL_STATIC_COPY
 from ._egraphics import GL_STATIC_DRAW
 from ._egraphics import GL_STATIC_READ
 from ._egraphics import GL_STREAM_COPY
 from ._egraphics import GL_STREAM_DRAW
 from ._egraphics import GL_STREAM_READ
-from ._egraphics import GlBuffer
 from ._egraphics import create_gl_buffer
 from ._egraphics import create_gl_copy_read_buffer_memory_view
 from ._egraphics import delete_gl_buffer
@@ -72,6 +72,7 @@ class GBufferTarget:
 
     ARRAY: ClassVar[Self]
     COPY_READ: ClassVar[Self]
+    ELEMENT_ARRAY: ClassVar[Self]
 
     def __init__(self, gl_target: Any):
         self._targets.append(self)
@@ -98,6 +99,7 @@ class GBufferTarget:
 
 GBufferTarget.ARRAY = GBufferTarget(GL_ARRAY_BUFFER)
 GBufferTarget.COPY_READ = GBufferTarget(GL_COPY_READ_BUFFER)
+GBufferTarget.ELEMENT_ARRAY = GBufferTarget(GL_ELEMENT_ARRAY_BUFFER)
 
 
 @Platform.register_deactivate_callback
@@ -176,7 +178,3 @@ class GBuffer:
     @property
     def nature(self) -> GBufferNature:
         return self._nature
-
-
-def get_g_buffer_gl_buffer(g_buffer: GBuffer) -> GlBuffer:
-    return g_buffer._gl_buffer

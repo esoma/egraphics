@@ -4,6 +4,7 @@ __all__ = [
     "GlBufferUsage",
     "GL_ARRAY_BUFFER",
     "GL_COPY_READ_BUFFER",
+    "GL_ELEMENT_ARRAY_BUFFER",
     "GL_STREAM_DRAW",
     "GL_STREAM_READ",
     "GL_STREAM_COPY",
@@ -31,6 +32,7 @@ GlBufferUsage = NewType("GlBufferUsage", int)
 
 GL_ARRAY_BUFFER: GlBufferTarget
 GL_COPY_READ_BUFFER: GlBufferTarget
+GL_ELEMENT_ARRAY_BUFFER: GlBufferTarget
 
 GL_STREAM_DRAW: GlBufferUsage
 GL_STREAM_READ: GlBufferUsage
