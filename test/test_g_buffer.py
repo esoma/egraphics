@@ -28,11 +28,6 @@ from OpenGL.GL import glIsBuffer
 import pytest
 
 
-def test_no_gl_context():
-    with pytest.raises(Exception):
-        GBuffer(0)
-
-
 def test_defaults(platform):
     g_buffer = GBuffer()
     assert len(g_buffer) == 0

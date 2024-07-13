@@ -22,18 +22,19 @@ if os.environ.get("EGRAPHICS_BUILD_WITH_COVERAGE", "0") == "1":
     _coverage_compile_args = ["-fprofile-arcs", "-ftest-coverage", "-O0"]
     _coverage_links_args = ["-fprofile-arcs"]
 
-extra_compile_args: list[str] = []
-extra_link_args: list[str] = []
+libraries: list[str] = []
 if os.name == "nt":
-    extra_link_args.extend(["opengl32.lib", "glu32.lib"])
+    libraries.extend(["opengl32.lib", "glu32.lib"])
+else:
+    libraries.extend(["GL", "GLU"])
 
 _egraphics = Extension(
     "egraphics._egraphics",
-    libraries=[],
+    libraries=libraries,
     include_dirs=["src/egraphics", "vendor/glew/include"],
     sources=["src/egraphics/_egraphics.c", "vendor/glew/src/glew.c"],
-    extra_compile_args=_coverage_compile_args + extra_compile_args,
-    extra_link_args=_coverage_links_args + extra_link_args,
+    extra_compile_args=_coverage_compile_args,
+    extra_link_args=_coverage_links_args,
     define_macros=[("GLEW_STATIC", None)],
 )
 
