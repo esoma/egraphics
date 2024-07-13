@@ -8,10 +8,10 @@ authors = ["Erik Soma <stillusingirc@gmail.com>"]
 python = "^3.12"
 emath = "^0.1.13"
 pyopengl = "^3.1.7"
-pyopengl-accelerate = "^3.1.7"
 egeometry = "^0.3.0"
 eplatform = "^0.2.1"
 numpy = "^2.0.0"
+pyopengl-accelerate = "^3.1.7"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "7.4.3"
