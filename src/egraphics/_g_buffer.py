@@ -7,31 +7,30 @@ __all__ = [
     "GBufferNature",
 ]
 
+# egraphics
+from ._egraphics import GL_ARRAY_BUFFER
+from ._egraphics import GL_COPY_READ_BUFFER
+from ._egraphics import GL_DYNAMIC_COPY
+from ._egraphics import GL_DYNAMIC_DRAW
+from ._egraphics import GL_DYNAMIC_READ
+from ._egraphics import GL_STATIC_COPY
+from ._egraphics import GL_STATIC_DRAW
+from ._egraphics import GL_STATIC_READ
+from ._egraphics import GL_STREAM_COPY
+from ._egraphics import GL_STREAM_DRAW
+from ._egraphics import GL_STREAM_READ
+from ._egraphics import bind_gl_buffer
+from ._egraphics import create_gl_buffer
+from ._egraphics import delete_gl_buffer
+from ._egraphics import set_gl_buffer_target_data
 
 # eplatform
 from eplatform import Platform
 
 # pyopengl
-from OpenGL.GL import GL_ARRAY_BUFFER
-from OpenGL.GL import GL_COPY_READ_BUFFER
-from OpenGL.GL import GL_DYNAMIC_COPY
-from OpenGL.GL import GL_DYNAMIC_DRAW
-from OpenGL.GL import GL_DYNAMIC_READ
 from OpenGL.GL import GL_READ_WRITE
-from OpenGL.GL import GL_STATIC_COPY
-from OpenGL.GL import GL_STATIC_DRAW
-from OpenGL.GL import GL_STATIC_READ
-from OpenGL.GL import GL_STREAM_COPY
-from OpenGL.GL import GL_STREAM_DRAW
-from OpenGL.GL import GL_STREAM_READ
-from OpenGL.GL import glBindBuffer
-from OpenGL.GL import glBufferData
-from OpenGL.GL import glDeleteBuffers
-from OpenGL.GL import glGenBuffers
 from OpenGL.GL import glMapBuffer
 from OpenGL.GL import glUnmapBuffer
-from OpenGL.error import GLError
-from OpenGL.error import NullFunctionError
 
 # python
 from collections.abc import Buffer
@@ -95,10 +94,10 @@ class GBufferTarget:
         if self.g_buffer is g_buffer:
             return
         if g_buffer is None:
-            glBindBuffer(self._gl_target, 0)
+            bind_gl_buffer(self._gl_target, None)
             self._g_buffer = None
         else:
-            glBindBuffer(self._gl_target, g_buffer._gl_buffer)
+            bind_gl_buffer(self._gl_target, g_buffer._gl_buffer)
             self._g_buffer = ref(g_buffer)
 
 
@@ -127,34 +126,19 @@ class GBuffer:
         frequency: GBufferFrequency = GBufferFrequency.STATIC,
         nature: GBufferNature = GBufferNature.DRAW,
     ):
-        if isinstance(data, int):
-            if data < 0:
-                raise ValueError("data must be 0 or more")
-            self._length = data
-            buffer = None
-        else:
-            buffer = memoryview(data)
-            self._length = buffer.nbytes
-
         self._gl_usage = _FREQUENCY_NATURE_TO_GL_USAGE[(frequency, nature)]
         self._frequency = frequency
         self._nature = nature
 
-        self._gl_buffer: int = glGenBuffers(1)
+        self._gl_buffer = create_gl_buffer()
         GBufferTarget.ARRAY.g_buffer = self
-        glBufferData(GL_ARRAY_BUFFER, self._length, buffer, self._gl_usage)
+        self._length = set_gl_buffer_target_data(GL_ARRAY_BUFFER, data, self._gl_usage)
 
     def __del__(self) -> None:
         if not hasattr(self, "_gl_buffer"):
             return
-        try:
-            try:
-                glDeleteBuffers(1, [self._gl_buffer])
-            except (TypeError, NullFunctionError, GLError):
-                pass
-            del self._gl_buffer
-        except AttributeError:
-            pass
+        delete_gl_buffer(self._gl_buffer)
+        del self._gl_buffer
 
     def __len__(self) -> int:
         return self._length

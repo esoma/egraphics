@@ -7,3 +7,5 @@
 *.egg-info
 build/
 dist/
+
+test.py
