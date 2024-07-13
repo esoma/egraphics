@@ -10,13 +10,14 @@ from setuptools.command.build_ext import build_ext
 # python
 import os
 from pathlib import Path
+from platform import system
 import shutil
 import sys
 
 _coverage_compile_args: list[str] = []
 _coverage_links_args: list[str] = []
 if os.environ.get("EGRAPHICS_BUILD_WITH_COVERAGE", "0") == "1":
-    if os.name == "nt":
+    if system() == "Windows":
         print("Cannot build with coverage on windows.")
         sys.exit(1)
     _coverage_compile_args = ["-fprofile-arcs", "-ftest-coverage", "-O0"]
@@ -24,9 +25,9 @@ if os.environ.get("EGRAPHICS_BUILD_WITH_COVERAGE", "0") == "1":
 
 libraries: list[str] = []
 extra_link_args: list[str] = []
-if os.name == "nt":
+if system() == "Windows":
     libraries.extend(["opengl32", "glu32"])
-elif os.name == "darwin":
+elif system() == "Darwin":
     libraries.extend(["GLU"])
     extra_link_args.extend(["-framework", "OpenGL"])
 else:
