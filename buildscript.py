@@ -23,8 +23,12 @@ if os.environ.get("EGRAPHICS_BUILD_WITH_COVERAGE", "0") == "1":
     _coverage_links_args = ["-fprofile-arcs"]
 
 libraries: list[str] = []
+extra_link_args: list[str] = []
 if os.name == "nt":
     libraries.extend(["opengl32", "glu32"])
+elif os.name == "darwin":
+    libraries.extend(["GLU"])
+    extra_link_args.extend(["-framework", "OpenGL"])
 else:
     libraries.extend(["GL", "GLU"])
 
@@ -34,7 +38,7 @@ _egraphics = Extension(
     include_dirs=["src/egraphics", "vendor/glew/include"],
     sources=["src/egraphics/_egraphics.c", "vendor/glew/src/glew.c"],
     extra_compile_args=_coverage_compile_args,
-    extra_link_args=_coverage_links_args,
+    extra_link_args=_coverage_links_args + extra_link_args,
     define_macros=[("GLEW_STATIC", None)],
 )
 
