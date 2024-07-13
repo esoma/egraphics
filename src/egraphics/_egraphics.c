@@ -29,7 +29,7 @@
     }
 
 static PyObject *
-bind_gl_buffer(PyObject *module, PyObject **args, Py_ssize_t nargs)
+set_gl_buffer_target(PyObject *module, PyObject **args, Py_ssize_t nargs)
 {
     CHECK_UNEXPECTED_ARG_COUNT_ERROR(2);
 
@@ -117,7 +117,7 @@ set_gl_buffer_target_data(PyObject *module, PyObject **args, Py_ssize_t nargs)
 static PyMethodDef module_PyMethodDef[] = {
     {"create_gl_buffer", create_gl_buffer, METH_NOARGS, 0},
     {"delete_gl_buffer", delete_gl_buffer, METH_O, 0},
-    {"bind_gl_buffer", (PyCFunction)bind_gl_buffer, METH_FASTCALL, 0},
+    {"set_gl_buffer_target", (PyCFunction)set_gl_buffer_target, METH_FASTCALL, 0},
     {"set_gl_buffer_target_data", (PyCFunction)set_gl_buffer_target_data, METH_FASTCALL, 0},
     {0},
 };

@@ -21,9 +21,9 @@ from ._egraphics import GL_STREAM_COPY
 from ._egraphics import GL_STREAM_DRAW
 from ._egraphics import GL_STREAM_READ
 from ._egraphics import GlBuffer
-from ._egraphics import bind_gl_buffer
 from ._egraphics import create_gl_buffer
 from ._egraphics import delete_gl_buffer
+from ._egraphics import set_gl_buffer_target
 from ._egraphics import set_gl_buffer_target_data
 
 # eplatform
@@ -96,10 +96,10 @@ class GBufferTarget:
         if self.g_buffer is g_buffer:
             return
         if g_buffer is None:
-            bind_gl_buffer(self._gl_target, None)
+            set_gl_buffer_target(self._gl_target, None)
             self._g_buffer = None
         else:
-            bind_gl_buffer(self._gl_target, g_buffer._gl_buffer)
+            set_gl_buffer_target(self._gl_target, g_buffer._gl_buffer)
             self._g_buffer = ref(g_buffer)
 
 
