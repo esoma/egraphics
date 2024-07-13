@@ -29,6 +29,22 @@
     }
 
 static PyObject *
+activate_gl_vertex_array(PyObject *module, PyObject *py_gl_vertex_array)
+{
+    GLuint gl_vertex_array = 0;
+    if (py_gl_vertex_array != Py_None)
+    {
+        gl_vertex_array = PyLong_AsLong(py_gl_vertex_array);
+        CHECK_UNEXPECTED_PYTHON_ERROR();
+    }
+
+    glBindVertexArray(gl_vertex_array);
+    CHECK_GL_ERROR();
+
+    Py_RETURN_NONE;
+}
+
+static PyObject *
 set_gl_buffer_target(PyObject *module, PyObject **args, Py_ssize_t nargs)
 {
     CHECK_UNEXPECTED_ARG_COUNT_ERROR(2);
@@ -61,12 +77,34 @@ create_gl_buffer(PyObject *module, PyObject *unused)
 }
 
 static PyObject *
+create_gl_vertex_array(PyObject *module, PyObject *unused)
+{
+    GLuint gl_vertex_array = 0;
+
+    glGenVertexArrays(1, &gl_vertex_array);
+    CHECK_GL_ERROR();
+
+    return PyLong_FromUnsignedLong(gl_vertex_array);
+}
+
+static PyObject *
 delete_gl_buffer(PyObject *module, PyObject *py_gl_buffer)
 {
     GLuint gl_buffer = PyLong_AsLong(py_gl_buffer);
     CHECK_UNEXPECTED_PYTHON_ERROR();
 
     glDeleteBuffers(1, &gl_buffer);
+
+    Py_RETURN_NONE;
+}
+
+static PyObject *
+delete_gl_vertex_array(PyObject *module, PyObject *py_gl_vertex_array)
+{
+    GLuint gl_vertex_array = PyLong_AsLong(py_gl_vertex_array);
+    CHECK_UNEXPECTED_PYTHON_ERROR();
+
+    glDeleteVertexArrays(1, &gl_vertex_array);
 
     Py_RETURN_NONE;
 }
@@ -143,8 +181,11 @@ release_gl_copy_read_buffer_memory_view(PyObject *module, PyObject *unused)
 }
 
 static PyMethodDef module_PyMethodDef[] = {
+    {"activate_gl_vertex_array", activate_gl_vertex_array, METH_O, 0},
     {"create_gl_buffer", create_gl_buffer, METH_NOARGS, 0},
+    {"create_gl_vertex_array", create_gl_vertex_array, METH_NOARGS, 0},
     {"delete_gl_buffer", delete_gl_buffer, METH_O, 0},
+    {"delete_gl_vertex_array", delete_gl_vertex_array, METH_O, 0},
     {"set_gl_buffer_target", (PyCFunction)set_gl_buffer_target, METH_FASTCALL, 0},
     {"set_gl_buffer_target_data", (PyCFunction)set_gl_buffer_target_data, METH_FASTCALL, 0},
     {"create_gl_copy_read_buffer_memory_view", create_gl_buffer_memory_view, METH_O, 0},
@@ -211,6 +252,7 @@ PyInit__egraphics()
     ADD_ALIAS("GlBuffer", PyLong_Type);
     ADD_ALIAS("GlBufferTarget", PyLong_Type);
     ADD_ALIAS("GlBufferUsage", PyLong_Type);
+    ADD_ALIAS("GlVertexArray", PyLong_Type);
 
 #define ADD_CONSTANT(n)\
     {\

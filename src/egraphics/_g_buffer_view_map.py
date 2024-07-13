@@ -3,6 +3,10 @@ from __future__ import annotations
 __all__ = ["GBufferViewMap"]
 
 # egraphics
+from ._egraphics import GlVertexArray
+from ._egraphics import activate_gl_vertex_array
+from ._egraphics import create_gl_vertex_array
+from ._egraphics import delete_gl_vertex_array
 from ._g_buffer import GBufferTarget
 from ._g_buffer_view import GBufferView
 from ._shader import Shader
@@ -12,18 +16,10 @@ import emath
 
 # pyopengl
 import OpenGL.GL
-from OpenGL.GL import GL_DOUBLE
 from OpenGL.GL import GL_FALSE
-from OpenGL.GL import glBindVertexArray
-from OpenGL.GL import glDeleteVertexArrays
 from OpenGL.GL import glEnableVertexAttribArray
-from OpenGL.GL import glGenVertexArrays
 from OpenGL.GL import glVertexAttribDivisor
-from OpenGL.GL import glVertexAttribIPointer
-from OpenGL.GL import glVertexAttribLPointer
 from OpenGL.GL import glVertexAttribPointer
-from OpenGL.error import GLError
-from OpenGL.error import NullFunctionError
 
 # python
 from collections.abc import Mapping
@@ -97,13 +93,15 @@ class GBufferViewMap:
 class _GlVertexArray:
     _active: ClassVar[ref[_GlVertexArray] | None] = None
 
+    _gl_vertex_array: GlVertexArray | None
+
     def __init__(
         self,
         shader: Shader,
         mapping: Mapping[str, GBufferView],
         index_g_buffer_view: IndexGBufferView | None,
     ) -> None:
-        self._gl = glGenVertexArrays(1)
+        self._gl_vertex_array = create_gl_vertex_array()
         self._activate()
 
         if index_g_buffer_view is not None:
@@ -130,6 +128,7 @@ class _GlVertexArray:
             for location_offset in range(locations):
                 location = attribute.location + location_offset
                 offset = buffer_view.offset + ((buffer_view.stride // locations) * location_offset)
+                """
                 if attr_gl_type == GL_DOUBLE and view_gl_type == GL_DOUBLE:
                     glVertexAttribLPointer(
                         location, count, view_gl_type, buffer_view.stride, c_void_p(offset)
@@ -139,14 +138,15 @@ class _GlVertexArray:
                         location, count, view_gl_type, buffer_view.stride, c_void_p(offset)
                     )
                 else:
-                    glVertexAttribPointer(
-                        location,
-                        count,
-                        view_gl_type,
-                        GL_FALSE,
-                        buffer_view.stride,
-                        c_void_p(offset),
-                    )
+                """
+                glVertexAttribPointer(
+                    location,
+                    count,
+                    view_gl_type,
+                    GL_FALSE,
+                    buffer_view.stride,
+                    c_void_p(offset),
+                )
                 glEnableVertexAttribArray(location)
                 if buffer_view.instancing_divisor is not None:
                     glVertexAttribDivisor(location, buffer_view.instancing_divisor)
@@ -154,22 +154,16 @@ class _GlVertexArray:
     def _activate(self) -> None:
         if self._active and self._active() is self:
             return
-        glBindVertexArray(self._gl)
+        activate_gl_vertex_array(self._gl_vertex_array)
         _GlVertexArray._active = ref(self)
 
     def __del__(self) -> None:
-        if self._gl:
+        if self._gl_vertex_array:
             if self._active and self._active() is self:
-                try:
-                    glBindVertexArray(0)
-                except GLError:
-                    pass
+                activate_gl_vertex_array(None)
                 _GlVertexArray._active = None
-            try:
-                glDeleteVertexArrays(1, [self._gl])
-            except (TypeError, NullFunctionError, GLError):
-                pass
-            self._gl = None
+            delete_gl_vertex_array(self._gl_vertex_array)
+            self._gl_vertex_array = None
 
 
 _BUFFER_VIEW_TYPE_TO_VERTEX_ATTRIB_POINTER: Final[Mapping[Any, tuple[Any, int, int]]] = {
