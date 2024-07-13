@@ -24,7 +24,7 @@ if os.environ.get("EGRAPHICS_BUILD_WITH_COVERAGE", "0") == "1":
 
 libraries: list[str] = []
 if os.name == "nt":
-    libraries.extend(["opengl32.lib", "glu32.lib"])
+    libraries.extend(["opengl32", "glu32"])
 else:
     libraries.extend(["GL", "GLU"])
 
