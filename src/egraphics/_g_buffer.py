@@ -22,24 +22,17 @@ from ._egraphics import GL_STREAM_DRAW
 from ._egraphics import GL_STREAM_READ
 from ._egraphics import GlBuffer
 from ._egraphics import create_gl_buffer
+from ._egraphics import create_gl_copy_read_buffer_memory_view
 from ._egraphics import delete_gl_buffer
+from ._egraphics import release_gl_copy_read_buffer_memory_view
 from ._egraphics import set_gl_buffer_target
 from ._egraphics import set_gl_buffer_target_data
 
 # eplatform
 from eplatform import Platform
 
-# pyopengl
-from OpenGL.GL import GL_READ_WRITE
-from OpenGL.GL import glMapBuffer
-from OpenGL.GL import glUnmapBuffer
-
 # python
 from collections.abc import Buffer
-from ctypes import POINTER as c_pointer
-from ctypes import c_ubyte
-from ctypes import c_void_p
-from ctypes import cast as c_cast
 from enum import Enum
 from typing import Any
 from typing import ClassVar
@@ -114,7 +107,7 @@ def _reset_g_buffer_target_state() -> None:
 
 
 class GBuffer:
-    _buffer: Any = None
+    _buffer: memoryview | None = None
     _buffer_refs: int = 0
 
     Nature: TypeAlias = GBufferNature
@@ -146,18 +139,23 @@ class GBuffer:
         return self._length
 
     def __buffer__(self, flags: int) -> memoryview:
-        if self._buffer:
+        if self._buffer_refs:
+            assert self._buffer is not None
             self._buffer_refs += 1
-            return self._create_memory_view()
+            return self._buffer
+
+        assert self._buffer is None
+        assert self._buffer_refs == 0
 
         if self._length == 0:
-            self._buffer = b""
-        else:
-            GBufferTarget.COPY_READ.g_buffer = self
-            map = c_void_p(glMapBuffer(GL_COPY_READ_BUFFER, GL_READ_WRITE))
-            self._buffer = c_cast(map, c_pointer(c_ubyte * self._length)).contents
-        self._buffer_refs = 1
-        return self._create_memory_view()
+            self._buffer = memoryview(b"").cast("B")
+            self._buffer_refs += 1
+            return self._buffer
+
+        GBufferTarget.COPY_READ.g_buffer = self
+        self._buffer = create_gl_copy_read_buffer_memory_view(self._length)
+        self._buffer_refs += 1
+        return self._buffer
 
     def __release_buffer__(self, view: memoryview) -> None:
         self._buffer_refs -= 1
@@ -165,15 +163,11 @@ class GBuffer:
         if self._buffer_refs != 0:
             return
 
-        if not isinstance(self._buffer, bytes):
+        if self._length != 0:
             GBufferTarget.COPY_READ.g_buffer = self
-            glUnmapBuffer(GL_COPY_READ_BUFFER)
+            release_gl_copy_read_buffer_memory_view()
 
         self._buffer = None
-
-    def _create_memory_view(self) -> memoryview:
-        assert self._buffer is not None
-        return memoryview(self._buffer).cast("B")
 
     @property
     def frequency(self) -> GBufferFrequency:

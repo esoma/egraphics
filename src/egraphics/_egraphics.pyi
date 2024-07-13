@@ -17,6 +17,8 @@ __all__ = [
     "create_gl_buffer",
     "delete_gl_buffer",
     "set_gl_buffer_target_data",
+    "create_gl_copy_read_buffer_memory_view",
+    "release_gl_copy_read_buffer_memory_view",
 ]
 
 # python
@@ -46,3 +48,5 @@ def delete_gl_buffer(gl_buffer: GlBuffer, /) -> None: ...
 def set_gl_buffer_target_data(
     target: GlBufferTarget, data: Buffer | int, usage: GlBufferUsage, /
 ) -> int: ...
+def create_gl_copy_read_buffer_memory_view(length: int) -> memoryview: ...
+def release_gl_copy_read_buffer_memory_view() -> None: ...

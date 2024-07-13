@@ -114,11 +114,41 @@ set_gl_buffer_target_data(PyObject *module, PyObject **args, Py_ssize_t nargs)
     return PyLong_FromSsize_t(buffer.len);
 }
 
+static PyObject *
+create_gl_buffer_memory_view(PyObject *module, PyObject *py_length)
+{
+    Py_ssize_t length = PyLong_AsSsize_t(py_length);
+    CHECK_UNEXPECTED_PYTHON_ERROR();
+
+    void *memory = glMapBuffer(GL_COPY_READ_BUFFER, GL_READ_WRITE);
+    CHECK_GL_ERROR();
+
+    PyObject *memory_view = PyMemoryView_FromMemory(memory, length, PyBUF_WRITE);
+    if (!memory_view)
+    {
+        glUnmapBuffer(GL_COPY_READ_BUFFER);
+        CHECK_GL_ERROR();
+        return 0;
+    }
+
+    return memory_view;
+}
+
+static PyObject *
+release_gl_copy_read_buffer_memory_view(PyObject *module, PyObject *unused)
+{
+    glUnmapBuffer(GL_COPY_READ_BUFFER);
+    CHECK_GL_ERROR();
+    Py_RETURN_NONE;
+}
+
 static PyMethodDef module_PyMethodDef[] = {
     {"create_gl_buffer", create_gl_buffer, METH_NOARGS, 0},
     {"delete_gl_buffer", delete_gl_buffer, METH_O, 0},
     {"set_gl_buffer_target", (PyCFunction)set_gl_buffer_target, METH_FASTCALL, 0},
     {"set_gl_buffer_target_data", (PyCFunction)set_gl_buffer_target_data, METH_FASTCALL, 0},
+    {"create_gl_copy_read_buffer_memory_view", create_gl_buffer_memory_view, METH_O, 0},
+    {"release_gl_copy_read_buffer_memory_view", release_gl_copy_read_buffer_memory_view, METH_NOARGS, 0},
     {0},
 };
 
