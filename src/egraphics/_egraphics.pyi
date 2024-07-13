@@ -1,4 +1,23 @@
-__all__ = ["bind_gl_buffer", "create_gl_buffer", "GL_ARRAY_BUFFER", "GL_COPY_READ_BUFFER"]
+__all__ = [
+    "GlBuffer",
+    "GlBufferTarget",
+    "GlBufferUsage",
+    "GL_ARRAY_BUFFER",
+    "GL_COPY_READ_BUFFER",
+    "GL_STREAM_DRAW",
+    "GL_STREAM_READ",
+    "GL_STREAM_COPY",
+    "GL_STATIC_DRAW",
+    "GL_STATIC_READ",
+    "GL_STATIC_COPY",
+    "GL_DYNAMIC_DRAW",
+    "GL_DYNAMIC_READ",
+    "GL_DYNAMIC_COPY",
+    "bind_gl_buffer",
+    "create_gl_buffer",
+    "delete_gl_buffer",
+    "set_gl_buffer_target_data",
+]
 
 # python
 from collections.abc import Buffer

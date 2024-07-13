@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 __all__ = [
+    "get_g_buffer_gl_buffer",
     "GBuffer",
     "GBufferTarget",
     "GBufferFrequency",
@@ -19,6 +20,7 @@ from ._egraphics import GL_STATIC_READ
 from ._egraphics import GL_STREAM_COPY
 from ._egraphics import GL_STREAM_DRAW
 from ._egraphics import GL_STREAM_READ
+from ._egraphics import GlBuffer
 from ._egraphics import bind_gl_buffer
 from ._egraphics import create_gl_buffer
 from ._egraphics import delete_gl_buffer
@@ -178,9 +180,9 @@ class GBuffer:
         return self._frequency
 
     @property
-    def gl_buffer(self) -> int:
-        return self._gl_buffer
-
-    @property
     def nature(self) -> GBufferNature:
         return self._nature
+
+
+def get_g_buffer_gl_buffer(g_buffer: GBuffer) -> GlBuffer:
+    return g_buffer._gl_buffer

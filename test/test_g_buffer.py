@@ -1,6 +1,7 @@
 # egraphics
 from egraphics import GBuffer
 from egraphics._g_buffer import _reset_g_buffer_target_state
+from egraphics._g_buffer import get_g_buffer_gl_buffer
 
 # emath
 from emath import FVector3
@@ -35,7 +36,7 @@ def test_defaults(platform):
     GBuffer.Target.ARRAY.g_buffer = g_buffer
     usage = glGetBufferParameteriv(GL_ARRAY_BUFFER, GL_BUFFER_USAGE)[0]
     assert usage == GL_STATIC_DRAW
-    assert g_buffer.gl_buffer == g_buffer._gl_buffer
+    assert get_g_buffer_gl_buffer(g_buffer) == g_buffer._gl_buffer
 
 
 @pytest.mark.parametrize("data", [0, b"", b"sdfsfsf", FVector3(0, 1, 2)])

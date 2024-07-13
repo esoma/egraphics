@@ -170,6 +170,18 @@ PyInit__egraphics()
 
     PyObject *module = PyModule_Create(&module_PyModuleDef);
 
+#define ADD_ALIAS(name, type)\
+    {\
+        if (PyModule_AddObjectRef(module, name, (PyObject *)&type) != 0)\
+        {\
+            return 0;\
+        }\
+    }
+
+    ADD_ALIAS("GlBuffer", PyLong_Type);
+    ADD_ALIAS("GlBufferTarget", PyLong_Type);
+    ADD_ALIAS("GlBufferUsage", PyLong_Type);
+
 #define ADD_CONSTANT(n)\
     {\
         PyObject *constant = PyLong_FromLong(n);\
