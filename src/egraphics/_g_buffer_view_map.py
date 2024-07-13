@@ -3,6 +3,15 @@ from __future__ import annotations
 __all__ = ["GBufferViewMap"]
 
 # egraphics
+from ._egraphics import GL_BYTE
+from ._egraphics import GL_DOUBLE
+from ._egraphics import GL_FLOAT
+from ._egraphics import GL_INT
+from ._egraphics import GL_SHORT
+from ._egraphics import GL_UNSIGNED_BYTE
+from ._egraphics import GL_UNSIGNED_INT
+from ._egraphics import GL_UNSIGNED_SHORT
+from ._egraphics import GlType
 from ._egraphics import GlVertexArray
 from ._egraphics import activate_gl_vertex_array
 from ._egraphics import create_gl_vertex_array
@@ -15,7 +24,6 @@ from ._shader import Shader
 import emath
 
 # pyopengl
-import OpenGL.GL
 from OpenGL.GL import GL_FALSE
 from OpenGL.GL import glEnableVertexAttribArray
 from OpenGL.GL import glVertexAttribDivisor
@@ -166,68 +174,57 @@ class _GlVertexArray:
             self._gl_vertex_array = None
 
 
-_BUFFER_VIEW_TYPE_TO_VERTEX_ATTRIB_POINTER: Final[Mapping[Any, tuple[Any, int, int]]] = {
-    ctypes.c_float: (OpenGL.GL.GL_FLOAT, 1, 1),
-    ctypes.c_double: (OpenGL.GL.GL_DOUBLE, 1, 1),
-    ctypes.c_int8: (OpenGL.GL.GL_BYTE, 1, 1),
-    ctypes.c_uint8: (OpenGL.GL.GL_UNSIGNED_BYTE, 1, 1),
-    ctypes.c_int16: (OpenGL.GL.GL_SHORT, 1, 1),
-    ctypes.c_uint16: (OpenGL.GL.GL_UNSIGNED_SHORT, 1, 1),
-    ctypes.c_int32: (OpenGL.GL.GL_INT, 1, 1),
-    ctypes.c_uint32: (OpenGL.GL.GL_UNSIGNED_INT, 1, 1),
-    emath.FVector2: (OpenGL.GL.GL_FLOAT, 2, 1),
-    emath.DVector2: (OpenGL.GL.GL_DOUBLE, 2, 1),
-    emath.I8Vector2: (OpenGL.GL.GL_BYTE, 2, 1),
-    emath.I16Vector2: (OpenGL.GL.GL_SHORT, 2, 1),
-    emath.I32Vector2: (OpenGL.GL.GL_INT, 2, 1),
-    emath.U8Vector2: (OpenGL.GL.GL_UNSIGNED_BYTE, 2, 1),
-    emath.U16Vector2: (OpenGL.GL.GL_UNSIGNED_SHORT, 2, 1),
-    emath.U32Vector2: (OpenGL.GL.GL_UNSIGNED_INT, 2, 1),
-    emath.FVector3: (OpenGL.GL.GL_FLOAT, 3, 1),
-    emath.DVector3: (OpenGL.GL.GL_DOUBLE, 3, 1),
-    emath.I8Vector3: (OpenGL.GL.GL_BYTE, 3, 1),
-    emath.I16Vector3: (OpenGL.GL.GL_SHORT, 3, 1),
-    emath.I32Vector3: (OpenGL.GL.GL_INT, 3, 1),
-    emath.U8Vector3: (OpenGL.GL.GL_UNSIGNED_BYTE, 3, 1),
-    emath.U16Vector3: (OpenGL.GL.GL_UNSIGNED_SHORT, 3, 1),
-    emath.U32Vector3: (OpenGL.GL.GL_UNSIGNED_INT, 3, 1),
-    emath.FVector4: (OpenGL.GL.GL_FLOAT, 4, 1),
-    emath.DVector4: (OpenGL.GL.GL_DOUBLE, 4, 1),
-    emath.I8Vector4: (OpenGL.GL.GL_BYTE, 4, 1),
-    emath.I16Vector4: (OpenGL.GL.GL_SHORT, 4, 1),
-    emath.I32Vector4: (OpenGL.GL.GL_INT, 4, 1),
-    emath.U8Vector4: (OpenGL.GL.GL_UNSIGNED_BYTE, 4, 1),
-    emath.U16Vector4: (OpenGL.GL.GL_UNSIGNED_SHORT, 4, 1),
-    emath.U32Vector4: (OpenGL.GL.GL_UNSIGNED_INT, 4, 1),
-    emath.FMatrix2x2: (OpenGL.GL.GL_FLOAT, 2, 2),
-    emath.DMatrix2x2: (OpenGL.GL.GL_DOUBLE, 2, 2),
-    emath.FMatrix2x3: (OpenGL.GL.GL_FLOAT, 2, 3),
-    emath.DMatrix2x3: (OpenGL.GL.GL_DOUBLE, 2, 3),
-    emath.FMatrix2x4: (OpenGL.GL.GL_FLOAT, 2, 4),
-    emath.DMatrix2x4: (OpenGL.GL.GL_DOUBLE, 2, 4),
-    emath.FMatrix3x2: (OpenGL.GL.GL_FLOAT, 3, 2),
-    emath.DMatrix3x2: (OpenGL.GL.GL_DOUBLE, 3, 2),
-    emath.FMatrix3x3: (OpenGL.GL.GL_FLOAT, 3, 3),
-    emath.DMatrix3x3: (OpenGL.GL.GL_DOUBLE, 3, 3),
-    emath.FMatrix3x4: (OpenGL.GL.GL_FLOAT, 3, 4),
-    emath.DMatrix3x4: (OpenGL.GL.GL_DOUBLE, 3, 4),
-    emath.FMatrix4x2: (OpenGL.GL.GL_FLOAT, 4, 2),
-    emath.DMatrix4x2: (OpenGL.GL.GL_DOUBLE, 4, 2),
-    emath.FMatrix4x3: (OpenGL.GL.GL_FLOAT, 4, 3),
-    emath.DMatrix4x3: (OpenGL.GL.GL_DOUBLE, 4, 3),
-    emath.FMatrix4x4: (OpenGL.GL.GL_FLOAT, 4, 4),
-    emath.DMatrix4x4: (OpenGL.GL.GL_DOUBLE, 4, 4),
+_BUFFER_VIEW_TYPE_TO_VERTEX_ATTRIB_POINTER: Final[Mapping[Any, tuple[GlType, int, int]]] = {
+    ctypes.c_float: (GL_FLOAT, 1, 1),
+    ctypes.c_double: (GL_DOUBLE, 1, 1),
+    ctypes.c_int8: (GL_BYTE, 1, 1),
+    ctypes.c_uint8: (GL_UNSIGNED_BYTE, 1, 1),
+    ctypes.c_int16: (GL_SHORT, 1, 1),
+    ctypes.c_uint16: (GL_UNSIGNED_SHORT, 1, 1),
+    ctypes.c_int32: (GL_INT, 1, 1),
+    ctypes.c_uint32: (GL_UNSIGNED_INT, 1, 1),
+    emath.FVector2: (GL_FLOAT, 2, 1),
+    emath.DVector2: (GL_DOUBLE, 2, 1),
+    emath.I8Vector2: (GL_BYTE, 2, 1),
+    emath.I16Vector2: (GL_SHORT, 2, 1),
+    emath.I32Vector2: (GL_INT, 2, 1),
+    emath.U8Vector2: (GL_UNSIGNED_BYTE, 2, 1),
+    emath.U16Vector2: (GL_UNSIGNED_SHORT, 2, 1),
+    emath.U32Vector2: (GL_UNSIGNED_INT, 2, 1),
+    emath.FVector3: (GL_FLOAT, 3, 1),
+    emath.DVector3: (GL_DOUBLE, 3, 1),
+    emath.I8Vector3: (GL_BYTE, 3, 1),
+    emath.I16Vector3: (GL_SHORT, 3, 1),
+    emath.I32Vector3: (GL_INT, 3, 1),
+    emath.U8Vector3: (GL_UNSIGNED_BYTE, 3, 1),
+    emath.U16Vector3: (GL_UNSIGNED_SHORT, 3, 1),
+    emath.U32Vector3: (GL_UNSIGNED_INT, 3, 1),
+    emath.FVector4: (GL_FLOAT, 4, 1),
+    emath.DVector4: (GL_DOUBLE, 4, 1),
+    emath.I8Vector4: (GL_BYTE, 4, 1),
+    emath.I16Vector4: (GL_SHORT, 4, 1),
+    emath.I32Vector4: (GL_INT, 4, 1),
+    emath.U8Vector4: (GL_UNSIGNED_BYTE, 4, 1),
+    emath.U16Vector4: (GL_UNSIGNED_SHORT, 4, 1),
+    emath.U32Vector4: (GL_UNSIGNED_INT, 4, 1),
+    emath.FMatrix2x2: (GL_FLOAT, 2, 2),
+    emath.DMatrix2x2: (GL_DOUBLE, 2, 2),
+    emath.FMatrix2x3: (GL_FLOAT, 2, 3),
+    emath.DMatrix2x3: (GL_DOUBLE, 2, 3),
+    emath.FMatrix2x4: (GL_FLOAT, 2, 4),
+    emath.DMatrix2x4: (GL_DOUBLE, 2, 4),
+    emath.FMatrix3x2: (GL_FLOAT, 3, 2),
+    emath.DMatrix3x2: (GL_DOUBLE, 3, 2),
+    emath.FMatrix3x3: (GL_FLOAT, 3, 3),
+    emath.DMatrix3x3: (GL_DOUBLE, 3, 3),
+    emath.FMatrix3x4: (GL_FLOAT, 3, 4),
+    emath.DMatrix3x4: (GL_DOUBLE, 3, 4),
+    emath.FMatrix4x2: (GL_FLOAT, 4, 2),
+    emath.DMatrix4x2: (GL_DOUBLE, 4, 2),
+    emath.FMatrix4x3: (GL_FLOAT, 4, 3),
+    emath.DMatrix4x3: (GL_DOUBLE, 4, 3),
+    emath.FMatrix4x4: (GL_FLOAT, 4, 4),
+    emath.DMatrix4x4: (GL_DOUBLE, 4, 4),
 }
-
-_GL_INT_TYPES: Final[Set] = set(
-    [
-        OpenGL.GL.GL_BYTE,
-        OpenGL.GL.GL_UNSIGNED_BYTE,
-        OpenGL.GL.GL_SHORT,
-        OpenGL.GL.GL_UNSIGNED_SHORT,
-        OpenGL.GL.GL_INT,
-        OpenGL.GL.GL_UNSIGNED_INT,
-    ]
-)
 
 _INDEX_BUFFER_TYPES: Final[Set] = {ctypes.c_uint8, ctypes.c_uint16, ctypes.c_uint32}

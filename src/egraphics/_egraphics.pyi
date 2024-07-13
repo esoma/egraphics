@@ -2,6 +2,8 @@ __all__ = [
     "GlBuffer",
     "GlBufferTarget",
     "GlBufferUsage",
+    "GlVertexArray",
+    "GlType",
     "GL_ARRAY_BUFFER",
     "GL_COPY_READ_BUFFER",
     "GL_ELEMENT_ARRAY_BUFFER",
@@ -33,6 +35,7 @@ GlBuffer = NewType("GlBuffer", int)
 GlBufferTarget = NewType("GlBufferTarget", int)
 GlBufferUsage = NewType("GlBufferUsage", int)
 GlVertexArray = NewType("GlVertexArray", int)
+GlType = NewType("GlType", int)
 
 GL_ARRAY_BUFFER: GlBufferTarget
 GL_COPY_READ_BUFFER: GlBufferTarget
@@ -47,6 +50,15 @@ GL_STATIC_COPY: GlBufferUsage
 GL_DYNAMIC_DRAW: GlBufferUsage
 GL_DYNAMIC_READ: GlBufferUsage
 GL_DYNAMIC_COPY: GlBufferUsage
+
+GL_FLOAT: GlType
+GL_DOUBLE: GlType
+GL_BYTE: GlType
+GL_UNSIGNED_BYTE: GlType
+GL_SHORT: GlType
+GL_UNSIGNED_SHORT: GlType
+GL_INT: GlType
+GL_UNSIGNED_INT: GlType
 
 def activate_gl_vertex_array(gl_vertex_array: GlVertexArray | None) -> None: ...
 def set_gl_buffer_target(target: GlBufferTarget, gl_buffer: GlBuffer | None, /) -> None: ...
