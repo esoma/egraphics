@@ -38,8 +38,11 @@ from ._egraphics import GL_TEXTURE_WRAP_T
 from ._egraphics import GL_UNSIGNED_BYTE
 from ._egraphics import GL_UNSIGNED_INT
 from ._egraphics import GL_UNSIGNED_SHORT
+from ._egraphics import GlTexture
 from ._egraphics import GlTextureFilter
 from ._egraphics import GlType
+from ._egraphics import create_gl_texture
+from ._egraphics import delete_gl_texture
 from ._egraphics import set_active_gl_texture_unit
 from ._egraphics import set_gl_texture_target
 
@@ -58,8 +61,6 @@ from OpenGL.GL import GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS
 from OpenGL.GL import GL_TEXTURE_BORDER_COLOR
 from OpenGL.GL import GL_TEXTURE_MAG_FILTER
 from OpenGL.GL import GL_TEXTURE_MIN_FILTER
-from OpenGL.GL import glDeleteTextures
-from OpenGL.GL import glGenTextures
 from OpenGL.GL import glGenerateMipmap
 from OpenGL.GL import glGetIntegerv
 from OpenGL.GL import glTexImage2D
@@ -68,8 +69,6 @@ from OpenGL.GL import glTexParameterfv
 from OpenGL.GL import glTexParameteri
 from OpenGL.GL.EXT.texture_filter_anisotropic import GL_TEXTURE_MAX_ANISOTROPY_EXT
 from OpenGL.GL.EXT.texture_filter_anisotropic import glInitTextureFilterAnisotropicEXT
-from OpenGL.error import GLError
-from OpenGL.error import NullFunctionError
 
 # python
 from collections.abc import Buffer
@@ -125,7 +124,7 @@ class TextureTarget:
         if unit_texture is texture:
             return
 
-        set_gl_texture_target(self._gl_target, texture._gl)
+        set_gl_texture_target(self._gl_target, texture._gl_texture)
         self._unit_texture[unit] = ref(texture)
 
         if self._bound and unit_only:
@@ -235,7 +234,7 @@ _TEXTURE_FILTER_TO_GL_MAG_FILTER: Final[Mapping[TextureFilter, GlTextureFilter]]
 
 
 class Texture:
-    _gl: Any = None
+    _gl_texture: GlTexture | None = None
 
     _max_unit: ClassVar[int | None] = None
     _next_unit: ClassVar[int] = _FIRST_BINDABLE_TEXTURE_UNIT
@@ -292,7 +291,7 @@ class Texture:
         if memoryview(buffer).nbytes != expected_data_length:
             raise ValueError("too much or not enough data")
         # generate the texture and copy the data to it
-        self._gl = glGenTextures(1)
+        self._gl_texture = create_gl_texture()
         with self.bind():
             gl_target = self._type.value.target._gl_target
             assert type == TextureType.TWO_DIMENSIONS
@@ -332,12 +331,9 @@ class Texture:
     def __del__(self) -> None:
         if self._unit is not None:
             self._release_unit()
-        if self._gl is not None:
-            try:
-                glDeleteTextures([self._gl])
-            except (TypeError, NullFunctionError, GLError):
-                pass
-            self._gl = None
+        if self._gl_texture is not None:
+            delete_gl_texture(self._gl_texture)
+            self._gl_texture = None
 
     def __repr__(self) -> str:
         cls = type(self)

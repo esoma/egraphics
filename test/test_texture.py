@@ -227,7 +227,7 @@ class TextureTest:
             size, TextureComponents.R, ctypes.c_int8, memoryview(b"\x00" * self.data_multiplier)
         )
 
-        gl_texture = texture._gl
+        gl_texture = texture._gl_texture
         del texture
         assert not glIsTexture(gl_texture)
 
@@ -242,40 +242,40 @@ class TextureTest:
             active_texture = glGetIntegerv(GL_ACTIVE_TEXTURE)
             assert active_texture != GL_TEXTURE0 + unit_1
             glActiveTexture(GL_TEXTURE0 + unit_1)
-            assert glGetIntegerv(GL_TEXTURE_BINDING_2D) == texture_1._gl
+            assert glGetIntegerv(GL_TEXTURE_BINDING_2D) == texture_1._gl_texture
             glActiveTexture(active_texture)
 
             with texture_2.bind_unit() as unit_2:
                 assert glGetIntegerv(GL_ACTIVE_TEXTURE) == GL_TEXTURE0 + unit_2
-                assert glGetIntegerv(GL_TEXTURE_BINDING_2D) == texture_2._gl
+                assert glGetIntegerv(GL_TEXTURE_BINDING_2D) == texture_2._gl_texture
                 glActiveTexture(GL_TEXTURE0 + unit_1)
-                assert glGetIntegerv(GL_TEXTURE_BINDING_2D) == texture_1._gl
+                assert glGetIntegerv(GL_TEXTURE_BINDING_2D) == texture_1._gl_texture
                 glActiveTexture(GL_TEXTURE0 + unit_2)
 
                 with texture_1.bind_unit() as unit_1_2:
                     assert unit_1 == unit_1_2
                     assert glGetIntegerv(GL_ACTIVE_TEXTURE) == GL_TEXTURE0 + unit_2
-                    assert glGetIntegerv(GL_TEXTURE_BINDING_2D) == texture_2._gl
+                    assert glGetIntegerv(GL_TEXTURE_BINDING_2D) == texture_2._gl_texture
                     glActiveTexture(GL_TEXTURE0 + unit_1)
-                    assert glGetIntegerv(GL_TEXTURE_BINDING_2D) == texture_1._gl
+                    assert glGetIntegerv(GL_TEXTURE_BINDING_2D) == texture_1._gl_texture
                     glActiveTexture(GL_TEXTURE0 + unit_2)
 
                 assert glGetIntegerv(GL_ACTIVE_TEXTURE) == GL_TEXTURE0 + unit_2
-                assert glGetIntegerv(GL_TEXTURE_BINDING_2D) == texture_2._gl
+                assert glGetIntegerv(GL_TEXTURE_BINDING_2D) == texture_2._gl_texture
                 glActiveTexture(GL_TEXTURE0 + unit_1)
-                assert glGetIntegerv(GL_TEXTURE_BINDING_2D) == texture_1._gl
+                assert glGetIntegerv(GL_TEXTURE_BINDING_2D) == texture_1._gl_texture
                 glActiveTexture(GL_TEXTURE0 + unit_2)
 
             assert glGetIntegerv(GL_ACTIVE_TEXTURE) == GL_TEXTURE0 + unit_2
-            assert glGetIntegerv(GL_TEXTURE_BINDING_2D) == texture_2._gl
+            assert glGetIntegerv(GL_TEXTURE_BINDING_2D) == texture_2._gl_texture
             glActiveTexture(GL_TEXTURE0 + unit_1)
-            assert glGetIntegerv(GL_TEXTURE_BINDING_2D) == texture_1._gl
+            assert glGetIntegerv(GL_TEXTURE_BINDING_2D) == texture_1._gl_texture
             glActiveTexture(GL_TEXTURE0 + unit_2)
 
         assert glGetIntegerv(GL_ACTIVE_TEXTURE) == GL_TEXTURE0 + unit_2
-        assert glGetIntegerv(GL_TEXTURE_BINDING_2D) == texture_2._gl
+        assert glGetIntegerv(GL_TEXTURE_BINDING_2D) == texture_2._gl_texture
         glActiveTexture(GL_TEXTURE0 + unit_1)
-        assert glGetIntegerv(GL_TEXTURE_BINDING_2D) == texture_1._gl
+        assert glGetIntegerv(GL_TEXTURE_BINDING_2D) == texture_1._gl_texture
         glActiveTexture(GL_TEXTURE0 + unit_2)
 
         del texture_1
@@ -292,7 +292,7 @@ class TextureTest:
             size, TextureComponents.R, ctypes.c_int8, memoryview(b"\x00" * self.data_multiplier)
         )
         with texture.bind_unit() as unit:
-            gl_texture = texture._gl
+            gl_texture = texture._gl_texture
             del texture
             glActiveTexture(GL_TEXTURE0 + unit)
             assert glGetIntegerv(GL_TEXTURE_BINDING_2D) == gl_texture
@@ -305,7 +305,7 @@ class TextureTest:
             size, TextureComponents.R, ctypes.c_int8, memoryview(b"\x00" * self.data_multiplier)
         )
         with texture_1.bind():
-            assert glGetIntegerv(GL_TEXTURE_BINDING_2D) == texture_1._gl
+            assert glGetIntegerv(GL_TEXTURE_BINDING_2D) == texture_1._gl_texture
 
             with pytest.raises(RuntimeError) as excinfo:
                 with texture_2.bind():
@@ -313,15 +313,15 @@ class TextureTest:
             assert str(excinfo.value) == "texture already bound to target"
             del excinfo
 
-            assert glGetIntegerv(GL_TEXTURE_BINDING_2D) == texture_1._gl
+            assert glGetIntegerv(GL_TEXTURE_BINDING_2D) == texture_1._gl_texture
 
-        assert glGetIntegerv(GL_TEXTURE_BINDING_2D) == texture_1._gl
+        assert glGetIntegerv(GL_TEXTURE_BINDING_2D) == texture_1._gl_texture
 
         with texture_2.bind():
-            assert glGetIntegerv(GL_TEXTURE_BINDING_2D) == texture_2._gl
+            assert glGetIntegerv(GL_TEXTURE_BINDING_2D) == texture_2._gl_texture
 
         del texture_1
-        assert glGetIntegerv(GL_TEXTURE_BINDING_2D) == texture_2._gl
+        assert glGetIntegerv(GL_TEXTURE_BINDING_2D) == texture_2._gl_texture
 
         del texture_2
         assert glGetIntegerv(GL_TEXTURE_BINDING_2D) == 0
@@ -331,7 +331,7 @@ class TextureTest:
             size, TextureComponents.R, ctypes.c_int8, memoryview(b"\x00" * self.data_multiplier)
         )
         with texture.bind():
-            gl_texture = texture._gl
+            gl_texture = texture._gl_texture
             del texture
             assert glGetIntegerv(GL_TEXTURE_BINDING_2D) == gl_texture
 
@@ -354,14 +354,14 @@ class TextureTest:
 
         with texture_1.bind():
             assert glGetIntegerv(GL_ACTIVE_TEXTURE) == GL_TEXTURE0 + unit_1
-            assert glGetIntegerv(GL_TEXTURE_BINDING_2D) == texture_1._gl
+            assert glGetIntegerv(GL_TEXTURE_BINDING_2D) == texture_1._gl_texture
 
             with texture_3.bind_unit() as unit_3:
                 assert glGetIntegerv(GL_ACTIVE_TEXTURE) == GL_TEXTURE0 + unit_1
-                assert glGetIntegerv(GL_TEXTURE_BINDING_2D) == texture_1._gl
+                assert glGetIntegerv(GL_TEXTURE_BINDING_2D) == texture_1._gl_texture
 
                 glActiveTexture(GL_TEXTURE0 + unit_3)
-                assert glGetIntegerv(GL_TEXTURE_BINDING_2D) == texture_3._gl
+                assert glGetIntegerv(GL_TEXTURE_BINDING_2D) == texture_3._gl_texture
 
                 glActiveTexture(GL_TEXTURE0 + unit_1)
 

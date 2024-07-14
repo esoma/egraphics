@@ -81,7 +81,7 @@ set_gl_buffer_target(PyObject *module, PyObject **args, Py_ssize_t nargs)
     GLuint gl_buffer = 0;
     if (args[1] != Py_None)
     {
-        gl_buffer = PyLong_AsLong(args[1]);
+        gl_buffer = PyLong_AsUnsignedLong(args[1]);
         CHECK_UNEXPECTED_PYTHON_ERROR();
     }
 
@@ -120,9 +120,22 @@ error:
 }
 
 static PyObject *
+create_gl_texture(PyObject *module, PyObject *unused)
+{
+    GLuint gl_texture = 0;
+
+    glGenTextures(1, &gl_texture);
+    CHECK_GL_ERROR();
+
+    return PyLong_FromUnsignedLong(gl_texture);
+error:
+    return 0;
+}
+
+static PyObject *
 delete_gl_buffer(PyObject *module, PyObject *py_gl_buffer)
 {
-    GLuint gl_buffer = PyLong_AsLong(py_gl_buffer);
+    GLuint gl_buffer = PyLong_AsUnsignedLong(py_gl_buffer);
     CHECK_UNEXPECTED_PYTHON_ERROR();
 
     glDeleteBuffers(1, &gl_buffer);
@@ -135,10 +148,23 @@ error:
 static PyObject *
 delete_gl_vertex_array(PyObject *module, PyObject *py_gl_vertex_array)
 {
-    GLuint gl_vertex_array = PyLong_AsLong(py_gl_vertex_array);
+    GLuint gl_vertex_array = PyLong_AsUnsignedLong(py_gl_vertex_array);
     CHECK_UNEXPECTED_PYTHON_ERROR();
 
     glDeleteVertexArrays(1, &gl_vertex_array);
+
+    Py_RETURN_NONE;
+error:
+    return 0;
+}
+
+static PyObject *
+delete_gl_texture(PyObject *module, PyObject *py_gl_texture)
+{
+    GLuint gl_texture = PyLong_AsUnsignedLong(py_gl_texture);
+    CHECK_UNEXPECTED_PYTHON_ERROR();
+
+    glDeleteTextures(1, &gl_texture);
 
     Py_RETURN_NONE;
 error:
@@ -442,7 +468,7 @@ set_gl_texture_target(PyObject *module, PyObject **args, Py_ssize_t nargs)
     GLuint gl_texture = 0;
     if (args[1] != Py_None)
     {
-        gl_texture = PyLong_AsLong(args[1]);
+        gl_texture = PyLong_AsUnsignedLong(args[1]);
         CHECK_UNEXPECTED_PYTHON_ERROR();
     }
 
@@ -459,8 +485,10 @@ static PyMethodDef module_PyMethodDef[] = {
     {"activate_gl_vertex_array", activate_gl_vertex_array, METH_O, 0},
     {"create_gl_buffer", create_gl_buffer, METH_NOARGS, 0},
     {"create_gl_vertex_array", create_gl_vertex_array, METH_NOARGS, 0},
+    {"create_gl_texture", create_gl_texture, METH_NOARGS, 0},
     {"delete_gl_buffer", delete_gl_buffer, METH_O, 0},
     {"delete_gl_vertex_array", delete_gl_vertex_array, METH_O, 0},
+    {"delete_gl_texture", delete_gl_texture, METH_O, 0},
     {"set_gl_buffer_target", (PyCFunction)set_gl_buffer_target, METH_FASTCALL, 0},
     {"set_gl_buffer_target_data", (PyCFunction)set_gl_buffer_target_data, METH_FASTCALL, 0},
     {"create_gl_copy_read_buffer_memory_view", create_gl_buffer_memory_view, METH_O, 0},
