@@ -49,6 +49,7 @@ reset_module_state(PyObject *module, PyObject *unused)
 {
     ModuleState *state = (ModuleState *)PyModule_GetState(module);
     CHECK_UNEXPECTED_PYTHON_ERROR();
+    if (!state){ Py_RETURN_NONE; }
 
     state->clear_color[0] = -1;
     state->clear_color[1] = -1;
@@ -56,7 +57,6 @@ reset_module_state(PyObject *module, PyObject *unused)
     state->clear_depth = -1;
 
     state->texture_filter_anisotropic_supported = GLEW_EXT_texture_filter_anisotropic;
-
     Py_RETURN_NONE;
 error:
     return 0;
@@ -574,6 +574,8 @@ error:
 static PyObject *
 set_gl_texture_target_parameters(PyObject *module, PyObject **args, Py_ssize_t nargs)
 {
+    glewInit();
+
     PyObject *ex = 0;
     struct EMathApi *emath_api = 0;
 
@@ -630,7 +632,7 @@ set_gl_texture_target_parameters(PyObject *module, PyObject **args, Py_ssize_t n
 
     GLfloat anisotropy = PyFloat_AsDouble(args[7]);
     CHECK_UNEXPECTED_PYTHON_ERROR();
-    if (anisotropy > 1.0 && state->texture_filter_anisotropic_supported)
+    if (anisotropy >= 1.0 && state->texture_filter_anisotropic_supported)
     {
         glTexParameterf(target, GL_TEXTURE_MAX_ANISOTROPY_EXT, anisotropy);
         CHECK_GL_ERROR();

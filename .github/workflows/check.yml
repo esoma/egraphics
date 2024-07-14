@@ -55,12 +55,12 @@ jobs:
     - name: Test
       if: runner.os != 'Linux'
       run: |
-        poetry run pytest --cov=eplatform --cov-report=xml
+        poetry run pytest --cov=eplatform --cov-report=xml -vvx
 
     - name: Test with Xvfb
       if: runner.os == 'Linux'
       run: |
-        xvfb-run -a poetry run pytest --cov=eplatform --cov-report=xml
+        xvfb-run -a poetry run pytest --cov=eplatform --cov-report=xml -vvx
 
     - name: Codecov
       uses: codecov/codecov-action@v2
