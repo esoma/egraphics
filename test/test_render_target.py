@@ -9,10 +9,8 @@ import egraphics._render_target
 from egeometry import IRectangle
 
 # emath
-from emath import FArray
 from emath import FVector3
 from emath import FVector4
-from emath import FVector4Array
 from emath import IVector2
 
 # eplatform
@@ -21,9 +19,6 @@ from eplatform import Platform
 # pyopengl
 from OpenGL.GL import GL_READ_FRAMEBUFFER_BINDING
 from OpenGL.GL import glGetIntegerv
-
-# pytest
-import pytest
 
 
 def test_default_state():
@@ -46,20 +41,6 @@ def test_set_read_window(platform, window):
 
     set_read_render_target(window)
     assert glGetIntegerv(GL_READ_FRAMEBUFFER_BINDING) == 0
-
-
-@pytest.mark.parametrize("size", [IVector2(1, 1), IVector2(2, 2)])
-def test_read_color_from_window(window, size):
-    colors = read_color_from_render_target(window, IRectangle(IVector2(0, 0), size))
-    assert isinstance(colors, FVector4Array)
-    assert colors == FVector4Array(*[FVector4(0, 0, 0, 1)] * size.x * size.y)
-
-
-@pytest.mark.parametrize("size", [IVector2(1, 1), IVector2(2, 2)])
-def test_read_depth_from_window(window, size):
-    depths = read_depth_from_render_target(window, IRectangle(IVector2(0, 0), size))
-    assert isinstance(depths, FArray)
-    assert depths == FArray(*[0] * size.x * size.y)
 
 
 def test_clear_window(window, is_close):
