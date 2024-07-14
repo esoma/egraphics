@@ -60,9 +60,6 @@ from eplatform import Platform
 # pyopengl
 from OpenGL.GL import GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS
 from OpenGL.GL import glGetIntegerv
-from OpenGL.GL import glTexParameterf
-from OpenGL.GL.EXT.texture_filter_anisotropic import GL_TEXTURE_MAX_ANISOTROPY_EXT
-from OpenGL.GL.EXT.texture_filter_anisotropic import glInitTextureFilterAnisotropicEXT
 
 # python
 from collections.abc import Buffer
@@ -290,12 +287,13 @@ class Texture:
             self._mipmap_selection = mipmap_selection
             if mipmap_selection != MipmapSelection.NONE:
                 generate_gl_texture_target_mipmaps(gl_target)
-            # set the min/max filter parameters
+            # set parameters
             self._minify_filter = minify_filter
             self._magnify_filter = magnify_filter
-            # set the wrapping parameters
             self._wrap = wrap
             self._wrap_color = wrap_color
+            self._anisotropy = anisotropy
+
             gl_wrap_args: tuple[GlTextureWrap, GlTextureWrap | None, GlTextureWrap | None] = tuple(
                 (
                     *(w.value for w in wrap),
@@ -303,16 +301,8 @@ class Texture:
                 )
             )  # type: ignore
             set_gl_texture_target_parameters(
-                gl_target,
-                gl_min_filter,
-                gl_mag_filter,
-                *gl_wrap_args,
-                wrap_color,
+                gl_target, gl_min_filter, gl_mag_filter, *gl_wrap_args, wrap_color, anisotropy
             )
-            # set anisotropy
-            self._anisotropy = anisotropy
-            if anisotropy > 1.0 and glInitTextureFilterAnisotropicEXT():
-                glTexParameterf(gl_target, GL_TEXTURE_MAX_ANISOTROPY_EXT, anisotropy)
 
     def __del__(self) -> None:
         if self._unit is not None:

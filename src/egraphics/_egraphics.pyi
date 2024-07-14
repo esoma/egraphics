@@ -173,5 +173,6 @@ def set_gl_texture_target_parameters(
     wrap_t: GlTextureWrap | None,
     wrap_r: GlTextureWrap | None,
     wrap_color: FVector4,
+    anisotropy: float,
     /,
 ) -> None: ...

@@ -25,7 +25,14 @@
         GLenum gl_error = glGetError();\
         if (gl_error != GL_NO_ERROR)\
         {\
-            PyErr_Format(PyExc_RuntimeError, "gl error: %s", gluErrorString(gl_error));\
+            PyErr_Format(\
+                PyExc_RuntimeError,\
+                "gl error: %s\nfile: %s\nfunction: %s\nline: %i",\
+                gluErrorString(gl_error),\
+                __FILE__,\
+                __func__,\
+                __LINE__\
+            );\
             goto error;\
         }\
     }
@@ -34,6 +41,7 @@ typedef struct ModuleState
 {
     float clear_color[3];
     float clear_depth;
+    int texture_filter_anisotropic_supported;
 } ModuleState;
 
 static PyObject *
@@ -46,6 +54,8 @@ reset_module_state(PyObject *module, PyObject *unused)
     state->clear_color[1] = -1;
     state->clear_color[2] = -1;
     state->clear_depth = -1;
+
+    state->texture_filter_anisotropic_supported = glewIsSupported("GL_EXT_texture_filter_anisotropic");
 
     Py_RETURN_NONE;
 error:
@@ -562,7 +572,10 @@ set_gl_texture_target_parameters(PyObject *module, PyObject **args, Py_ssize_t n
 {
     struct EMathApi *emath_api = 0;
 
-    CHECK_UNEXPECTED_ARG_COUNT_ERROR(7);
+    ModuleState *state = (ModuleState *)PyModule_GetState(module);
+    CHECK_UNEXPECTED_PYTHON_ERROR();
+
+    CHECK_UNEXPECTED_ARG_COUNT_ERROR(8);
 
     GLenum target = PyLong_AsLong(args[0]);
     CHECK_UNEXPECTED_PYTHON_ERROR();
@@ -607,6 +620,14 @@ set_gl_texture_target_parameters(PyObject *module, PyObject **args, Py_ssize_t n
         EMathApi_Release();
 
         glTexParameterfv(target, GL_TEXTURE_BORDER_COLOR, wrap_color);
+        CHECK_GL_ERROR();
+    }
+
+    GLfloat anisotropy = PyFloat_AsDouble(args[7]);
+    CHECK_UNEXPECTED_PYTHON_ERROR();
+    if (anisotropy > 1.0 && state->texture_filter_anisotropic_supported)
+    {
+        glTexParameterf(target, GL_TEXTURE_MAX_ANISOTROPY_EXT, anisotropy);
         CHECK_GL_ERROR();
     }
 
