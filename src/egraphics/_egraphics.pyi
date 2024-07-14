@@ -30,7 +30,6 @@ __all__ = [
     "GL_CLAMP_TO_BORDER",
     "GL_REPEAT",
     "GL_MIRRORED_REPEAT",
-    "GL_MIRROR_CLAMP_TO_EDGE",
     "GL_NEAREST",
     "GL_LINEAR",
     "GL_NEAREST_MIPMAP_NEAREST",
@@ -121,7 +120,6 @@ GL_CLAMP_TO_EDGE: GlTextureWrap
 GL_CLAMP_TO_BORDER: GlTextureWrap
 GL_REPEAT: GlTextureWrap
 GL_MIRRORED_REPEAT: GlTextureWrap
-GL_MIRROR_CLAMP_TO_EDGE: GlTextureWrap
 
 GL_NEAREST: GlTextureFilter
 GL_LINEAR: GlTextureFilter

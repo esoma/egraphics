@@ -22,7 +22,6 @@ from ._egraphics import GL_LINEAR_MIPMAP_LINEAR
 from ._egraphics import GL_LINEAR_MIPMAP_NEAREST
 from ._egraphics import GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS_VALUE
 from ._egraphics import GL_MIRRORED_REPEAT
-from ._egraphics import GL_MIRROR_CLAMP_TO_EDGE
 from ._egraphics import GL_NEAREST
 from ._egraphics import GL_NEAREST_MIPMAP_LINEAR
 from ._egraphics import GL_NEAREST_MIPMAP_NEAREST
@@ -155,7 +154,6 @@ class TextureWrap(Enum):
     CLAMP_TO_COLOR = GL_CLAMP_TO_BORDER
     REPEAT = GL_REPEAT
     REPEAT_MIRRORED = GL_MIRRORED_REPEAT
-    REPEAT_MIRRORED_THEN_CLAMP_TO_EDGE = GL_MIRROR_CLAMP_TO_EDGE
 
 
 class MipmapSelection(Enum):
