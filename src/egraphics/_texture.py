@@ -32,9 +32,6 @@ from ._egraphics import GL_RGB
 from ._egraphics import GL_RGBA
 from ._egraphics import GL_SHORT
 from ._egraphics import GL_TEXTURE_2D
-from ._egraphics import GL_TEXTURE_WRAP_R
-from ._egraphics import GL_TEXTURE_WRAP_S
-from ._egraphics import GL_TEXTURE_WRAP_T
 from ._egraphics import GL_UNSIGNED_BYTE
 from ._egraphics import GL_UNSIGNED_INT
 from ._egraphics import GL_UNSIGNED_SHORT
@@ -47,7 +44,7 @@ from ._egraphics import generate_gl_texture_target_mipmaps
 from ._egraphics import set_active_gl_texture_unit
 from ._egraphics import set_gl_texture_target
 from ._egraphics import set_gl_texture_target_2d_data
-from ._egraphics import set_gl_texture_target_filters
+from ._egraphics import set_gl_texture_target_parameters
 
 # egraphics
 from egraphics._weak_fifo_set import WeakFifoSet
@@ -65,7 +62,6 @@ from OpenGL.GL import GL_TEXTURE_BORDER_COLOR
 from OpenGL.GL import glGetIntegerv
 from OpenGL.GL import glTexParameterf
 from OpenGL.GL import glTexParameterfv
-from OpenGL.GL import glTexParameteri
 from OpenGL.GL.EXT.texture_filter_anisotropic import GL_TEXTURE_MAX_ANISOTROPY_EXT
 from OpenGL.GL.EXT.texture_filter_anisotropic import glInitTextureFilterAnisotropicEXT
 
@@ -190,12 +186,6 @@ TextureDataType = (
     | ctypes.c_float
 )
 
-_GL_TEXTURE_WRAP_NAMES: Final = (
-    GL_TEXTURE_WRAP_S,
-    GL_TEXTURE_WRAP_T,
-    GL_TEXTURE_WRAP_R,
-)
-
 _TEXTURE_DATA_TYPE_TO_GL_DATA_TYPE: Final[Mapping[type[TextureDataType], GlType]] = {
     ctypes.c_uint8: GL_UNSIGNED_BYTE,
     ctypes.c_int8: GL_BYTE,
@@ -304,12 +294,16 @@ class Texture:
             # set the min/max filter parameters
             self._minify_filter = minify_filter
             self._magnify_filter = magnify_filter
-            set_gl_texture_target_filters(gl_target, gl_min_filter, gl_mag_filter)
             # set the wrapping parameters
             self._wrap = wrap
             self._wrap_color = wrap_color
-            for wrap_value, wrap_name in zip(wrap, _GL_TEXTURE_WRAP_NAMES):
-                glTexParameteri(gl_target, wrap_name, wrap_value.value)
+            set_gl_texture_target_parameters(
+                gl_target,
+                gl_min_filter,
+                gl_mag_filter,
+                *(w.value for w in wrap),
+                *(None for i in range(3 - len(wrap))),
+            )
             glTexParameterfv(gl_target, GL_TEXTURE_BORDER_COLOR, wrap_color.pointer)
             # set anisotropy
             self._anisotropy = anisotropy

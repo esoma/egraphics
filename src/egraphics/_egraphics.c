@@ -558,9 +558,9 @@ error:
 
 
 static PyObject *
-set_gl_texture_target_filters(PyObject *module, PyObject **args, Py_ssize_t nargs)
+set_gl_texture_target_parameters(PyObject *module, PyObject **args, Py_ssize_t nargs)
 {
-    CHECK_UNEXPECTED_ARG_COUNT_ERROR(3);
+    CHECK_UNEXPECTED_ARG_COUNT_ERROR(6);
 
     GLenum target = PyLong_AsLong(args[0]);
     CHECK_UNEXPECTED_PYTHON_ERROR();
@@ -576,6 +576,22 @@ set_gl_texture_target_filters(PyObject *module, PyObject **args, Py_ssize_t narg
 
     glTexParameteri(target, GL_TEXTURE_MAG_FILTER, mag_filter);
     CHECK_GL_ERROR();
+
+    for (size_t i = 0; i < 3; i++)
+    {
+        static const GLenum wrap_target[] = {
+            GL_TEXTURE_WRAP_S,
+            GL_TEXTURE_WRAP_T,
+            GL_TEXTURE_WRAP_R
+        };
+        PyObject *py_wrap = args[3 + i];
+        if (i > 0 && py_wrap == Py_None){ break; }
+        GLenum wrap = PyLong_AsLong(py_wrap);
+        CHECK_UNEXPECTED_PYTHON_ERROR();
+
+        glTexParameteri(target, wrap_target[i], wrap);
+        CHECK_GL_ERROR();
+    }
 
     Py_RETURN_NONE;
 error:
@@ -604,7 +620,7 @@ static PyMethodDef module_PyMethodDef[] = {
     {"set_gl_texture_target", (PyCFunction)set_gl_texture_target, METH_FASTCALL, 0},
     {"set_gl_texture_target_2d_data", (PyCFunction)set_gl_texture_target_2d_data, METH_FASTCALL, 0},
     {"generate_gl_texture_target_mipmaps", generate_gl_texture_target_mipmaps, METH_O, 0},
-    {"set_gl_texture_target_filters", (PyCFunction)set_gl_texture_target_filters, METH_FASTCALL, 0},
+    {"set_gl_texture_target_parameters", (PyCFunction)set_gl_texture_target_parameters, METH_FASTCALL, 0},
     {0},
 };
 
@@ -690,7 +706,6 @@ PyInit__egraphics()
     ADD_ALIAS("GlTextureFilter", PyLong_Type);
     ADD_ALIAS("GlTextureTarget", PyLong_Type);
     ADD_ALIAS("GlTexturWrap", PyLong_Type);
-    ADD_ALIAS("GlTextureWrapAxis", PyLong_Type);
 
 #define ADD_CONSTANT(n)\
     {\
@@ -736,10 +751,6 @@ PyInit__egraphics()
     ADD_CONSTANT(GL_REPEAT);
     ADD_CONSTANT(GL_MIRRORED_REPEAT);
     ADD_CONSTANT(GL_MIRROR_CLAMP_TO_EDGE);
-
-    ADD_CONSTANT(GL_TEXTURE_WRAP_S);
-    ADD_CONSTANT(GL_TEXTURE_WRAP_T);
-    ADD_CONSTANT(GL_TEXTURE_WRAP_R);
 
     ADD_CONSTANT(GL_NEAREST);
     ADD_CONSTANT(GL_LINEAR);

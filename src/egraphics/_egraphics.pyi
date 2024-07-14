@@ -9,7 +9,6 @@ __all__ = [
     "GlTextureFilter",
     "GlTextureTarget",
     "GlTextureWrap",
-    "GlTextureWrapAxis",
     "GL_ARRAY_BUFFER",
     "GL_COPY_READ_BUFFER",
     "GL_ELEMENT_ARRAY_BUFFER",
@@ -84,7 +83,6 @@ GlTextureComponents = NewType("GlTextureComponents", int)
 GlTextureFilter = NewType("GlTextureFilter", int)
 GlTextureTarget = NewType("GlTextureTarget", int)
 GlTextureWrap = NewType("GlTextureWrap", int)
-GlTextureWrapAxis = NewType("GlTextureWrapAxis", int)
 
 GL_ARRAY_BUFFER: GlBufferTarget
 GL_COPY_READ_BUFFER: GlBufferTarget
@@ -119,10 +117,6 @@ GL_CLAMP_TO_BORDER: GlTextureWrap
 GL_REPEAT: GlTextureWrap
 GL_MIRRORED_REPEAT: GlTextureWrap
 GL_MIRROR_CLAMP_TO_EDGE: GlTextureWrap
-
-GL_TEXTURE_WRAP_S: GlTextureWrapAxis
-GL_TEXTURE_WRAP_T: GlTextureWrapAxis
-GL_TEXTURE_WRAP_R: GlTextureWrapAxis
 
 GL_NEAREST: GlTextureFilter
 GL_LINEAR: GlTextureFilter
@@ -170,6 +164,12 @@ def set_gl_texture_target_2d_data(
     /,
 ) -> None: ...
 def generate_gl_texture_target_mipmaps(target: GlTextureTarget, /) -> None: ...
-def set_gl_texture_target_filters(
-    target: GlTextureTarget, min_filter: GlTextureFilter, mag_filter: GlTextureFilter, /
+def set_gl_texture_target_parameters(
+    target: GlTextureTarget,
+    min_filter: GlTextureFilter,
+    mag_filter: GlTextureFilter,
+    wrap_s: GlTextureWrap,
+    wrap_t: GlTextureWrap | None,
+    wrap_r: GlTextureWrap | None,
+    /,
 ) -> None: ...
