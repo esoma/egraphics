@@ -12,6 +12,10 @@ __all__ = [
 ]
 
 # egraphics
+from ._egraphics import GL_RED
+from ._egraphics import GL_RG
+from ._egraphics import GL_RGB
+from ._egraphics import GL_RGBA
 from ._egraphics import GL_TEXTURE_2D
 from ._egraphics import set_active_gl_texture_unit
 from ._egraphics import set_gl_texture_target
@@ -131,10 +135,10 @@ class TextureType(Enum):
 
 
 class TextureComponents(Enum):
-    R = OpenGL.GL.GL_RED
-    RG = OpenGL.GL.GL_RG
-    RGB = OpenGL.GL.GL_RGB
-    RGBA = OpenGL.GL.GL_RGBA
+    R = GL_RED
+    RG = GL_RG
+    RGB = GL_RGB
+    RGBA = GL_RGBA
 
 
 class TextureWrap(Enum):

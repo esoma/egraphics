@@ -5,6 +5,7 @@ __all__ = [
     "GlVertexArray",
     "GlType",
     "GlTexture",
+    "GlTextureComponents",
     "GlTextureTarget",
     "GL_ARRAY_BUFFER",
     "GL_COPY_READ_BUFFER",
@@ -18,6 +19,10 @@ __all__ = [
     "GL_DYNAMIC_DRAW",
     "GL_DYNAMIC_READ",
     "GL_DYNAMIC_COPY",
+    "GL_RED",
+    "GL_RG",
+    "GL_RGB",
+    "GL_RGBA",
     "GL_TEXTURE_2D",
     "activate_gl_vertex_array",
     "set_gl_buffer_target",
@@ -55,6 +60,7 @@ GlBufferUsage = NewType("GlBufferUsage", int)
 GlVertexArray = NewType("GlVertexArray", int)
 GlType = NewType("GlType", int)
 GlTexture = NewType("GlTexture", int)
+GlTextureComponents = NewType("GlTextureComponents", int)
 GlTextureTarget = NewType("GlTextureTarget", int)
 
 GL_ARRAY_BUFFER: GlBufferTarget
@@ -79,6 +85,11 @@ GL_SHORT: GlType
 GL_UNSIGNED_SHORT: GlType
 GL_INT: GlType
 GL_UNSIGNED_INT: GlType
+
+GL_RED: GlTextureComponents
+GL_RG: GlTextureComponents
+GL_RGB: GlTextureComponents
+GL_RGBA: GlTextureComponents
 
 GL_TEXTURE_2D: GlTextureTarget
 

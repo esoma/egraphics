@@ -553,6 +553,7 @@ PyInit__egraphics()
     ADD_ALIAS("GlVertexArray", PyLong_Type);
     ADD_ALIAS("GlType", PyLong_Type);
     ADD_ALIAS("GlTexture", PyLong_Type);
+    ADD_ALIAS("GlTextureComponents", PyLong_Type);
     ADD_ALIAS("GlTextureTarget", PyLong_Type);
 
 #define ADD_CONSTANT(n)\
@@ -588,6 +589,11 @@ PyInit__egraphics()
     ADD_CONSTANT(GL_UNSIGNED_SHORT);
     ADD_CONSTANT(GL_INT);
     ADD_CONSTANT(GL_UNSIGNED_INT);
+
+    ADD_CONSTANT(GL_RED);
+    ADD_CONSTANT(GL_RG);
+    ADD_CONSTANT(GL_RGB);
+    ADD_CONSTANT(GL_RGBA);
 
     ADD_CONSTANT(GL_TEXTURE_2D);
 
