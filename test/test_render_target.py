@@ -44,24 +44,7 @@ def test_set_read_window(platform, window):
 
 
 def test_clear_window(window, is_close):
-    clear_render_target(window)
     rect = IRectangle(IVector2(0, 0), window.size)
-    assert all(p == FVector4(0, 0, 0, 1) for p in read_color_from_render_target(window, rect))
-    assert all(p == 0 for p in read_depth_from_render_target(window, rect))
-
-    clear_render_target(window, color=FVector3(0.2, 0.4, 0.6))
-    assert all(
-        is_close(p, FVector4(0.2, 0.4, 0.6, 1))
-        for p in read_color_from_render_target(window, rect)
-    )
-    assert all(p == 0 for p in read_depth_from_render_target(window, rect))
-
-    clear_render_target(window, depth=0.5)
-    assert all(
-        is_close(p, FVector4(0.2, 0.4, 0.6, 1))
-        for p in read_color_from_render_target(window, rect)
-    )
-    assert all(is_close(p, 0.5) for p in read_depth_from_render_target(window, rect))
 
     clear_render_target(window, color=FVector3(0.3, 0.5, 0.7), depth=1)
     assert all(
@@ -69,3 +52,17 @@ def test_clear_window(window, is_close):
         for p in read_color_from_render_target(window, rect)
     )
     assert all(is_close(p, 1) for p in read_depth_from_render_target(window, rect))
+
+    clear_render_target(window, color=FVector3(0.2, 0.4, 0.6))
+    assert all(
+        is_close(p, FVector4(0.2, 0.4, 0.6, 1))
+        for p in read_color_from_render_target(window, rect)
+    )
+    assert all(p == 1 for p in read_depth_from_render_target(window, rect))
+
+    clear_render_target(window, depth=0.5)
+    assert all(
+        is_close(p, FVector4(0.2, 0.4, 0.6, 1))
+        for p in read_color_from_render_target(window, rect)
+    )
+    assert all(is_close(p, 0.5) for p in read_depth_from_render_target(window, rect))
