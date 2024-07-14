@@ -542,6 +542,20 @@ error:
     return 0;
 }
 
+static PyObject *
+generate_gl_texture_target_mipmaps(PyObject *module, PyObject *py_target)
+{
+    GLenum target = PyLong_AsLong(py_target);
+    CHECK_UNEXPECTED_PYTHON_ERROR();
+
+    glGenerateMipmap(target);
+    CHECK_GL_ERROR();
+
+    Py_RETURN_NONE;
+error:
+    return 0;
+}
+
 static PyMethodDef module_PyMethodDef[] = {
     {"reset_module_state", reset_module_state, METH_NOARGS, 0},
     {"activate_gl_vertex_array", activate_gl_vertex_array, METH_O, 0},
@@ -563,6 +577,7 @@ static PyMethodDef module_PyMethodDef[] = {
     {"set_active_gl_texture_unit", set_active_gl_texture_unit, METH_O, 0},
     {"set_gl_texture_target", (PyCFunction)set_gl_texture_target, METH_FASTCALL, 0},
     {"set_gl_texture_target_2d_data", (PyCFunction)set_gl_texture_target_2d_data, METH_FASTCALL, 0},
+    {"generate_gl_texture_target_mipmaps", generate_gl_texture_target_mipmaps, METH_O, 0},
     {0},
 };
 

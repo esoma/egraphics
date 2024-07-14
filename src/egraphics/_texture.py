@@ -43,6 +43,7 @@ from ._egraphics import GlTextureFilter
 from ._egraphics import GlType
 from ._egraphics import create_gl_texture
 from ._egraphics import delete_gl_texture
+from ._egraphics import generate_gl_texture_target_mipmaps
 from ._egraphics import set_active_gl_texture_unit
 from ._egraphics import set_gl_texture_target
 from ._egraphics import set_gl_texture_target_2d_data
@@ -62,7 +63,6 @@ from OpenGL.GL import GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS
 from OpenGL.GL import GL_TEXTURE_BORDER_COLOR
 from OpenGL.GL import GL_TEXTURE_MAG_FILTER
 from OpenGL.GL import GL_TEXTURE_MIN_FILTER
-from OpenGL.GL import glGenerateMipmap
 from OpenGL.GL import glGetIntegerv
 from OpenGL.GL import glTexParameterf
 from OpenGL.GL import glTexParameterfv
@@ -301,7 +301,7 @@ class Texture:
             # that would actually check the mipmaps
             self._mipmap_selection = mipmap_selection
             if mipmap_selection != MipmapSelection.NONE:
-                glGenerateMipmap(gl_target)
+                generate_gl_texture_target_mipmaps(gl_target)
             # set the min/max filter parameters
             self._minify_filter = minify_filter
             self._magnify_filter = magnify_filter

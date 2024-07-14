@@ -57,6 +57,7 @@ __all__ = [
     "set_active_gl_texture_unit",
     "set_gl_texture_target",
     "set_gl_texture_target_2d_data",
+    "generate_gl_texture_target_mipmaps",
 ]
 
 # egeometry
@@ -167,3 +168,4 @@ def set_gl_texture_target_2d_data(
     data: Buffer,
     /,
 ) -> None: ...
+def generate_gl_texture_target_mipmaps(target: GlTextureTarget) -> None: ...
