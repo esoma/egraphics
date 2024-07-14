@@ -37,6 +37,7 @@ __all__ = [
     "GL_LINEAR_MIPMAP_NEAREST",
     "GL_LINEAR_MIPMAP_LINEAR",
     "GL_TEXTURE_2D",
+    "GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS_VALUE",
     "activate_gl_vertex_array",
     "set_gl_buffer_target",
     "create_gl_buffer",
@@ -127,6 +128,8 @@ GL_LINEAR_MIPMAP_NEAREST: GlTextureFilter
 GL_LINEAR_MIPMAP_LINEAR: GlTextureFilter
 
 GL_TEXTURE_2D: GlTextureTarget
+
+GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS_VALUE: int
 
 def activate_gl_vertex_array(gl_vertex_array: GlVertexArray | None) -> None: ...
 def set_gl_buffer_target(target: GlBufferTarget, gl_buffer: GlBuffer | None, /) -> None: ...

@@ -366,7 +366,10 @@ class TextureTest:
                 glActiveTexture(GL_TEXTURE0 + unit_1)
 
     def test_steal_unit(self, platform, size):
-        with patch.object(Texture, "_get_max_unit", return_value=_FIRST_BINDABLE_TEXTURE_UNIT + 2):
+        with patch(
+            "egraphics._texture.GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS_VALUE",
+            _FIRST_BINDABLE_TEXTURE_UNIT + 2,
+        ):
             texture_1 = self.create_texture(
                 size,
                 TextureComponents.R,
@@ -407,7 +410,10 @@ class TextureTest:
                 assert texture_3._unit is None
 
     def test_out_of_units(self, platform, size):
-        with patch.object(Texture, "_get_max_unit", return_value=_FIRST_BINDABLE_TEXTURE_UNIT + 1):
+        with patch(
+            "egraphics._texture.GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS_VALUE",
+            _FIRST_BINDABLE_TEXTURE_UNIT + 1,
+        ):
             texture_1 = self.create_texture(
                 size,
                 TextureComponents.R,

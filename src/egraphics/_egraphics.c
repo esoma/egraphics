@@ -676,6 +676,7 @@ static struct PyModuleDef module_PyModuleDef = {
 PyMODINIT_FUNC
 PyInit__egraphics()
 {
+    GLint GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS_VALUE = 0;
     {
         PyObject *eplatform = PyImport_ImportModule("eplatform");
         if (!eplatform){ return 0; }
@@ -704,6 +705,11 @@ PyInit__egraphics()
             PyErr_SetString(PyExc_RuntimeError, glewGetErrorString(err));
             return 0;
         }
+
+        glGetIntegerv(
+            GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS,
+            &GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS_VALUE
+        );
 
         context = PyObject_CallMethod(platform, "__exit__", "");
         Py_XDECREF(context);
@@ -801,6 +807,8 @@ PyInit__egraphics()
     ADD_CONSTANT(GL_LINEAR_MIPMAP_LINEAR);
 
     ADD_CONSTANT(GL_TEXTURE_2D);
+
+    ADD_CONSTANT(GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS_VALUE);
 
     {
         PyObject *eplatform = PyImport_ImportModule("eplatform");

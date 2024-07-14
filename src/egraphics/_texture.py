@@ -20,6 +20,7 @@ from ._egraphics import GL_INT
 from ._egraphics import GL_LINEAR
 from ._egraphics import GL_LINEAR_MIPMAP_LINEAR
 from ._egraphics import GL_LINEAR_MIPMAP_NEAREST
+from ._egraphics import GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS_VALUE
 from ._egraphics import GL_MIRRORED_REPEAT
 from ._egraphics import GL_MIRROR_CLAMP_TO_EDGE
 from ._egraphics import GL_NEAREST
@@ -56,10 +57,6 @@ from emath import UVector2
 
 # eplatform
 from eplatform import Platform
-
-# pyopengl
-from OpenGL.GL import GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS
-from OpenGL.GL import glGetIntegerv
 
 # python
 from collections.abc import Buffer
@@ -320,8 +317,8 @@ class Texture:
         if self._open_units:
             self._unit = self._open_units.pop()
             return
-        assert self._next_unit <= self._get_max_unit()
-        if self._next_unit == self._get_max_unit():
+        assert self._next_unit <= GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS_VALUE
+        if self._next_unit == GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS_VALUE:
             self._steal_unit()
         else:
             self._unit = self._next_unit
@@ -363,12 +360,6 @@ class Texture:
     def _unbind(self) -> None:
         self._unbind_unit()
         self._type.value.target._unset_texture()
-
-    @classmethod
-    def _get_max_unit(cls) -> int:
-        if cls._max_unit is None:
-            cls._max_unit = glGetIntegerv(GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS)
-        return cls._max_unit
 
     def bind_unit(self) -> _TextureUnitBind:
         return _TextureUnitBind(self)
