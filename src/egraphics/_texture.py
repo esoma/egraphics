@@ -14,6 +14,7 @@ __all__ = [
 # egraphics
 from ._egraphics import GL_TEXTURE_2D
 from ._egraphics import set_active_gl_texture_unit
+from ._egraphics import set_gl_texture_target
 
 # egraphics
 from egraphics._weak_fifo_set import WeakFifoSet
@@ -31,7 +32,6 @@ from OpenGL.GL import GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS
 from OpenGL.GL import GL_TEXTURE_BORDER_COLOR
 from OpenGL.GL import GL_TEXTURE_MAG_FILTER
 from OpenGL.GL import GL_TEXTURE_MIN_FILTER
-from OpenGL.GL import glBindTexture
 from OpenGL.GL import glDeleteTextures
 from OpenGL.GL import glGenTextures
 from OpenGL.GL import glGenerateMipmap
@@ -99,7 +99,7 @@ class TextureTarget:
         if unit_texture is texture:
             return
 
-        glBindTexture(self._gl_target, texture._gl)
+        set_gl_texture_target(self._gl_target, texture._gl)
         self._unit_texture[unit] = ref(texture)
 
         if self._bound and unit_only:

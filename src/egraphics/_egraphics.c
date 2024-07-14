@@ -431,6 +431,29 @@ error:
     return 0;
 }
 
+static PyObject *
+set_gl_texture_target(PyObject *module, PyObject **args, Py_ssize_t nargs)
+{
+    CHECK_UNEXPECTED_ARG_COUNT_ERROR(2);
+
+    GLenum target = PyLong_AsLong(args[0]);
+    CHECK_UNEXPECTED_PYTHON_ERROR();
+
+    GLuint gl_texture = 0;
+    if (args[1] != Py_None)
+    {
+        gl_texture = PyLong_AsLong(args[1]);
+        CHECK_UNEXPECTED_PYTHON_ERROR();
+    }
+
+    glBindTexture(target, gl_texture);
+    CHECK_GL_ERROR();
+
+    Py_RETURN_NONE;
+error:
+    return 0;
+}
+
 static PyMethodDef module_PyMethodDef[] = {
     {"reset_module_state", reset_module_state, METH_NOARGS, 0},
     {"activate_gl_vertex_array", activate_gl_vertex_array, METH_O, 0},
@@ -448,6 +471,7 @@ static PyMethodDef module_PyMethodDef[] = {
     {"read_depth_from_framebuffer", read_depth_from_framebuffer, METH_O, 0},
     {"clear_framebuffer", (PyCFunction)clear_framebuffer, METH_FASTCALL, 0},
     {"set_active_gl_texture_unit", set_active_gl_texture_unit, METH_O, 0},
+    {"set_gl_texture_target", (PyCFunction)set_gl_texture_target, METH_FASTCALL, 0},
     {0},
 };
 
@@ -528,6 +552,7 @@ PyInit__egraphics()
     ADD_ALIAS("GlBufferUsage", PyLong_Type);
     ADD_ALIAS("GlVertexArray", PyLong_Type);
     ADD_ALIAS("GlType", PyLong_Type);
+    ADD_ALIAS("GlTexture", PyLong_Type);
     ADD_ALIAS("GlTextureTarget", PyLong_Type);
 
 #define ADD_CONSTANT(n)\

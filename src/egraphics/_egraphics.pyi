@@ -4,6 +4,8 @@ __all__ = [
     "GlBufferUsage",
     "GlVertexArray",
     "GlType",
+    "GlTexture",
+    "GlTextureTarget",
     "GL_ARRAY_BUFFER",
     "GL_COPY_READ_BUFFER",
     "GL_ELEMENT_ARRAY_BUFFER",
@@ -32,6 +34,7 @@ __all__ = [
     "read_depth_from_framebuffer",
     "clear_framebuffer",
     "set_active_gl_texture_unit",
+    "set_gl_texture_target",
 ]
 
 # egeometry
@@ -51,6 +54,7 @@ GlBufferTarget = NewType("GlBufferTarget", int)
 GlBufferUsage = NewType("GlBufferUsage", int)
 GlVertexArray = NewType("GlVertexArray", int)
 GlType = NewType("GlType", int)
+GlTexture = NewType("GlTexture", int)
 GlTextureTarget = NewType("GlTextureTarget", int)
 
 GL_ARRAY_BUFFER: GlBufferTarget
@@ -103,3 +107,4 @@ def read_color_from_framebuffer(rect: IRectangle, /) -> FVector4Array: ...
 def read_depth_from_framebuffer(rect: IRectangle, /) -> FArray: ...
 def clear_framebuffer(color: FVector3 | None, depth: float | None, /) -> None: ...
 def set_active_gl_texture_unit(unit: int, /) -> None: ...
+def set_gl_texture_target(target: GlTextureTarget, gl_texture: GlTexture | None, /) -> None: ...
