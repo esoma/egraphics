@@ -12,8 +12,11 @@ __all__ = [
 ]
 
 # egraphics
+from ._egraphics import GL_BYTE
 from ._egraphics import GL_CLAMP_TO_BORDER
 from ._egraphics import GL_CLAMP_TO_EDGE
+from ._egraphics import GL_FLOAT
+from ._egraphics import GL_INT
 from ._egraphics import GL_MIRRORED_REPEAT
 from ._egraphics import GL_MIRROR_CLAMP_TO_EDGE
 from ._egraphics import GL_RED
@@ -21,10 +24,15 @@ from ._egraphics import GL_REPEAT
 from ._egraphics import GL_RG
 from ._egraphics import GL_RGB
 from ._egraphics import GL_RGBA
+from ._egraphics import GL_SHORT
 from ._egraphics import GL_TEXTURE_2D
 from ._egraphics import GL_TEXTURE_WRAP_R
 from ._egraphics import GL_TEXTURE_WRAP_S
 from ._egraphics import GL_TEXTURE_WRAP_T
+from ._egraphics import GL_UNSIGNED_BYTE
+from ._egraphics import GL_UNSIGNED_INT
+from ._egraphics import GL_UNSIGNED_SHORT
+from ._egraphics import GlType
 from ._egraphics import set_active_gl_texture_unit
 from ._egraphics import set_gl_texture_target
 
@@ -184,14 +192,14 @@ _GL_TEXTURE_WRAP_NAMES: Final = (
     GL_TEXTURE_WRAP_R,
 )
 
-_TEXTURE_DATA_TYPE_TO_GL_DATA_TYPE: Final[Mapping[type[TextureDataType], Any]] = {
-    ctypes.c_uint8: OpenGL.GL.GL_UNSIGNED_BYTE,
-    ctypes.c_int8: OpenGL.GL.GL_BYTE,
-    ctypes.c_uint16: OpenGL.GL.GL_UNSIGNED_SHORT,
-    ctypes.c_int16: OpenGL.GL.GL_SHORT,
-    ctypes.c_uint32: OpenGL.GL.GL_UNSIGNED_INT,
-    ctypes.c_int32: OpenGL.GL.GL_INT,
-    ctypes.c_float: OpenGL.GL.GL_FLOAT,
+_TEXTURE_DATA_TYPE_TO_GL_DATA_TYPE: Final[Mapping[type[TextureDataType], GlType]] = {
+    ctypes.c_uint8: GL_UNSIGNED_BYTE,
+    ctypes.c_int8: GL_BYTE,
+    ctypes.c_uint16: GL_UNSIGNED_SHORT,
+    ctypes.c_int16: GL_SHORT,
+    ctypes.c_uint32: GL_UNSIGNED_INT,
+    ctypes.c_int32: GL_INT,
+    ctypes.c_float: GL_FLOAT,
 }
 
 _TEXTURE_COMPONENTS_COUNT: Final[Mapping[TextureComponents, int]] = {
