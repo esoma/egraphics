@@ -313,6 +313,7 @@ error:
 static PyObject *
 read_color_from_framebuffer(PyObject *module, PyObject *rect)
 {
+    PyObject *ex = 0;
     struct EMathApi *emath_api = 0;
 
     PyObject *py_position = PyObject_GetAttrString(rect, "position");
@@ -346,7 +347,7 @@ read_color_from_framebuffer(PyObject *module, PyObject *rect)
     EMathApi_Release();
     return array;
 error:
-    PyObject *ex = PyErr_GetRaisedException();
+    ex = PyErr_GetRaisedException();
     if (emath_api){ EMathApi_Release(); }
     PyErr_SetRaisedException(ex);
     return 0;
@@ -355,6 +356,7 @@ error:
 static PyObject *
 read_depth_from_framebuffer(PyObject *module, PyObject *rect)
 {
+    PyObject *ex = 0;
     struct EMathApi *emath_api = 0;
 
     PyObject *py_position = PyObject_GetAttrString(rect, "position");
@@ -388,7 +390,7 @@ read_depth_from_framebuffer(PyObject *module, PyObject *rect)
     EMathApi_Release();
     return array;
 error:
-    PyObject *ex = PyErr_GetRaisedException();
+    ex = PyErr_GetRaisedException();
     if (emath_api){ EMathApi_Release(); }
     PyErr_SetRaisedException(ex);
     return 0;
@@ -397,6 +399,7 @@ error:
 static PyObject *
 clear_framebuffer(PyObject *module, PyObject **args, Py_ssize_t nargs)
 {
+    PyObject *ex = 0;
     struct EMathApi *emath_api = 0;
 
     CHECK_UNEXPECTED_ARG_COUNT_ERROR(2);
@@ -447,7 +450,7 @@ clear_framebuffer(PyObject *module, PyObject **args, Py_ssize_t nargs)
     }
     Py_RETURN_NONE;
 error:
-    PyObject *ex = PyErr_GetRaisedException();
+    ex = PyErr_GetRaisedException();
     if (emath_api){ EMathApi_Release(); }
     PyErr_SetRaisedException(ex);
     return 0;
@@ -493,6 +496,7 @@ error:
 static PyObject *
 set_gl_texture_target_2d_data(PyObject *module, PyObject **args, Py_ssize_t nargs)
 {
+    PyObject *ex = 0;
     struct EMathApi *emath_api = 0;
 
     CHECK_UNEXPECTED_ARG_COUNT_ERROR(5);
@@ -546,7 +550,7 @@ set_gl_texture_target_2d_data(PyObject *module, PyObject **args, Py_ssize_t narg
 
     Py_RETURN_NONE;
 error:
-    PyObject *ex = PyErr_GetRaisedException();
+    ex = PyErr_GetRaisedException();
     if (emath_api){ EMathApi_Release(); }
     PyErr_SetRaisedException(ex);
     return 0;
@@ -570,6 +574,7 @@ error:
 static PyObject *
 set_gl_texture_target_parameters(PyObject *module, PyObject **args, Py_ssize_t nargs)
 {
+    PyObject *ex = 0;
     struct EMathApi *emath_api = 0;
 
     ModuleState *state = (ModuleState *)PyModule_GetState(module);
@@ -633,7 +638,7 @@ set_gl_texture_target_parameters(PyObject *module, PyObject **args, Py_ssize_t n
 
     Py_RETURN_NONE;
 error:
-    PyObject *ex = PyErr_GetRaisedException();
+    ex = PyErr_GetRaisedException();
     if (emath_api){ EMathApi_Release(); }
     PyErr_SetRaisedException(ex);
     return 0;
