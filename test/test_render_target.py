@@ -68,9 +68,9 @@ def test_read_color_from_window(window, size):
 
 @pytest.mark.parametrize("size", [IVector2(1, 1), IVector2(2, 2)])
 def test_read_depth_from_window(window, size):
-    colors = read_depth_from_render_target(window, IRectangle(IVector2(0, 0), size))
-    assert isinstance(colors, FArray)
-    assert colors == FArray(*[-1] * size.x * size.y)
+    depths = read_depth_from_render_target(window, IRectangle(IVector2(0, 0), size))
+    assert isinstance(depths, FArray)
+    assert depths == FArray(*[0] * size.x * size.y)
 
 
 @patch("egraphics._render_target.set_draw_render_target")
@@ -86,7 +86,7 @@ def test_clear_render_target_defaults(glClear, set_draw_render_target, platform)
 @patch("egraphics._render_target.glClearColor")
 @patch("egraphics._render_target.glClearDepthf")
 @pytest.mark.parametrize("color", [None, FVector3(1, 2, 3), FVector3(0)])
-@pytest.mark.parametrize("depth, expected_depth", [(None, None), (1, 1), (0, 0.5), (-1, 0)])
+@pytest.mark.parametrize("depth, expected_depth", [(None, None), (1, 1), (0.5, 0.5), (0, 0)])
 def test_clear_render_target(
     glClearDepthf,
     glClearColor,
@@ -154,14 +154,14 @@ def test_clear_window(window, is_close):
     clear_render_target(window)
     rect = IRectangle(IVector2(0, 0), window.size)
     assert all(p == FVector4(0, 0, 0, 1) for p in read_color_from_render_target(window, rect))
-    assert all(p == -1 for p in read_depth_from_render_target(window, rect))
+    assert all(p == 0 for p in read_depth_from_render_target(window, rect))
 
     clear_render_target(window, color=FVector3(0.2, 0.4, 0.6))
     assert all(
         is_close(p, FVector4(0.2, 0.4, 0.6, 1))
         for p in read_color_from_render_target(window, rect)
     )
-    assert all(p == -1 for p in read_depth_from_render_target(window, rect))
+    assert all(p == 0 for p in read_depth_from_render_target(window, rect))
 
     clear_render_target(window, depth=0.5)
     assert all(

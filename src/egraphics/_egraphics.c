@@ -5,17 +5,19 @@
 #include <Python.h>
 #include <stdio.h>
 
+#include "emath.h"
+
 #define CHECK_UNEXPECTED_ARG_COUNT_ERROR(expected_count)\
     if (expected_count != nargs)\
     {\
         PyErr_Format(PyExc_TypeError, "expected %z args, got %z", expected_count, nargs);\
-        return 0;\
+        goto error;\
     }
 
 #define CHECK_UNEXPECTED_PYTHON_ERROR()\
     if (PyErr_Occurred())\
     {\
-        return 0;\
+        goto error;\
     }
 
 #define CHECK_GL_ERROR()\
@@ -24,7 +26,7 @@
         if (gl_error != GL_NO_ERROR)\
         {\
             PyErr_Format(PyExc_RuntimeError, "gl error: %s", gluErrorString(gl_error));\
-            return 0;\
+            goto error;\
         }\
     }
 
@@ -42,6 +44,8 @@ activate_gl_vertex_array(PyObject *module, PyObject *py_gl_vertex_array)
     CHECK_GL_ERROR();
 
     Py_RETURN_NONE;
+error:
+    return 0;
 }
 
 static PyObject *
@@ -63,6 +67,8 @@ set_gl_buffer_target(PyObject *module, PyObject **args, Py_ssize_t nargs)
     CHECK_GL_ERROR();
 
     Py_RETURN_NONE;
+error:
+    return 0;
 }
 
 static PyObject *
@@ -74,6 +80,8 @@ create_gl_buffer(PyObject *module, PyObject *unused)
     CHECK_GL_ERROR();
 
     return PyLong_FromUnsignedLong(gl_buffer);
+error:
+    return 0;
 }
 
 static PyObject *
@@ -85,6 +93,8 @@ create_gl_vertex_array(PyObject *module, PyObject *unused)
     CHECK_GL_ERROR();
 
     return PyLong_FromUnsignedLong(gl_vertex_array);
+error:
+    return 0;
 }
 
 static PyObject *
@@ -96,6 +106,8 @@ delete_gl_buffer(PyObject *module, PyObject *py_gl_buffer)
     glDeleteBuffers(1, &gl_buffer);
 
     Py_RETURN_NONE;
+error:
+    return 0;
 }
 
 static PyObject *
@@ -107,6 +119,8 @@ delete_gl_vertex_array(PyObject *module, PyObject *py_gl_vertex_array)
     glDeleteVertexArrays(1, &gl_vertex_array);
 
     Py_RETURN_NONE;
+error:
+    return 0;
 }
 
 static PyObject *
@@ -130,7 +144,7 @@ set_gl_buffer_target_data(PyObject *module, PyObject **args, Py_ssize_t nargs)
         if (length < 0)
         {
             PyErr_Format(PyExc_ValueError, "data must be 0 or more");
-            return 0;
+            goto error;
         }
         buffer.len = length;
         buffer.buf = 0;
@@ -150,6 +164,8 @@ set_gl_buffer_target_data(PyObject *module, PyObject **args, Py_ssize_t nargs)
     CHECK_GL_ERROR();
 
     return PyLong_FromSsize_t(buffer.len);
+error:
+    return 0;
 }
 
 static PyObject *
@@ -166,10 +182,12 @@ create_gl_buffer_memory_view(PyObject *module, PyObject *py_length)
     {
         glUnmapBuffer(GL_COPY_READ_BUFFER);
         CHECK_GL_ERROR();
-        return 0;
+        goto error;
     }
 
     return memory_view;
+error:
+    return 0;
 }
 
 static PyObject *
@@ -178,6 +196,8 @@ release_gl_copy_read_buffer_memory_view(PyObject *module, PyObject *unused)
     glUnmapBuffer(GL_COPY_READ_BUFFER);
     CHECK_GL_ERROR();
     Py_RETURN_NONE;
+error:
+    return 0;
 }
 
 static PyObject *
@@ -217,6 +237,8 @@ configure_gl_vertex_array_location(PyObject *module, PyObject **args, Py_ssize_t
     }
 
     Py_RETURN_NONE;
+error:
+    return 0;
 }
 
 static PyObject *
@@ -226,6 +248,88 @@ set_read_framebuffer(PyObject *module, PyObject *unused)
     CHECK_GL_ERROR();
 
     Py_RETURN_NONE;
+error:
+    return 0;
+}
+
+static PyObject *
+read_color_from_framebuffer(PyObject *module, PyObject *rect)
+{
+    struct EMathApi *emath_api = 0;
+
+    PyObject *py_position = PyObject_GetAttrString(rect, "position");
+    CHECK_UNEXPECTED_PYTHON_ERROR();
+
+    PyObject *py_size = PyObject_GetAttrString(rect, "size");
+    CHECK_UNEXPECTED_PYTHON_ERROR();
+
+    emath_api = EMathApi_Get();
+    CHECK_UNEXPECTED_PYTHON_ERROR();
+
+    const int *position = emath_api->IVector2_GetValuePointer(py_position);
+    CHECK_UNEXPECTED_PYTHON_ERROR();
+
+    const int *size = emath_api->IVector2_GetValuePointer(py_size);
+    CHECK_UNEXPECTED_PYTHON_ERROR();
+
+    size_t count = (size_t)size[0] * (size_t)size[1];
+    float *data = malloc(sizeof(float) * 4 * count);
+    if (!data)
+    {
+        PyErr_Format(PyExc_MemoryError, "out of memory");
+        goto error;
+    }
+
+    glReadPixels(position[0], position[1], size[0], size[1], GL_RGBA, GL_FLOAT, data);
+    CHECK_GL_ERROR();
+
+    PyObject *array = emath_api->FVector4Array_Create(count, data);
+    free(data);
+    EMathApi_Release();
+    return array;
+error:
+    if (emath_api){ EMathApi_Release(); }
+    return 0;
+}
+
+static PyObject *
+read_depth_from_framebuffer(PyObject *module, PyObject *rect)
+{
+    struct EMathApi *emath_api = 0;
+
+    PyObject *py_position = PyObject_GetAttrString(rect, "position");
+    CHECK_UNEXPECTED_PYTHON_ERROR();
+
+    PyObject *py_size = PyObject_GetAttrString(rect, "size");
+    CHECK_UNEXPECTED_PYTHON_ERROR();
+
+    emath_api = EMathApi_Get();
+    CHECK_UNEXPECTED_PYTHON_ERROR();
+
+    const int *position = emath_api->IVector2_GetValuePointer(py_position);
+    CHECK_UNEXPECTED_PYTHON_ERROR();
+
+    const int *size = emath_api->IVector2_GetValuePointer(py_size);
+    CHECK_UNEXPECTED_PYTHON_ERROR();
+
+    size_t count = (size_t)size[0] * (size_t)size[1];
+    float *data = malloc(sizeof(float) * count);
+    if (!data)
+    {
+        PyErr_Format(PyExc_MemoryError, "out of memory");
+        goto error;
+    }
+
+    glReadPixels(position[0], position[1], size[0], size[1], GL_DEPTH_COMPONENT, GL_FLOAT, data);
+    CHECK_GL_ERROR();
+
+    PyObject *array = emath_api->FArray_Create(count, data);
+    free(data);
+    EMathApi_Release();
+    return array;
+error:
+    if (emath_api){ EMathApi_Release(); }
+    return 0;
 }
 
 static PyMethodDef module_PyMethodDef[] = {
@@ -240,6 +344,8 @@ static PyMethodDef module_PyMethodDef[] = {
     {"release_gl_copy_read_buffer_memory_view", release_gl_copy_read_buffer_memory_view, METH_NOARGS, 0},
     {"configure_gl_vertex_array_location", (PyCFunction)configure_gl_vertex_array_location, METH_FASTCALL, 0},
     {"set_read_framebuffer", set_read_framebuffer, METH_NOARGS, 0},
+    {"read_color_from_framebuffer", read_color_from_framebuffer, METH_O, 0},
+    {"read_depth_from_framebuffer", read_depth_from_framebuffer, METH_O, 0},
     {0},
 };
 

@@ -1,0 +1,3 @@
+[submodule "vendor/emath"]
+	path = vendor/emath
+	url = https://github.com/esoma/emath.git

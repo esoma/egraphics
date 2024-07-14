@@ -27,7 +27,16 @@ __all__ = [
     "release_gl_copy_read_buffer_memory_view",
     "configure_gl_vertex_array_location",
     "set_read_framebuffer",
+    "read_color_from_framebuffer",
+    "read_depth_from_framebuffer",
 ]
+
+# egeometry
+from egeometry import IRectangle
+
+# emath
+from emath import FArray
+from emath import FVector4Array
 
 # python
 from collections.abc import Buffer
@@ -83,3 +92,5 @@ def configure_gl_vertex_array_location(
     /,
 ) -> None: ...
 def set_read_framebuffer() -> None: ...
+def read_color_from_framebuffer(rect: IRectangle, /) -> FVector4Array: ...
+def read_depth_from_framebuffer(rect: IRectangle, /) -> FArray: ...

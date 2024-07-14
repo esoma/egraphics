@@ -9,7 +9,8 @@ __all__ = [
 
 
 # egraphics
-from ._egraphics import GL_FLOAT
+from ._egraphics import read_color_from_framebuffer
+from ._egraphics import read_depth_from_framebuffer
 from ._egraphics import set_read_framebuffer
 
 # egeometry
@@ -28,12 +29,9 @@ from eplatform import set_draw_render_target
 # pyopengl
 from OpenGL.GL import GL_COLOR_BUFFER_BIT
 from OpenGL.GL import GL_DEPTH_BUFFER_BIT
-from OpenGL.GL import GL_DEPTH_COMPONENT
-from OpenGL.GL import GL_RGBA
 from OpenGL.GL import glClear
 from OpenGL.GL import glClearColor
 from OpenGL.GL import glClearDepthf
-from OpenGL.GL import glReadPixels
 
 _read_render_target: RenderTarget | None = None
 _clear_color: FVector3 | None = None
@@ -60,14 +58,12 @@ def set_read_render_target(render_target: RenderTarget) -> None:
 
 def read_color_from_render_target(render_target: RenderTarget, rect: IRectangle) -> FVector4Array:
     set_read_render_target(render_target)
-    array = glReadPixels(*rect.position, *rect.size, GL_RGBA, GL_FLOAT)
-    return FVector4Array.from_buffer(array)
+    return read_color_from_framebuffer(rect)
 
 
 def read_depth_from_render_target(render_target: RenderTarget, rect: IRectangle) -> FArray:
     set_read_render_target(render_target)
-    array = glReadPixels(*rect.position, *rect.size, GL_DEPTH_COMPONENT, GL_FLOAT)
-    return FArray(*(((d * 2) - 1) for row in array for d in row))
+    return read_depth_from_framebuffer(rect)
 
 
 def clear_render_target(
@@ -83,7 +79,7 @@ def clear_render_target(
         mask |= GL_COLOR_BUFFER_BIT
     if depth is not None:
         if _clear_depth != depth:
-            glClearDepthf((depth + 1) * 0.5)
+            glClearDepthf(depth)
             _clear_depth = depth
         mask |= GL_DEPTH_BUFFER_BIT
     if not mask:

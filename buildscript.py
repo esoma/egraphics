@@ -35,7 +35,7 @@ else:
 _egraphics = Extension(
     "egraphics._egraphics",
     libraries=libraries,
-    include_dirs=["src/egraphics", "vendor/glew/include"],
+    include_dirs=["src/egraphics", "vendor/glew/include", "vendor/emath/include"],
     sources=["src/egraphics/_egraphics.c", "vendor/glew/src/glew.c"],
     extra_compile_args=_coverage_compile_args,
     extra_link_args=_coverage_links_args + extra_link_args,
