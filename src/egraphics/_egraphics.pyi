@@ -26,6 +26,7 @@ __all__ = [
     "create_gl_copy_read_buffer_memory_view",
     "release_gl_copy_read_buffer_memory_view",
     "configure_gl_vertex_array_location",
+    "set_read_framebuffer",
 ]
 
 # python
@@ -81,3 +82,4 @@ def configure_gl_vertex_array_location(
     instancing_divistor: int | None,
     /,
 ) -> None: ...
+def set_read_framebuffer() -> None: ...

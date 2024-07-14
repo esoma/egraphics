@@ -21,7 +21,8 @@ from eplatform import Platform
 # pyopengl
 from OpenGL.GL import GL_COLOR_BUFFER_BIT
 from OpenGL.GL import GL_DEPTH_BUFFER_BIT
-from OpenGL.GL import GL_READ_FRAMEBUFFER
+from OpenGL.GL import GL_READ_FRAMEBUFFER_BINDING
+from OpenGL.GL import glGetIntegerv
 
 # pytest
 import pytest
@@ -49,32 +50,25 @@ def test_reset_state():
     assert egraphics._render_target._clear_depth is None
 
 
-@patch("egraphics._render_target.glBindFramebuffer")
-def test_set_read_window(glBindFramebuffer, platform, window):
+def test_set_read_window(platform, window):
     set_read_render_target(window)
     assert egraphics._render_target._read_render_target is window
-    glBindFramebuffer.assert_called_once_with(GL_READ_FRAMEBUFFER, 0)
+    assert glGetIntegerv(GL_READ_FRAMEBUFFER_BINDING) == 0
 
-    glBindFramebuffer.reset_mock()
     set_read_render_target(window)
-    assert egraphics._render_target._read_render_target is window
-    glBindFramebuffer.assert_not_called()
+    assert glGetIntegerv(GL_READ_FRAMEBUFFER_BINDING) == 0
 
 
-@patch("egraphics._render_target.set_read_render_target", spec=True)
 @pytest.mark.parametrize("size", [IVector2(1, 1), IVector2(2, 2)])
-def test_read_color_from_window(set_read_render_target, window, size):
+def test_read_color_from_window(window, size):
     colors = read_color_from_render_target(window, IRectangle(IVector2(0, 0), size))
-    set_read_render_target.assert_called_once_with(window)
     assert isinstance(colors, FVector4Array)
     assert colors == FVector4Array(*[FVector4(0, 0, 0, 1)] * size.x * size.y)
 
 
-@patch("egraphics._render_target.set_read_render_target", spec=True)
 @pytest.mark.parametrize("size", [IVector2(1, 1), IVector2(2, 2)])
-def test_read_depth_from_window(set_read_render_target, window, size):
+def test_read_depth_from_window(window, size):
     colors = read_depth_from_render_target(window, IRectangle(IVector2(0, 0), size))
-    set_read_render_target.assert_called_once_with(window)
     assert isinstance(colors, FArray)
     assert colors == FArray(*[-1] * size.x * size.y)
 

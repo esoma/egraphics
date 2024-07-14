@@ -8,6 +8,10 @@ __all__ = [
 ]
 
 
+# egraphics
+from ._egraphics import GL_FLOAT
+from ._egraphics import set_read_framebuffer
+
 # egeometry
 from egeometry import IRectangle
 
@@ -25,10 +29,7 @@ from eplatform import set_draw_render_target
 from OpenGL.GL import GL_COLOR_BUFFER_BIT
 from OpenGL.GL import GL_DEPTH_BUFFER_BIT
 from OpenGL.GL import GL_DEPTH_COMPONENT
-from OpenGL.GL import GL_FLOAT
-from OpenGL.GL import GL_READ_FRAMEBUFFER
 from OpenGL.GL import GL_RGBA
-from OpenGL.GL import glBindFramebuffer
 from OpenGL.GL import glClear
 from OpenGL.GL import glClearColor
 from OpenGL.GL import glClearDepthf
@@ -53,7 +54,7 @@ def set_read_render_target(render_target: RenderTarget) -> None:
     global _read_render_target
     if _read_render_target is render_target:
         return
-    glBindFramebuffer(GL_READ_FRAMEBUFFER, 0)
+    set_read_framebuffer()
     _read_render_target = render_target
 
 

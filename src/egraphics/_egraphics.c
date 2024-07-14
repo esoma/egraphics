@@ -219,6 +219,15 @@ configure_gl_vertex_array_location(PyObject *module, PyObject **args, Py_ssize_t
     Py_RETURN_NONE;
 }
 
+static PyObject *
+set_read_framebuffer(PyObject *module, PyObject *unused)
+{
+    glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
+    CHECK_GL_ERROR();
+
+    Py_RETURN_NONE;
+}
+
 static PyMethodDef module_PyMethodDef[] = {
     {"activate_gl_vertex_array", activate_gl_vertex_array, METH_O, 0},
     {"create_gl_buffer", create_gl_buffer, METH_NOARGS, 0},
@@ -230,6 +239,7 @@ static PyMethodDef module_PyMethodDef[] = {
     {"create_gl_copy_read_buffer_memory_view", create_gl_buffer_memory_view, METH_O, 0},
     {"release_gl_copy_read_buffer_memory_view", release_gl_copy_read_buffer_memory_view, METH_NOARGS, 0},
     {"configure_gl_vertex_array_location", (PyCFunction)configure_gl_vertex_array_location, METH_FASTCALL, 0},
+    {"set_read_framebuffer", set_read_framebuffer, METH_NOARGS, 0},
     {0},
 };
 
@@ -293,6 +303,7 @@ PyInit__egraphics()
     ADD_ALIAS("GlBufferTarget", PyLong_Type);
     ADD_ALIAS("GlBufferUsage", PyLong_Type);
     ADD_ALIAS("GlVertexArray", PyLong_Type);
+    ADD_ALIAS("GlType", PyLong_Type);
 
 #define ADD_CONSTANT(n)\
     {\
