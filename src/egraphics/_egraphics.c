@@ -30,6 +30,28 @@
         }\
     }
 
+typedef struct ModuleState
+{
+    float clear_color[3];
+    float clear_depth;
+} ModuleState;
+
+static PyObject *
+reset_module_state(PyObject *module, PyObject *unused)
+{
+    ModuleState *state = (ModuleState *)PyModule_GetState(module);
+    CHECK_UNEXPECTED_PYTHON_ERROR();
+
+    state->clear_color[0] = -1;
+    state->clear_color[1] = -1;
+    state->clear_color[2] = -1;
+    state->clear_depth = -1;
+
+    Py_RETURN_NONE;
+error:
+    return 0;
+}
+
 static PyObject *
 activate_gl_vertex_array(PyObject *module, PyObject *py_gl_vertex_array)
 {
@@ -288,7 +310,9 @@ read_color_from_framebuffer(PyObject *module, PyObject *rect)
     EMathApi_Release();
     return array;
 error:
+    PyObject *ex = PyErr_GetRaisedException();
     if (emath_api){ EMathApi_Release(); }
+    PyErr_SetRaisedException(ex);
     return 0;
 }
 
@@ -328,11 +352,73 @@ read_depth_from_framebuffer(PyObject *module, PyObject *rect)
     EMathApi_Release();
     return array;
 error:
+    PyObject *ex = PyErr_GetRaisedException();
     if (emath_api){ EMathApi_Release(); }
+    PyErr_SetRaisedException(ex);
+    return 0;
+}
+
+static PyObject *
+clear_framebuffer(PyObject *module, PyObject **args, Py_ssize_t nargs)
+{
+    struct EMathApi *emath_api = 0;
+
+    CHECK_UNEXPECTED_ARG_COUNT_ERROR(2);
+
+    PyObject *py_color = args[0];
+    PyObject *py_depth = args[1];
+
+    GLbitfield clear_mask = 0;
+
+    ModuleState *state = (ModuleState *)PyModule_GetState(module);
+    CHECK_UNEXPECTED_PYTHON_ERROR();
+
+    if (py_color != Py_None)
+    {
+        emath_api = EMathApi_Get();
+        CHECK_UNEXPECTED_PYTHON_ERROR();
+
+        const float *color = emath_api->FVector3_GetValuePointer(py_color);
+        CHECK_UNEXPECTED_PYTHON_ERROR();
+
+        EMathApi_Release();
+
+        if (memcmp(state->clear_color, color, sizeof(float) * 3) != 0)
+        {
+            glClearColor(color[0], color[1], color[2], 1.0);
+            CHECK_GL_ERROR();
+            memcpy(state->clear_color, color, sizeof(float) * 3);
+        }
+        clear_mask |= GL_COLOR_BUFFER_BIT;
+    }
+
+    if (py_depth != Py_None)
+    {
+        float depth = PyFloat_AsDouble(py_depth);
+        CHECK_UNEXPECTED_PYTHON_ERROR();
+        if (depth != state->clear_depth)
+        {
+            glClearDepth(depth);
+            CHECK_GL_ERROR();
+        }
+        clear_mask |= GL_DEPTH_BUFFER_BIT;
+    }
+
+    if (clear_mask != 0)
+    {
+        glClear(clear_mask);
+        CHECK_GL_ERROR();
+    }
+    Py_RETURN_NONE;
+error:
+    PyObject *ex = PyErr_GetRaisedException();
+    if (emath_api){ EMathApi_Release(); }
+    PyErr_SetRaisedException(ex);
     return 0;
 }
 
 static PyMethodDef module_PyMethodDef[] = {
+    {"reset_module_state", reset_module_state, METH_NOARGS, 0},
     {"activate_gl_vertex_array", activate_gl_vertex_array, METH_O, 0},
     {"create_gl_buffer", create_gl_buffer, METH_NOARGS, 0},
     {"create_gl_vertex_array", create_gl_vertex_array, METH_NOARGS, 0},
@@ -346,6 +432,7 @@ static PyMethodDef module_PyMethodDef[] = {
     {"set_read_framebuffer", set_read_framebuffer, METH_NOARGS, 0},
     {"read_color_from_framebuffer", read_color_from_framebuffer, METH_O, 0},
     {"read_depth_from_framebuffer", read_depth_from_framebuffer, METH_O, 0},
+    {"clear_framebuffer", (PyCFunction)clear_framebuffer, METH_FASTCALL, 0},
     {0},
 };
 
@@ -353,7 +440,7 @@ static struct PyModuleDef module_PyModuleDef = {
     PyModuleDef_HEAD_INIT,
     "egraphics._egraphics",
     0,
-    -1,
+    sizeof(ModuleState),
     module_PyMethodDef,
 };
 
@@ -396,6 +483,22 @@ PyInit__egraphics()
     }
 
     PyObject *module = PyModule_Create(&module_PyModuleDef);
+    if (!module){ return 0; }
+
+    if (PyState_AddModule(module, &module_PyModuleDef) == -1)
+    {
+        Py_DECREF(module);
+        return 0;
+    }
+    {
+        PyObject *r = reset_module_state(module, 0);
+        if (!r)
+        {
+            Py_DECREF(module);
+            return 0;
+        }
+        Py_DECREF(r);
+    }
 
 #define ADD_ALIAS(name, type)\
     {\
@@ -444,6 +547,30 @@ PyInit__egraphics()
     ADD_CONSTANT(GL_UNSIGNED_SHORT);
     ADD_CONSTANT(GL_INT);
     ADD_CONSTANT(GL_UNSIGNED_INT);
+
+    {
+        PyObject *eplatform = PyImport_ImportModule("eplatform");
+        if (!eplatform){ return 0; }
+
+        PyObject *platform_cls = PyObject_GetAttrString(eplatform, "Platform");
+        Py_DECREF(eplatform);
+        if (!platform_cls){ return 0; }
+
+        PyObject *py_reset_module_state = PyObject_GetAttrString(module, "reset_module_state");
+        if (!py_reset_module_state)
+        {
+            Py_DECREF(platform_cls);
+            return 0;
+        }
+
+        PyObject *r = PyObject_CallMethod(
+            platform_cls, "register_deactivate_callback", "O", py_reset_module_state
+        );
+        Py_DECREF(platform_cls);
+        Py_DECREF(py_reset_module_state);
+        if (!r){ return 0; }
+        Py_DECREF(r);
+    }
 
     return module;
 }

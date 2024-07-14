@@ -29,6 +29,7 @@ __all__ = [
     "set_read_framebuffer",
     "read_color_from_framebuffer",
     "read_depth_from_framebuffer",
+    "clear_framebuffer",
 ]
 
 # egeometry
@@ -36,6 +37,7 @@ from egeometry import IRectangle
 
 # emath
 from emath import FArray
+from emath import FVector3
 from emath import FVector4Array
 
 # python
@@ -94,3 +96,4 @@ def configure_gl_vertex_array_location(
 def set_read_framebuffer() -> None: ...
 def read_color_from_framebuffer(rect: IRectangle, /) -> FVector4Array: ...
 def read_depth_from_framebuffer(rect: IRectangle, /) -> FArray: ...
+def clear_framebuffer(color: FVector3 | None, depth: float | None, /) -> None: ...
