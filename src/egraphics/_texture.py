@@ -37,6 +37,7 @@ from ._egraphics import GL_UNSIGNED_INT
 from ._egraphics import GL_UNSIGNED_SHORT
 from ._egraphics import GlTexture
 from ._egraphics import GlTextureFilter
+from ._egraphics import GlTextureWrap
 from ._egraphics import GlType
 from ._egraphics import create_gl_texture
 from ._egraphics import delete_gl_texture
@@ -58,10 +59,8 @@ from eplatform import Platform
 
 # pyopengl
 from OpenGL.GL import GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS
-from OpenGL.GL import GL_TEXTURE_BORDER_COLOR
 from OpenGL.GL import glGetIntegerv
 from OpenGL.GL import glTexParameterf
-from OpenGL.GL import glTexParameterfv
 from OpenGL.GL.EXT.texture_filter_anisotropic import GL_TEXTURE_MAX_ANISOTROPY_EXT
 from OpenGL.GL.EXT.texture_filter_anisotropic import glInitTextureFilterAnisotropicEXT
 
@@ -297,14 +296,19 @@ class Texture:
             # set the wrapping parameters
             self._wrap = wrap
             self._wrap_color = wrap_color
+            gl_wrap_args: tuple[GlTextureWrap, GlTextureWrap | None, GlTextureWrap | None] = tuple(
+                (
+                    *(w.value for w in wrap),
+                    *(None for i in range(3 - len(wrap))),
+                )
+            )  # type: ignore
             set_gl_texture_target_parameters(
                 gl_target,
                 gl_min_filter,
                 gl_mag_filter,
-                *(w.value for w in wrap),
-                *(None for i in range(3 - len(wrap))),
+                *gl_wrap_args,
+                wrap_color,
             )
-            glTexParameterfv(gl_target, GL_TEXTURE_BORDER_COLOR, wrap_color.pointer)
             # set anisotropy
             self._anisotropy = anisotropy
             if anisotropy > 1.0 and glInitTextureFilterAnisotropicEXT():

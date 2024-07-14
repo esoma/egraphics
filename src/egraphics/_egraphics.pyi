@@ -66,6 +66,7 @@ from egeometry import IRectangle
 # emath
 from emath import FArray
 from emath import FVector3
+from emath import FVector4
 from emath import FVector4Array
 from emath import UVector2
 
@@ -171,5 +172,6 @@ def set_gl_texture_target_parameters(
     wrap_s: GlTextureWrap,
     wrap_t: GlTextureWrap | None,
     wrap_r: GlTextureWrap | None,
+    wrap_color: FVector4,
     /,
 ) -> None: ...

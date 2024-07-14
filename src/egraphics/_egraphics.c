@@ -560,7 +560,9 @@ error:
 static PyObject *
 set_gl_texture_target_parameters(PyObject *module, PyObject **args, Py_ssize_t nargs)
 {
-    CHECK_UNEXPECTED_ARG_COUNT_ERROR(6);
+    struct EMathApi *emath_api = 0;
+
+    CHECK_UNEXPECTED_ARG_COUNT_ERROR(7);
 
     GLenum target = PyLong_AsLong(args[0]);
     CHECK_UNEXPECTED_PYTHON_ERROR();
@@ -593,8 +595,26 @@ set_gl_texture_target_parameters(PyObject *module, PyObject **args, Py_ssize_t n
         CHECK_GL_ERROR();
     }
 
+    {
+        PyObject *py_wrap_color = args[6];
+
+        emath_api = EMathApi_Get();
+        CHECK_UNEXPECTED_PYTHON_ERROR();
+
+        const float *wrap_color = emath_api->FVector4_GetValuePointer(py_wrap_color);
+        CHECK_UNEXPECTED_PYTHON_ERROR();
+
+        EMathApi_Release();
+
+        glTexParameterfv(target, GL_TEXTURE_BORDER_COLOR, wrap_color);
+        CHECK_GL_ERROR();
+    }
+
     Py_RETURN_NONE;
 error:
+    PyObject *ex = PyErr_GetRaisedException();
+    if (emath_api){ EMathApi_Release(); }
+    PyErr_SetRaisedException(ex);
     return 0;
 }
 
@@ -705,7 +725,7 @@ PyInit__egraphics()
     ADD_ALIAS("GlTextureComponents", PyLong_Type);
     ADD_ALIAS("GlTextureFilter", PyLong_Type);
     ADD_ALIAS("GlTextureTarget", PyLong_Type);
-    ADD_ALIAS("GlTexturWrap", PyLong_Type);
+    ADD_ALIAS("GlTextureWrap", PyLong_Type);
 
 #define ADD_CONSTANT(n)\
     {\
