@@ -12,6 +12,10 @@ __all__ = [
 ]
 
 # egraphics
+from ._egraphics import GL_TEXTURE_2D
+from ._egraphics import set_active_gl_texture_unit
+
+# egraphics
 from egraphics._weak_fifo_set import WeakFifoSet
 
 # emath
@@ -24,11 +28,9 @@ from eplatform import Platform
 # pyopengl
 import OpenGL.GL
 from OpenGL.GL import GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS
-from OpenGL.GL import GL_TEXTURE0
 from OpenGL.GL import GL_TEXTURE_BORDER_COLOR
 from OpenGL.GL import GL_TEXTURE_MAG_FILTER
 from OpenGL.GL import GL_TEXTURE_MIN_FILTER
-from OpenGL.GL import glActiveTexture
 from OpenGL.GL import glBindTexture
 from OpenGL.GL import glDeleteTextures
 from OpenGL.GL import glGenTextures
@@ -90,7 +92,7 @@ class TextureTarget:
             return
 
         if self._texture_unit != unit:
-            glActiveTexture(GL_TEXTURE0 + unit)
+            set_active_gl_texture_unit(unit)
             if (unit_only and not self._bound) or not unit_only:
                 self.__class__._texture_unit = unit
 
@@ -101,13 +103,13 @@ class TextureTarget:
         self._unit_texture[unit] = ref(texture)
 
         if self._bound and unit_only:
-            glActiveTexture(GL_TEXTURE0 + self.__class__._texture_unit)
+            set_active_gl_texture_unit(self.__class__._texture_unit)
 
     def _unset_texture(self) -> None:
         self._bound = False
 
 
-TextureTarget.TEXTURE_2D = TextureTarget(OpenGL.GL.GL_TEXTURE_2D)
+TextureTarget.TEXTURE_2D = TextureTarget(GL_TEXTURE_2D)
 
 
 @Platform.register_deactivate_callback

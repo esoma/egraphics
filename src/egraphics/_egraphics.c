@@ -417,6 +417,20 @@ error:
     return 0;
 }
 
+static PyObject *
+set_active_gl_texture_unit(PyObject *module, PyObject *py_unit)
+{
+    GLenum unit = PyLong_AsLong(py_unit);
+    CHECK_UNEXPECTED_PYTHON_ERROR();
+
+    glActiveTexture(GL_TEXTURE0 + unit);
+    CHECK_GL_ERROR();
+
+    Py_RETURN_NONE;
+error:
+    return 0;
+}
+
 static PyMethodDef module_PyMethodDef[] = {
     {"reset_module_state", reset_module_state, METH_NOARGS, 0},
     {"activate_gl_vertex_array", activate_gl_vertex_array, METH_O, 0},
@@ -433,6 +447,7 @@ static PyMethodDef module_PyMethodDef[] = {
     {"read_color_from_framebuffer", read_color_from_framebuffer, METH_O, 0},
     {"read_depth_from_framebuffer", read_depth_from_framebuffer, METH_O, 0},
     {"clear_framebuffer", (PyCFunction)clear_framebuffer, METH_FASTCALL, 0},
+    {"set_active_gl_texture_unit", set_active_gl_texture_unit, METH_O, 0},
     {0},
 };
 
@@ -513,6 +528,7 @@ PyInit__egraphics()
     ADD_ALIAS("GlBufferUsage", PyLong_Type);
     ADD_ALIAS("GlVertexArray", PyLong_Type);
     ADD_ALIAS("GlType", PyLong_Type);
+    ADD_ALIAS("GlTextureTarget", PyLong_Type);
 
 #define ADD_CONSTANT(n)\
     {\
@@ -547,6 +563,8 @@ PyInit__egraphics()
     ADD_CONSTANT(GL_UNSIGNED_SHORT);
     ADD_CONSTANT(GL_INT);
     ADD_CONSTANT(GL_UNSIGNED_INT);
+
+    ADD_CONSTANT(GL_TEXTURE_2D);
 
     {
         PyObject *eplatform = PyImport_ImportModule("eplatform");
