@@ -286,7 +286,7 @@ configure_gl_vertex_array_location(PyObject *module, PyObject **args, Py_ssize_t
     glEnableVertexAttribArray(location);
     CHECK_GL_ERROR();
 
-    if (py_instancing_divisor == Py_None)
+    if (py_instancing_divisor != Py_None)
     {
         GLuint instancing_divisor = PyLong_AsLong(py_instancing_divisor);
         CHECK_UNEXPECTED_PYTHON_ERROR();
