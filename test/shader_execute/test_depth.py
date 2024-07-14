@@ -82,26 +82,26 @@ def draw_fullscreen_quad(
 @pytest.mark.parametrize(
     "depth_test, depth_write, expected_color, expected_depth",
     [
-        (DepthTest.ALWAYS, False, FVector4(0, 0, 1, 1), 0.0),
-        (DepthTest.ALWAYS, True, FVector4(0, 0, 1, 1), -0.5),
-        (DepthTest.NEVER, False, FVector4(0, 0, 0, 1), 0.0),
-        (DepthTest.NEVER, True, FVector4(0, 0, 0, 1), 0.0),
-        (DepthTest.LESS, False, FVector4(0, 0, 1, 1), 0.0),
-        (DepthTest.LESS, True, FVector4(1, 1, 0, 1), -0.75),
-        (DepthTest.LESS_EQUAL, False, FVector4(0, 0, 1, 1), 0.0),
-        (DepthTest.LESS_EQUAL, True, FVector4(0, 1, 1, 1), -0.75),
-        (DepthTest.GREATER, False, FVector4(0, 1, 0, 1), 0.0),
+        (DepthTest.ALWAYS, False, FVector4(0, 0, 1, 1), 0.5),
+        (DepthTest.ALWAYS, True, FVector4(0, 0, 1, 1), 0.25),
+        (DepthTest.NEVER, False, FVector4(0, 0, 0, 1), 0.5),
+        (DepthTest.NEVER, True, FVector4(0, 0, 0, 1), 0.5),
+        (DepthTest.LESS, False, FVector4(0, 0, 1, 1), 0.5),
+        (DepthTest.LESS, True, FVector4(1, 1, 0, 1), 0.125),
+        (DepthTest.LESS_EQUAL, False, FVector4(0, 0, 1, 1), 0.5),
+        (DepthTest.LESS_EQUAL, True, FVector4(0, 1, 1, 1), 0.125),
+        (DepthTest.GREATER, False, FVector4(0, 1, 0, 1), 0.5),
         (DepthTest.GREATER, True, FVector4(1, 1, 1, 1), 1.0),
-        (DepthTest.GREATER_EQUAL, False, FVector4(0.5, 0.5, 0.5, 1), 0.0),
+        (DepthTest.GREATER_EQUAL, False, FVector4(0.5, 0.5, 0.5, 1), 0.5),
         (DepthTest.GREATER_EQUAL, True, FVector4(1, 0, 0, 1), 1.0),
-        (DepthTest.EQUAL, False, FVector4(0.5, 0.5, 0.5, 1), 0.0),
-        (DepthTest.EQUAL, True, FVector4(0.5, 0.5, 0.5, 1), 0.0),
-        (DepthTest.NOT_EQUAL, False, FVector4(0, 0, 1, 1), 0.0),
-        (DepthTest.NOT_EQUAL, True, FVector4(0.1, 0.1, 0.1, 1), -0.5),
+        (DepthTest.EQUAL, False, FVector4(0.5, 0.5, 0.5, 1), 0.5),
+        (DepthTest.EQUAL, True, FVector4(0.5, 0.5, 0.5, 1), 0.5),
+        (DepthTest.NOT_EQUAL, False, FVector4(0, 0, 1, 1), 0.5),
+        (DepthTest.NOT_EQUAL, True, FVector4(0.1, 0.1, 0.1, 1), 0.25),
     ],
 )
 def test_basic(render_target, depth_test, depth_write, expected_color, expected_depth):
-    clear_render_target(render_target, color=FVector3(0, 0, 0), depth=0)
+    clear_render_target(render_target, color=FVector3(0, 0, 0), depth=0.5)
 
     shader = Shader(vertex=BytesIO(VERTEX_SHADER), fragment=BytesIO(FRAGMENT_SHADER))
 
