@@ -17,8 +17,14 @@ from ._egraphics import GL_CLAMP_TO_BORDER
 from ._egraphics import GL_CLAMP_TO_EDGE
 from ._egraphics import GL_FLOAT
 from ._egraphics import GL_INT
+from ._egraphics import GL_LINEAR
+from ._egraphics import GL_LINEAR_MIPMAP_LINEAR
+from ._egraphics import GL_LINEAR_MIPMAP_NEAREST
 from ._egraphics import GL_MIRRORED_REPEAT
 from ._egraphics import GL_MIRROR_CLAMP_TO_EDGE
+from ._egraphics import GL_NEAREST
+from ._egraphics import GL_NEAREST_MIPMAP_LINEAR
+from ._egraphics import GL_NEAREST_MIPMAP_NEAREST
 from ._egraphics import GL_RED
 from ._egraphics import GL_REPEAT
 from ._egraphics import GL_RG
@@ -32,6 +38,7 @@ from ._egraphics import GL_TEXTURE_WRAP_T
 from ._egraphics import GL_UNSIGNED_BYTE
 from ._egraphics import GL_UNSIGNED_INT
 from ._egraphics import GL_UNSIGNED_SHORT
+from ._egraphics import GlTextureFilter
 from ._egraphics import GlType
 from ._egraphics import set_active_gl_texture_unit
 from ._egraphics import set_gl_texture_target
@@ -47,7 +54,6 @@ from emath import UVector2
 from eplatform import Platform
 
 # pyopengl
-import OpenGL.GL
 from OpenGL.GL import GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS
 from OpenGL.GL import GL_TEXTURE_BORDER_COLOR
 from OpenGL.GL import GL_TEXTURE_MAG_FILTER
@@ -210,19 +216,21 @@ _TEXTURE_COMPONENTS_COUNT: Final[Mapping[TextureComponents, int]] = {
 }
 
 
-_TEXTURE_FILTER_TO_GL_MIN_FILTER: Final[Mapping[tuple[MipmapSelection, TextureFilter], Any]] = {
-    (MipmapSelection.NONE, TextureFilter.NEAREST): OpenGL.GL.GL_NEAREST,
-    (MipmapSelection.NONE, TextureFilter.LINEAR): OpenGL.GL.GL_LINEAR,
-    (MipmapSelection.NEAREST, TextureFilter.NEAREST): OpenGL.GL.GL_NEAREST_MIPMAP_NEAREST,
-    (MipmapSelection.NEAREST, TextureFilter.LINEAR): OpenGL.GL.GL_NEAREST_MIPMAP_LINEAR,
-    (MipmapSelection.LINEAR, TextureFilter.NEAREST): OpenGL.GL.GL_LINEAR_MIPMAP_NEAREST,
-    (MipmapSelection.LINEAR, TextureFilter.LINEAR): OpenGL.GL.GL_LINEAR_MIPMAP_LINEAR,
+_TEXTURE_FILTER_TO_GL_MIN_FILTER: Final[
+    Mapping[tuple[MipmapSelection, TextureFilter], GlTextureFilter]
+] = {
+    (MipmapSelection.NONE, TextureFilter.NEAREST): GL_NEAREST,
+    (MipmapSelection.NONE, TextureFilter.LINEAR): GL_LINEAR,
+    (MipmapSelection.NEAREST, TextureFilter.NEAREST): GL_NEAREST_MIPMAP_NEAREST,
+    (MipmapSelection.NEAREST, TextureFilter.LINEAR): GL_NEAREST_MIPMAP_LINEAR,
+    (MipmapSelection.LINEAR, TextureFilter.NEAREST): GL_LINEAR_MIPMAP_NEAREST,
+    (MipmapSelection.LINEAR, TextureFilter.LINEAR): GL_LINEAR_MIPMAP_LINEAR,
 }
 
 
-_TEXTURE_FILTER_TO_GL_MAG_FILTER: Final[Mapping[TextureFilter, Any]] = {
-    TextureFilter.NEAREST: OpenGL.GL.GL_NEAREST,
-    TextureFilter.LINEAR: OpenGL.GL.GL_LINEAR,
+_TEXTURE_FILTER_TO_GL_MAG_FILTER: Final[Mapping[TextureFilter, GlTextureFilter]] = {
+    TextureFilter.NEAREST: GL_NEAREST,
+    TextureFilter.LINEAR: GL_LINEAR,
 }
 
 

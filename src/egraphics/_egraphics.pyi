@@ -6,6 +6,7 @@ __all__ = [
     "GlType",
     "GlTexture",
     "GlTextureComponents",
+    "GlTextureFilter",
     "GlTextureTarget",
     "GlTextureWrap",
     "GlTextureWrapAxis",
@@ -30,6 +31,12 @@ __all__ = [
     "GL_REPEAT",
     "GL_MIRRORED_REPEAT",
     "GL_MIRROR_CLAMP_TO_EDGE",
+    "GL_NEAREST",
+    "GL_LINEAR",
+    "GL_NEAREST_MIPMAP_NEAREST",
+    "GL_NEAREST_MIPMAP_LINEAR",
+    "GL_LINEAR_MIPMAP_NEAREST",
+    "GL_LINEAR_MIPMAP_LINEAR",
     "GL_TEXTURE_2D",
     "activate_gl_vertex_array",
     "set_gl_buffer_target",
@@ -68,6 +75,7 @@ GlVertexArray = NewType("GlVertexArray", int)
 GlType = NewType("GlType", int)
 GlTexture = NewType("GlTexture", int)
 GlTextureComponents = NewType("GlTextureComponents", int)
+GlTextureFilter = NewType("GlTextureFilter", int)
 GlTextureTarget = NewType("GlTextureTarget", int)
 GlTextureWrap = NewType("GlTextureWrap", int)
 GlTextureWrapAxis = NewType("GlTextureWrapAxis", int)
@@ -109,6 +117,13 @@ GL_MIRROR_CLAMP_TO_EDGE: GlTextureWrap
 GL_TEXTURE_WRAP_S: GlTextureWrapAxis
 GL_TEXTURE_WRAP_T: GlTextureWrapAxis
 GL_TEXTURE_WRAP_R: GlTextureWrapAxis
+
+GL_NEAREST: GlTextureFilter
+GL_LINEAR: GlTextureFilter
+GL_NEAREST_MIPMAP_NEAREST: GlTextureFilter
+GL_NEAREST_MIPMAP_LINEAR: GlTextureFilter
+GL_LINEAR_MIPMAP_NEAREST: GlTextureFilter
+GL_LINEAR_MIPMAP_LINEAR: GlTextureFilter
 
 GL_TEXTURE_2D: GlTextureTarget
 

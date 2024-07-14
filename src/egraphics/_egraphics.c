@@ -554,6 +554,7 @@ PyInit__egraphics()
     ADD_ALIAS("GlType", PyLong_Type);
     ADD_ALIAS("GlTexture", PyLong_Type);
     ADD_ALIAS("GlTextureComponents", PyLong_Type);
+    ADD_ALIAS("GlTextureFilter", PyLong_Type);
     ADD_ALIAS("GlTextureTarget", PyLong_Type);
     ADD_ALIAS("GlTexturWrap", PyLong_Type);
     ADD_ALIAS("GlTextureWrapAxis", PyLong_Type);
@@ -606,6 +607,13 @@ PyInit__egraphics()
     ADD_CONSTANT(GL_TEXTURE_WRAP_S);
     ADD_CONSTANT(GL_TEXTURE_WRAP_T);
     ADD_CONSTANT(GL_TEXTURE_WRAP_R);
+
+    ADD_CONSTANT(GL_NEAREST);
+    ADD_CONSTANT(GL_LINEAR);
+    ADD_CONSTANT(GL_NEAREST_MIPMAP_NEAREST);
+    ADD_CONSTANT(GL_NEAREST_MIPMAP_LINEAR);
+    ADD_CONSTANT(GL_LINEAR_MIPMAP_NEAREST);
+    ADD_CONSTANT(GL_LINEAR_MIPMAP_LINEAR);
 
     ADD_CONSTANT(GL_TEXTURE_2D);
 
