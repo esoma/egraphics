@@ -555,6 +555,8 @@ PyInit__egraphics()
     ADD_ALIAS("GlTexture", PyLong_Type);
     ADD_ALIAS("GlTextureComponents", PyLong_Type);
     ADD_ALIAS("GlTextureTarget", PyLong_Type);
+    ADD_ALIAS("GlTexturWrap", PyLong_Type);
+    ADD_ALIAS("GlTextureWrapAxis", PyLong_Type);
 
 #define ADD_CONSTANT(n)\
     {\
@@ -594,6 +596,16 @@ PyInit__egraphics()
     ADD_CONSTANT(GL_RG);
     ADD_CONSTANT(GL_RGB);
     ADD_CONSTANT(GL_RGBA);
+
+    ADD_CONSTANT(GL_CLAMP_TO_EDGE);
+    ADD_CONSTANT(GL_CLAMP_TO_BORDER);
+    ADD_CONSTANT(GL_REPEAT);
+    ADD_CONSTANT(GL_MIRRORED_REPEAT);
+    ADD_CONSTANT(GL_MIRROR_CLAMP_TO_EDGE);
+
+    ADD_CONSTANT(GL_TEXTURE_WRAP_S);
+    ADD_CONSTANT(GL_TEXTURE_WRAP_T);
+    ADD_CONSTANT(GL_TEXTURE_WRAP_R);
 
     ADD_CONSTANT(GL_TEXTURE_2D);
 

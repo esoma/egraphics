@@ -7,6 +7,8 @@ __all__ = [
     "GlTexture",
     "GlTextureComponents",
     "GlTextureTarget",
+    "GlTextureWrap",
+    "GlTextureWrapAxis",
     "GL_ARRAY_BUFFER",
     "GL_COPY_READ_BUFFER",
     "GL_ELEMENT_ARRAY_BUFFER",
@@ -23,6 +25,11 @@ __all__ = [
     "GL_RG",
     "GL_RGB",
     "GL_RGBA",
+    "GL_CLAMP_TO_EDGE",
+    "GL_CLAMP_TO_BORDER",
+    "GL_REPEAT",
+    "GL_MIRRORED_REPEAT",
+    "GL_MIRROR_CLAMP_TO_EDGE",
     "GL_TEXTURE_2D",
     "activate_gl_vertex_array",
     "set_gl_buffer_target",
@@ -62,6 +69,8 @@ GlType = NewType("GlType", int)
 GlTexture = NewType("GlTexture", int)
 GlTextureComponents = NewType("GlTextureComponents", int)
 GlTextureTarget = NewType("GlTextureTarget", int)
+GlTextureWrap = NewType("GlTextureWrap", int)
+GlTextureWrapAxis = NewType("GlTextureWrapAxis", int)
 
 GL_ARRAY_BUFFER: GlBufferTarget
 GL_COPY_READ_BUFFER: GlBufferTarget
@@ -90,6 +99,16 @@ GL_RED: GlTextureComponents
 GL_RG: GlTextureComponents
 GL_RGB: GlTextureComponents
 GL_RGBA: GlTextureComponents
+
+GL_CLAMP_TO_EDGE: GlTextureWrap
+GL_CLAMP_TO_BORDER: GlTextureWrap
+GL_REPEAT: GlTextureWrap
+GL_MIRRORED_REPEAT: GlTextureWrap
+GL_MIRROR_CLAMP_TO_EDGE: GlTextureWrap
+
+GL_TEXTURE_WRAP_S: GlTextureWrapAxis
+GL_TEXTURE_WRAP_T: GlTextureWrapAxis
+GL_TEXTURE_WRAP_R: GlTextureWrapAxis
 
 GL_TEXTURE_2D: GlTextureTarget
 

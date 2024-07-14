@@ -12,11 +12,19 @@ __all__ = [
 ]
 
 # egraphics
+from ._egraphics import GL_CLAMP_TO_BORDER
+from ._egraphics import GL_CLAMP_TO_EDGE
+from ._egraphics import GL_MIRRORED_REPEAT
+from ._egraphics import GL_MIRROR_CLAMP_TO_EDGE
 from ._egraphics import GL_RED
+from ._egraphics import GL_REPEAT
 from ._egraphics import GL_RG
 from ._egraphics import GL_RGB
 from ._egraphics import GL_RGBA
 from ._egraphics import GL_TEXTURE_2D
+from ._egraphics import GL_TEXTURE_WRAP_R
+from ._egraphics import GL_TEXTURE_WRAP_S
+from ._egraphics import GL_TEXTURE_WRAP_T
 from ._egraphics import set_active_gl_texture_unit
 from ._egraphics import set_gl_texture_target
 
@@ -142,11 +150,11 @@ class TextureComponents(Enum):
 
 
 class TextureWrap(Enum):
-    CLAMP_TO_EDGE = OpenGL.GL.GL_CLAMP_TO_EDGE
-    CLAMP_TO_COLOR = OpenGL.GL.GL_CLAMP_TO_BORDER
-    REPEAT = OpenGL.GL.GL_REPEAT
-    REPEAT_MIRRORED = OpenGL.GL.GL_MIRRORED_REPEAT
-    REPEAT_MIRRORED_THEN_CLAMP_TO_EDGE = OpenGL.GL.GL_MIRROR_CLAMP_TO_EDGE
+    CLAMP_TO_EDGE = GL_CLAMP_TO_EDGE
+    CLAMP_TO_COLOR = GL_CLAMP_TO_BORDER
+    REPEAT = GL_REPEAT
+    REPEAT_MIRRORED = GL_MIRRORED_REPEAT
+    REPEAT_MIRRORED_THEN_CLAMP_TO_EDGE = GL_MIRROR_CLAMP_TO_EDGE
 
 
 class MipmapSelection(Enum):
@@ -171,9 +179,9 @@ TextureDataType = (
 )
 
 _GL_TEXTURE_WRAP_NAMES: Final = (
-    OpenGL.GL.GL_TEXTURE_WRAP_S,
-    OpenGL.GL.GL_TEXTURE_WRAP_T,
-    OpenGL.GL.GL_TEXTURE_WRAP_R,
+    GL_TEXTURE_WRAP_S,
+    GL_TEXTURE_WRAP_T,
+    GL_TEXTURE_WRAP_R,
 )
 
 _TEXTURE_DATA_TYPE_TO_GL_DATA_TYPE: Final[Mapping[type[TextureDataType], Any]] = {
