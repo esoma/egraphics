@@ -2,6 +2,7 @@ __all__ = [
     "GlBuffer",
     "GlBufferTarget",
     "GlBufferUsage",
+    "GlShader",
     "GlVertexArray",
     "GlType",
     "GlTexture",
@@ -59,6 +60,7 @@ __all__ = [
     "set_gl_texture_target_2d_data",
     "generate_gl_texture_target_mipmaps",
     "set_gl_texture_target_filters",
+    "get_gl_shader_uniforms",
 ]
 
 # egeometry
@@ -78,6 +80,7 @@ from typing import NewType
 GlBuffer = NewType("GlBuffer", int)
 GlBufferTarget = NewType("GlBufferTarget", int)
 GlBufferUsage = NewType("GlBufferUsage", int)
+GlShader = NewType("GlShader", int)
 GlVertexArray = NewType("GlVertexArray", int)
 GlType = NewType("GlType", int)
 GlTexture = NewType("GlTexture", int)
@@ -179,3 +182,4 @@ def set_gl_texture_target_parameters(
     anisotropy: float,
     /,
 ) -> None: ...
+def get_gl_shader_uniforms(shader: GlShader, /) -> tuple[tuple[str, int, GlType, int], ...]: ...

@@ -14,6 +14,7 @@ __all__ = [
 
 
 # egraphics
+from ._egraphics import get_gl_shader_uniforms
 from ._g_buffer_view import GBufferView
 from ._texture import Texture
 
@@ -30,7 +31,6 @@ from eplatform import set_draw_render_target
 # pyopengl
 import OpenGL.GL
 from OpenGL.GL import GL_ACTIVE_ATTRIBUTES
-from OpenGL.GL import GL_ACTIVE_UNIFORMS
 from OpenGL.GL import GL_BLEND
 from OpenGL.GL import GL_COMPILE_STATUS
 from OpenGL.GL import GL_CULL_FACE
@@ -60,13 +60,11 @@ from OpenGL.GL import glDrawElements
 from OpenGL.GL import glDrawElementsInstanced
 from OpenGL.GL import glEnable
 from OpenGL.GL import glGetActiveAttrib
-from OpenGL.GL import glGetActiveUniform
 from OpenGL.GL import glGetAttribLocation
 from OpenGL.GL import glGetProgramInfoLog
 from OpenGL.GL import glGetProgramiv
 from OpenGL.GL import glGetShaderInfoLog
 from OpenGL.GL import glGetShaderiv
-from OpenGL.GL import glGetUniformLocation
 from OpenGL.GL import glLinkProgram
 from OpenGL.GL import glShaderSource
 from OpenGL.GL import glUseProgram
@@ -221,25 +219,19 @@ class Shader:
             )
         self._attributes = tuple(attributes)
 
-        uniforms: list[ShaderUniform] = []
-        uniform_count = glGetProgramiv(self._gl_shader, GL_ACTIVE_UNIFORMS)
-        for i in range(uniform_count):
-            c_name, size, type = glGetActiveUniform(self._gl_shader, i)
-            name = c_cast(c_name, c_char_p).value.decode("utf8")  # type: ignore
-            location = glGetUniformLocation(self._gl_shader, name)
-            uniforms.append(
-                ShaderUniform(
-                    name.removesuffix("[0]"),
-                    _GL_TYPE_TO_PY[type],
-                    size,
-                    location,
-                )
+        self._uniforms = tuple(
+            ShaderUniform(
+                name.removesuffix("[0]"),
+                _GL_TYPE_TO_PY[type],
+                size,
+                location,
             )
-        self._uniforms = tuple(uniforms)
+            for name, size, type, location in get_gl_shader_uniforms(self._gl_shader)
+        )
 
         self._inputs: dict[str, ShaderAttribute | ShaderUniform] = {
             **{attribute.name: attribute for attribute in attributes},
-            **{uniform.name: uniform for uniform in uniforms},
+            **{uniform.name: uniform for uniform in self._uniforms},
         }
 
     def __del__(self) -> None:

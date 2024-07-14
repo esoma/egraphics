@@ -639,6 +639,60 @@ error:
     return 0;
 }
 
+static PyObject *
+get_gl_shader_uniforms(PyObject *module, PyObject *py_gl_shader)
+{
+    PyObject *result = 0;
+    GLchar *name = 0;
+
+    GLuint gl_shader = PyLong_AsUnsignedLong(py_gl_shader);
+    CHECK_UNEXPECTED_PYTHON_ERROR();
+
+    GLint uniform_count = 0;
+    glGetProgramiv(gl_shader, GL_ACTIVE_UNIFORMS, &uniform_count);
+    CHECK_GL_ERROR();
+
+    GLint max_name_length = 0;
+    glGetProgramiv(gl_shader, GL_ACTIVE_UNIFORM_MAX_LENGTH, &max_name_length);
+    CHECK_GL_ERROR();
+
+    name = malloc(sizeof(GLchar) * max_name_length + 1);
+    if (!name)
+    {
+        PyErr_Format(PyExc_MemoryError, "out of memory");
+        goto error;
+    }
+    GLsizei name_length;
+    GLint size;
+    GLenum type;
+
+    result = PyTuple_New(uniform_count);
+    CHECK_UNEXPECTED_PYTHON_ERROR();
+
+    for (GLint i = 0; i < uniform_count; i++)
+    {
+        glGetActiveUniform(gl_shader, i, max_name_length, &name_length, &size, &type, name);
+        CHECK_GL_ERROR();
+        name[name_length] = 0;
+
+        GLint location = glGetUniformLocation(gl_shader, name);
+        CHECK_GL_ERROR();
+
+        PyObject *uniform = Py_BuildValue("siii", name, size, type, location);
+        CHECK_UNEXPECTED_PYTHON_ERROR();
+
+        PyTuple_SET_ITEM(result, i, uniform);
+    }
+
+    free(name);
+
+    return result;
+error:
+    Py_XDECREF(result);
+    if (name){ free(name); }
+    return 0;
+}
+
 static PyMethodDef module_PyMethodDef[] = {
     {"reset_module_state", reset_module_state, METH_NOARGS, 0},
     {"activate_gl_vertex_array", activate_gl_vertex_array, METH_O, 0},
@@ -662,6 +716,7 @@ static PyMethodDef module_PyMethodDef[] = {
     {"set_gl_texture_target_2d_data", (PyCFunction)set_gl_texture_target_2d_data, METH_FASTCALL, 0},
     {"generate_gl_texture_target_mipmaps", generate_gl_texture_target_mipmaps, METH_O, 0},
     {"set_gl_texture_target_parameters", (PyCFunction)set_gl_texture_target_parameters, METH_FASTCALL, 0},
+    {"get_gl_shader_uniforms", get_gl_shader_uniforms, METH_O, 0},
     {0},
 };
 
@@ -746,6 +801,7 @@ PyInit__egraphics()
     ADD_ALIAS("GlBuffer", PyLong_Type);
     ADD_ALIAS("GlBufferTarget", PyLong_Type);
     ADD_ALIAS("GlBufferUsage", PyLong_Type);
+    ADD_ALIAS("GlShader", PyLong_Type);
     ADD_ALIAS("GlVertexArray", PyLong_Type);
     ADD_ALIAS("GlType", PyLong_Type);
     ADD_ALIAS("GlTexture", PyLong_Type);
