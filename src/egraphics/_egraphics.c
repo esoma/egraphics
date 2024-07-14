@@ -55,7 +55,7 @@ reset_module_state(PyObject *module, PyObject *unused)
     state->clear_color[2] = -1;
     state->clear_depth = -1;
 
-    state->texture_filter_anisotropic_supported = glewIsSupported("GL_EXT_texture_filter_anisotropic");
+    state->texture_filter_anisotropic_supported = GLEW_EXT_texture_filter_anisotropic;
 
     Py_RETURN_NONE;
 error:
