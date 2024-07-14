@@ -25,10 +25,12 @@ if os.environ.get("EGRAPHICS_BUILD_WITH_COVERAGE", "0") == "1":
 
 libraries: list[str] = []
 extra_link_args: list[str] = []
+define_macros: list[tuple[str, None]] = []
 if system() == "Windows":
     libraries.extend(["opengl32", "glu32"])
 elif system() == "Darwin":
     extra_link_args.extend(["-framework", "OpenGL"])
+    define_macros.extend([("GL_SILENCE_DEPRECATION", None)])
 else:
     libraries.extend(["GL", "GLU"])
 
@@ -39,7 +41,7 @@ _egraphics = Extension(
     sources=["src/egraphics/_egraphics.c", "vendor/glew/src/glew.c"],
     extra_compile_args=_coverage_compile_args,
     extra_link_args=_coverage_links_args + extra_link_args,
-    define_macros=[("GLEW_STATIC", None)],
+    define_macros=[("GLEW_STATIC", None)] + define_macros,
 )
 
 
