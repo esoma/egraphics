@@ -199,7 +199,7 @@ set_gl_buffer_target_data(PyObject *module, PyObject **args, Py_ssize_t nargs)
     }
     else
     {
-        if (PyObject_GetBuffer(data, &buffer, PyBUF_CONTIG_RO) == -1){ return 0; }
+        if (PyObject_GetBuffer(data, &buffer, PyBUF_CONTIG_RO) == -1){ goto error; }
     }
 
     glBufferData(target, buffer.len, buffer.buf, usage);
@@ -480,6 +480,68 @@ error:
     return 0;
 }
 
+static PyObject *
+set_gl_texture_target_2d_data(PyObject *module, PyObject **args, Py_ssize_t nargs)
+{
+    struct EMathApi *emath_api = 0;
+
+    CHECK_UNEXPECTED_ARG_COUNT_ERROR(5);
+
+    GLenum target = PyLong_AsLong(args[0]);
+    CHECK_UNEXPECTED_PYTHON_ERROR();
+
+    GLint format = PyLong_AsLong(args[1]);
+    CHECK_UNEXPECTED_PYTHON_ERROR();
+
+    GLsizei width = 0;
+    GLsizei height = 0;
+    {
+        PyObject *py_size = args[2];
+
+        emath_api = EMathApi_Get();
+        CHECK_UNEXPECTED_PYTHON_ERROR();
+
+        const unsigned int *size = emath_api->UVector2_GetValuePointer(py_size);
+        CHECK_UNEXPECTED_PYTHON_ERROR();
+
+        EMathApi_Release();
+
+        width = size[0];
+        height = size[1];
+    }
+
+    GLenum type = PyLong_AsLong(args[3]);
+    CHECK_UNEXPECTED_PYTHON_ERROR();
+
+    Py_buffer buffer;
+    {
+        PyObject *py_data = args[4];
+        if (PyObject_GetBuffer(py_data, &buffer, PyBUF_CONTIG_RO) == -1){ goto error; }
+    }
+
+    glTexImage2D(
+        target,
+        0,
+        format,
+        width,
+        height,
+        0,
+        format,
+        type,
+        buffer.buf
+    );
+    PyBuffer_Release(&buffer);
+    CHECK_UNEXPECTED_PYTHON_ERROR();
+    CHECK_GL_ERROR();
+
+    Py_RETURN_NONE;
+error:
+    PyObject *ex = PyErr_GetRaisedException();
+    if (emath_api){ EMathApi_Release(); }
+    PyErr_SetRaisedException(ex);
+    return 0;
+}
+
 static PyMethodDef module_PyMethodDef[] = {
     {"reset_module_state", reset_module_state, METH_NOARGS, 0},
     {"activate_gl_vertex_array", activate_gl_vertex_array, METH_O, 0},
@@ -500,6 +562,7 @@ static PyMethodDef module_PyMethodDef[] = {
     {"clear_framebuffer", (PyCFunction)clear_framebuffer, METH_FASTCALL, 0},
     {"set_active_gl_texture_unit", set_active_gl_texture_unit, METH_O, 0},
     {"set_gl_texture_target", (PyCFunction)set_gl_texture_target, METH_FASTCALL, 0},
+    {"set_gl_texture_target_2d_data", (PyCFunction)set_gl_texture_target_2d_data, METH_FASTCALL, 0},
     {0},
 };
 

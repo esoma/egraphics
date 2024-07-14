@@ -56,6 +56,7 @@ __all__ = [
     "clear_framebuffer",
     "set_active_gl_texture_unit",
     "set_gl_texture_target",
+    "set_gl_texture_target_2d_data",
 ]
 
 # egeometry
@@ -65,6 +66,7 @@ from egeometry import IRectangle
 from emath import FArray
 from emath import FVector3
 from emath import FVector4Array
+from emath import UVector2
 
 # python
 from collections.abc import Buffer
@@ -157,3 +159,11 @@ def read_depth_from_framebuffer(rect: IRectangle, /) -> FArray: ...
 def clear_framebuffer(color: FVector3 | None, depth: float | None, /) -> None: ...
 def set_active_gl_texture_unit(unit: int, /) -> None: ...
 def set_gl_texture_target(target: GlTextureTarget, gl_texture: GlTexture | None, /) -> None: ...
+def set_gl_texture_target_2d_data(
+    target: GlTextureTarget,
+    format: GlTextureComponents,
+    size: UVector2,
+    type: GlType,
+    data: Buffer,
+    /,
+) -> None: ...

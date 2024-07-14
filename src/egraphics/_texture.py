@@ -45,6 +45,7 @@ from ._egraphics import create_gl_texture
 from ._egraphics import delete_gl_texture
 from ._egraphics import set_active_gl_texture_unit
 from ._egraphics import set_gl_texture_target
+from ._egraphics import set_gl_texture_target_2d_data
 
 # egraphics
 from egraphics._weak_fifo_set import WeakFifoSet
@@ -63,7 +64,6 @@ from OpenGL.GL import GL_TEXTURE_MAG_FILTER
 from OpenGL.GL import GL_TEXTURE_MIN_FILTER
 from OpenGL.GL import glGenerateMipmap
 from OpenGL.GL import glGetIntegerv
-from OpenGL.GL import glTexImage2D
 from OpenGL.GL import glTexParameterf
 from OpenGL.GL import glTexParameterfv
 from OpenGL.GL import glTexParameteri
@@ -295,17 +295,7 @@ class Texture:
         with self.bind():
             gl_target = self._type.value.target._gl_target
             assert type == TextureType.TWO_DIMENSIONS
-            glTexImage2D(
-                gl_target,
-                0,
-                components.value,
-                size.x,
-                size.y,
-                0,
-                components.value,
-                gl_data_type,
-                buffer,
-            )
+            set_gl_texture_target_2d_data(gl_target, components.value, size, gl_data_type, buffer)
             self._size = size
             # we only need to generate mipmaps if we're using a mipmap selection
             # that would actually check the mipmaps
