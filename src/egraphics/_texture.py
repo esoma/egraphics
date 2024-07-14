@@ -47,6 +47,7 @@ from ._egraphics import generate_gl_texture_target_mipmaps
 from ._egraphics import set_active_gl_texture_unit
 from ._egraphics import set_gl_texture_target
 from ._egraphics import set_gl_texture_target_2d_data
+from ._egraphics import set_gl_texture_target_filters
 
 # egraphics
 from egraphics._weak_fifo_set import WeakFifoSet
@@ -61,8 +62,6 @@ from eplatform import Platform
 # pyopengl
 from OpenGL.GL import GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS
 from OpenGL.GL import GL_TEXTURE_BORDER_COLOR
-from OpenGL.GL import GL_TEXTURE_MAG_FILTER
-from OpenGL.GL import GL_TEXTURE_MIN_FILTER
 from OpenGL.GL import glGetIntegerv
 from OpenGL.GL import glTexParameterf
 from OpenGL.GL import glTexParameterfv
@@ -305,8 +304,7 @@ class Texture:
             # set the min/max filter parameters
             self._minify_filter = minify_filter
             self._magnify_filter = magnify_filter
-            glTexParameteri(gl_target, GL_TEXTURE_MIN_FILTER, gl_min_filter)
-            glTexParameteri(gl_target, GL_TEXTURE_MAG_FILTER, gl_mag_filter)
+            set_gl_texture_target_filters(gl_target, gl_min_filter, gl_mag_filter)
             # set the wrapping parameters
             self._wrap = wrap
             self._wrap_color = wrap_color

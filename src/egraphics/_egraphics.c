@@ -556,6 +556,32 @@ error:
     return 0;
 }
 
+
+static PyObject *
+set_gl_texture_target_filters(PyObject *module, PyObject **args, Py_ssize_t nargs)
+{
+    CHECK_UNEXPECTED_ARG_COUNT_ERROR(3);
+
+    GLenum target = PyLong_AsLong(args[0]);
+    CHECK_UNEXPECTED_PYTHON_ERROR();
+
+    GLenum min_filter = PyLong_AsLong(args[1]);
+    CHECK_UNEXPECTED_PYTHON_ERROR();
+
+    GLenum mag_filter = PyLong_AsLong(args[2]);
+    CHECK_UNEXPECTED_PYTHON_ERROR();
+
+    glTexParameteri(target, GL_TEXTURE_MIN_FILTER, min_filter);
+    CHECK_GL_ERROR();
+
+    glTexParameteri(target, GL_TEXTURE_MAG_FILTER, mag_filter);
+    CHECK_GL_ERROR();
+
+    Py_RETURN_NONE;
+error:
+    return 0;
+}
+
 static PyMethodDef module_PyMethodDef[] = {
     {"reset_module_state", reset_module_state, METH_NOARGS, 0},
     {"activate_gl_vertex_array", activate_gl_vertex_array, METH_O, 0},
@@ -578,6 +604,7 @@ static PyMethodDef module_PyMethodDef[] = {
     {"set_gl_texture_target", (PyCFunction)set_gl_texture_target, METH_FASTCALL, 0},
     {"set_gl_texture_target_2d_data", (PyCFunction)set_gl_texture_target_2d_data, METH_FASTCALL, 0},
     {"generate_gl_texture_target_mipmaps", generate_gl_texture_target_mipmaps, METH_O, 0},
+    {"set_gl_texture_target_filters", (PyCFunction)set_gl_texture_target_filters, METH_FASTCALL, 0},
     {0},
 };
 
