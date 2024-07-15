@@ -120,13 +120,13 @@ files = [
 
 [[package]]
 name = "eplatform"
-version = "0.2.2"
+version = "0.2.3"
 description = "Operating System Library"
 optional = false
 python-versions = "<4.0,>=3.12"
 files = [
-    {file = "eplatform-0.2.2-py3-none-any.whl", hash = "sha256:4cd39356fb5291678f573f070268b271108eb40dbd5630db219db4a850799b98"},
-    {file = "eplatform-0.2.2.tar.gz", hash = "sha256:a799acaf21b0e8cbdd76d76eb5622c837106383cbfde3bfc1eaf3bd80076c603"},
+    {file = "eplatform-0.2.3-py3-none-any.whl", hash = "sha256:4520440a3d4c53ac48cdbfd808470fbb86ef24ab3a89ad81cd71dab28e3b11f9"},
+    {file = "eplatform-0.2.3.tar.gz", hash = "sha256:f322abcb585877f1d98e9e630f2cdcf003967399262e178c671679f7e60ae624"},
 ]
 
 [package.dependencies]
@@ -252,4 +252,4 @@ testing = ["fields", "hunter", "process-tests", "pytest-xdist", "six", "virtuale
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.12"
-content-hash = "c0683f4af583e932ad8ae0cc50e69be02b21745e33ed00c45678c9de5f838da7"
+content-hash = "0a8a14a92e15c08964befe25fa35f549a15365ecdc94199edcf97a2ef370b968"
