@@ -64,7 +64,7 @@ def is_close():
 
 @pytest.fixture
 def is_kinda_close():
-    def _(a, b, rel_tol=0.09):
+    def _(a, b, abs_tol=0.09):
         try:
             for l, r in zip(a, b):
                 if not isclose(l, r, rel_tol=rel_tol):
