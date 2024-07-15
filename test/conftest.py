@@ -67,7 +67,7 @@ def is_kinda_close():
     def _(a, b, abs_tol=0.09):
         try:
             for l, r in zip(a, b):
-                if not isclose(l, r, rel_tol=rel_tol):
+                if not isclose(l, r, abs_tol=abs_tol):
                     return False
             return True
         except TypeError:
