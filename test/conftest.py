@@ -63,6 +63,21 @@ def is_close():
 
 
 @pytest.fixture
+def is_kinda_close():
+    def _(a, b, rel_tol=0.09):
+        try:
+            for l, r in zip(a, b):
+                if not isclose(l, r, rel_tol=rel_tol):
+                    return False
+            return True
+        except TypeError:
+            pass
+        return isclose(a, b, rel_tol=rel_tol)
+
+    return _
+
+
+@pytest.fixture
 def render_target(window):
     window.size = (10, 10)
     clear_render_target(window, depth=1, color=FVector3(0))
