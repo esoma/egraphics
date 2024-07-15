@@ -47,6 +47,7 @@ def test_clear_window(window, is_close):
     rect = IRectangle(IVector2(0, 0), window.size)
 
     clear_render_target(window, color=FVector3(0.3, 0.5, 0.7), depth=1)
+    print(list(read_color_from_render_target(window, rect)))
     assert all(
         is_close(p, FVector4(0.3, 0.5, 0.7, 1))
         for p in read_color_from_render_target(window, rect)
