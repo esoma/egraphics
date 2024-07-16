@@ -154,6 +154,7 @@ def test_source_destination_factors(
     colors = read_color_from_render_target(
         render_target, IRectangle(IVector2(0), render_target.size)
     )
+    print(colors[0], expected_color)
     assert all(
         c.r == pytest.approx(expected_color[0], abs=0.01)
         and c.g == pytest.approx(expected_color[1], abs=0.01)
