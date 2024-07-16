@@ -72,7 +72,7 @@ def is_kinda_close():
             return True
         except TypeError:
             pass
-        return isclose(a, b, rel_tol=rel_tol)
+        return isclose(a, b, abs_tol=abs_tol)
 
     return _
 
