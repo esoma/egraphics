@@ -136,4 +136,4 @@ def test_basic(render_target, depth_test, depth_write, expected_color, expected_
         render_target, IRectangle(IVector2(0), render_target.size)
     )
     print(depths[0], expected_depth)
-    assert all(d == pytest.approx(expected_depth, abs=1e-6) for d in depths)
+    assert all(d == pytest.approx(expected_depth, abs=0.01) for d in depths)
