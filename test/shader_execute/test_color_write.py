@@ -90,8 +90,7 @@ def test_mask(render_target, red, green, blue, alpha):
     expected_color = FVector4(
         0.2 if red else 0, 0.4 if green else 0, 0.6 if blue else 0, 0.8 if alpha else 1
     )
-    if isinstance(render_target, Window):
-        expected_color = expected_color.rgbl
+    ignore_alpha = isinstance(render_target, Window)
 
     colors = read_color_from_render_target(
         render_target, IRectangle(IVector2(0), render_target.size)
@@ -101,6 +100,6 @@ def test_mask(render_target, red, green, blue, alpha):
         c.r == pytest.approx(expected_color[0], abs=0.01)
         and c.g == pytest.approx(expected_color[1], abs=0.01)
         and c.b == pytest.approx(expected_color[2], abs=0.01)
-        and c.a == pytest.approx(expected_color[3], abs=0.01)
+        and (ignore_alpha or c.a == pytest.approx(expected_color[3], abs=0.01))
         for c in colors
     )

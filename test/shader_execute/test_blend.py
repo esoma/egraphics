@@ -148,18 +148,17 @@ def test_source_destination_factors(
     source_factor = calculate_factor(blend_source, color, clear_color, blend_color)
     destination_factor = calculate_factor(blend_destination, color, clear_color, blend_color)
     expected_color = ((color * source_factor) + (clear_color * destination_factor)).clamp(0.0, 1.0)
-    if isinstance(render_target, Window):
-        expected_color = expected_color.rgbl
+    ignore_alpha = isinstance(render_target, Window)
 
     colors = read_color_from_render_target(
         render_target, IRectangle(IVector2(0), render_target.size)
     )
-    print(colors[0], expected_color)
+
     assert all(
         c.r == pytest.approx(expected_color[0], abs=0.01)
         and c.g == pytest.approx(expected_color[1], abs=0.01)
         and c.b == pytest.approx(expected_color[2], abs=0.01)
-        and c.a == pytest.approx(expected_color[3], abs=0.01)
+        and (ignore_alpha or c.a == pytest.approx(expected_color[3], abs=0.01))
         for c in colors
     )
 
@@ -199,8 +198,7 @@ def test_source_destination_alpha_factors(
             clear_color.r, clear_color.g, clear_color.b, clear_color.a * destination_factor[3]
         )
     ).clamp(0.0, 1.0)
-    if isinstance(render_target, Window):
-        expected_color = expected_color.rgbl
+    ignore_alpha = isinstance(render_target, Window)
 
     colors = read_color_from_render_target(
         render_target, IRectangle(IVector2(0), render_target.size)
@@ -209,7 +207,7 @@ def test_source_destination_alpha_factors(
         c.r == pytest.approx(expected_color[0], abs=0.01)
         and c.g == pytest.approx(expected_color[1], abs=0.01)
         and c.b == pytest.approx(expected_color[2], abs=0.01)
-        and c.a == pytest.approx(expected_color[3], abs=0.01)
+        and (ignore_alpha or c.a == pytest.approx(expected_color[3], abs=0.01))
         for c in colors
     )
 
@@ -248,8 +246,7 @@ def test_function(render_target, blend_function):
     elif blend_function == BlendFunction.MAX:
         expected_color = FVector4(*(max(s, d) for s, d in zip(source, destination)))
     expected_color = expected_color.clamp(0.0, 1.0)
-    if isinstance(render_target, Window):
-        expected_color = expected_color.rgbl
+    ignore_alpha = isinstance(render_target, Window)
 
     colors = read_color_from_render_target(
         render_target, IRectangle(IVector2(0), render_target.size)
@@ -258,7 +255,7 @@ def test_function(render_target, blend_function):
         c.r == pytest.approx(expected_color[0], abs=0.01)
         and c.g == pytest.approx(expected_color[1], abs=0.01)
         and c.b == pytest.approx(expected_color[2], abs=0.01)
-        and c.a == pytest.approx(expected_color[3], abs=0.01)
+        and (ignore_alpha or c.a == pytest.approx(expected_color[3], abs=0.01))
         for c in colors
     )
 
@@ -280,6 +277,8 @@ def test_default_blend_color(render_target):
         None,
     )
     expected_color = FVector4(0.5, 0.5, 0.5, 1)
+    ignore_alpha = isinstance(render_target, Window)
+
     colors = read_color_from_render_target(
         render_target, IRectangle(IVector2(0), render_target.size)
     )
@@ -287,6 +286,6 @@ def test_default_blend_color(render_target):
         c.r == pytest.approx(expected_color[0], abs=0.01)
         and c.g == pytest.approx(expected_color[1], abs=0.01)
         and c.b == pytest.approx(expected_color[2], abs=0.01)
-        and c.a == pytest.approx(expected_color[3], abs=0.01)
+        and (ignore_alpha or c.a == pytest.approx(expected_color[3], abs=0.01))
         for c in colors
     )

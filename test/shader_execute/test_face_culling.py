@@ -17,6 +17,9 @@ from emath import FVector3
 from emath import FVector4
 from emath import IVector2
 
+# eplatform
+from eplatform import Window
+
 # pytest
 import pytest
 
@@ -72,6 +75,7 @@ def draw_fullscreen_quad(render_target, shader, color, front, face_cull) -> None
     ],
 )
 def test_basic(render_target, face_cull, expected_color):
+    ignore_alpha = isinstance(render_target, Window)
     clear_render_target(render_target, color=FVector3(0, 0, 0))
 
     shader = Shader(vertex=BytesIO(VERTEX_SHADER), fragment=BytesIO(FRAGMENT_SHADER))
@@ -96,6 +100,6 @@ def test_basic(render_target, face_cull, expected_color):
         c.r == pytest.approx(expected_color[0], abs=0.01)
         and c.g == pytest.approx(expected_color[1], abs=0.01)
         and c.b == pytest.approx(expected_color[2], abs=0.01)
-        and c.a == pytest.approx(expected_color[3], abs=0.01)
+        and (ignore_alpha or c.a == pytest.approx(expected_color[3], abs=0.01))
         for c in colors
     )

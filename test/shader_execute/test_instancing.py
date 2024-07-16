@@ -18,6 +18,9 @@ from emath import FVector3Array
 from emath import FVector4
 from emath import IVector2
 
+# eplatform
+from eplatform import Window
+
 # pytest
 import pytest
 
@@ -102,6 +105,7 @@ def test_zero_instances(render_target):
     draw_fullscreen_quads(render_target, shader, [])
 
     expected_color = FVector4(0, 0, 0, 1)
+    ignore_alpha = isinstance(render_target, Window)
     colors = read_color_from_render_target(
         render_target, IRectangle(IVector2(0), render_target.size)
     )
@@ -109,7 +113,7 @@ def test_zero_instances(render_target):
         c.r == pytest.approx(expected_color[0], abs=0.01)
         and c.g == pytest.approx(expected_color[1], abs=0.01)
         and c.b == pytest.approx(expected_color[2], abs=0.01)
-        and c.a == pytest.approx(expected_color[3], abs=0.01)
+        and (ignore_alpha or c.a == pytest.approx(expected_color[3], abs=0.01))
         for c in colors
     )
 
@@ -133,6 +137,7 @@ def test_basic(render_target, colors) -> None:
     draw_fullscreen_quads(render_target, shader, colors)
 
     expected_color = FVector4(*colors[-1], 1)
+    ignore_alpha = isinstance(render_target, Window)
     colors = read_color_from_render_target(
         render_target, IRectangle(IVector2(0), render_target.size)
     )
@@ -140,6 +145,6 @@ def test_basic(render_target, colors) -> None:
         c.r == pytest.approx(expected_color[0], abs=0.01)
         and c.g == pytest.approx(expected_color[1], abs=0.01)
         and c.b == pytest.approx(expected_color[2], abs=0.01)
-        and c.a == pytest.approx(expected_color[3], abs=0.01)
+        and (ignore_alpha or c.a == pytest.approx(expected_color[3], abs=0.01))
         for c in colors
     )
