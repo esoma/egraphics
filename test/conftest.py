@@ -18,6 +18,7 @@ from eplatform import get_window
 import pytest
 
 # python
+import gc
 from math import isclose
 
 
@@ -29,12 +30,14 @@ def _reset_state():
     _reset_shader_state()
     _reset_texture_target_state()
     _reset_texture_state()
+    gc.collect()
 
 
 @pytest.fixture
 def platform(_reset_state):
     with Platform():
         yield
+    gc.collect()
 
 
 @pytest.fixture
