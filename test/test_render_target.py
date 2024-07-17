@@ -46,10 +46,6 @@ def test_clear_window(window, is_kinda_close):
     rect = IRectangle(IVector2(0, 0), window.size)
 
     clear_render_target(window, color=FVector3(0.3, 0.5, 0.7), depth=1)
-    print(read_color_from_render_target(window, rect)[0].rgb)
-    print(
-        is_kinda_close(read_color_from_render_target(window, rect)[0].rgb, FVector3(0.3, 0.5, 0.7))
-    )
     assert all(
         is_kinda_close(p.rgb, FVector3(0.3, 0.5, 0.7))
         for p in read_color_from_render_target(window, rect)
