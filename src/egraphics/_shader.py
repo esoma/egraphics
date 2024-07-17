@@ -16,17 +16,59 @@ __all__ = [
 # egraphics
 from ._egraphics import GL_ALWAYS
 from ._egraphics import GL_BACK
+from ._egraphics import GL_BOOL
 from ._egraphics import GL_CONSTANT_ALPHA
 from ._egraphics import GL_CONSTANT_COLOR
+from ._egraphics import GL_DOUBLE
+from ._egraphics import GL_DOUBLE_MAT2
+from ._egraphics import GL_DOUBLE_MAT2x3
+from ._egraphics import GL_DOUBLE_MAT2x4
+from ._egraphics import GL_DOUBLE_MAT3
+from ._egraphics import GL_DOUBLE_MAT3x2
+from ._egraphics import GL_DOUBLE_MAT3x4
+from ._egraphics import GL_DOUBLE_MAT4
+from ._egraphics import GL_DOUBLE_MAT4x2
+from ._egraphics import GL_DOUBLE_MAT4x3
+from ._egraphics import GL_DOUBLE_VEC2
+from ._egraphics import GL_DOUBLE_VEC3
+from ._egraphics import GL_DOUBLE_VEC4
 from ._egraphics import GL_DST_ALPHA
 from ._egraphics import GL_DST_COLOR
 from ._egraphics import GL_EQUAL
+from ._egraphics import GL_FLOAT
+from ._egraphics import GL_FLOAT_MAT2
+from ._egraphics import GL_FLOAT_MAT2x3
+from ._egraphics import GL_FLOAT_MAT2x4
+from ._egraphics import GL_FLOAT_MAT3
+from ._egraphics import GL_FLOAT_MAT3x2
+from ._egraphics import GL_FLOAT_MAT3x4
+from ._egraphics import GL_FLOAT_MAT4
+from ._egraphics import GL_FLOAT_MAT4x2
+from ._egraphics import GL_FLOAT_MAT4x3
+from ._egraphics import GL_FLOAT_VEC2
+from ._egraphics import GL_FLOAT_VEC3
+from ._egraphics import GL_FLOAT_VEC4
 from ._egraphics import GL_FRONT
 from ._egraphics import GL_FUNC_ADD
 from ._egraphics import GL_FUNC_REVERSE_SUBTRACT
 from ._egraphics import GL_FUNC_SUBTRACT
 from ._egraphics import GL_GEQUAL
 from ._egraphics import GL_GREATER
+from ._egraphics import GL_INT
+from ._egraphics import GL_INT_SAMPLER_1D
+from ._egraphics import GL_INT_SAMPLER_1D_ARRAY
+from ._egraphics import GL_INT_SAMPLER_2D
+from ._egraphics import GL_INT_SAMPLER_2D_ARRAY
+from ._egraphics import GL_INT_SAMPLER_2D_MULTISAMPLE
+from ._egraphics import GL_INT_SAMPLER_2D_MULTISAMPLE_ARRAY
+from ._egraphics import GL_INT_SAMPLER_2D_RECT
+from ._egraphics import GL_INT_SAMPLER_3D
+from ._egraphics import GL_INT_SAMPLER_BUFFER
+from ._egraphics import GL_INT_SAMPLER_CUBE
+from ._egraphics import GL_INT_SAMPLER_CUBE_MAP_ARRAY
+from ._egraphics import GL_INT_VEC2
+from ._egraphics import GL_INT_VEC3
+from ._egraphics import GL_INT_VEC4
 from ._egraphics import GL_LEQUAL
 from ._egraphics import GL_LESS
 from ._egraphics import GL_MAX
@@ -40,9 +82,42 @@ from ._egraphics import GL_ONE_MINUS_DST_ALPHA
 from ._egraphics import GL_ONE_MINUS_DST_COLOR
 from ._egraphics import GL_ONE_MINUS_SRC_ALPHA
 from ._egraphics import GL_ONE_MINUS_SRC_COLOR
+from ._egraphics import GL_SAMPLER_1D
+from ._egraphics import GL_SAMPLER_1D_ARRAY
+from ._egraphics import GL_SAMPLER_1D_ARRAY_SHADOW
+from ._egraphics import GL_SAMPLER_1D_SHADOW
+from ._egraphics import GL_SAMPLER_2D
+from ._egraphics import GL_SAMPLER_2D_ARRAY
+from ._egraphics import GL_SAMPLER_2D_ARRAY_SHADOW
+from ._egraphics import GL_SAMPLER_2D_MULTISAMPLE
+from ._egraphics import GL_SAMPLER_2D_MULTISAMPLE_ARRAY
+from ._egraphics import GL_SAMPLER_2D_RECT
+from ._egraphics import GL_SAMPLER_2D_RECT_SHADOW
+from ._egraphics import GL_SAMPLER_2D_SHADOW
+from ._egraphics import GL_SAMPLER_3D
+from ._egraphics import GL_SAMPLER_BUFFER
+from ._egraphics import GL_SAMPLER_CUBE
+from ._egraphics import GL_SAMPLER_CUBE_MAP_ARRAY
+from ._egraphics import GL_SAMPLER_CUBE_SHADOW
 from ._egraphics import GL_SRC_ALPHA
 from ._egraphics import GL_SRC_COLOR
+from ._egraphics import GL_UNSIGNED_INT
+from ._egraphics import GL_UNSIGNED_INT_SAMPLER_1D
+from ._egraphics import GL_UNSIGNED_INT_SAMPLER_1D_ARRAY
+from ._egraphics import GL_UNSIGNED_INT_SAMPLER_2D
+from ._egraphics import GL_UNSIGNED_INT_SAMPLER_2D_ARRAY
+from ._egraphics import GL_UNSIGNED_INT_SAMPLER_2D_MULTISAMPLE
+from ._egraphics import GL_UNSIGNED_INT_SAMPLER_2D_MULTISAMPLE_ARRAY
+from ._egraphics import GL_UNSIGNED_INT_SAMPLER_2D_RECT
+from ._egraphics import GL_UNSIGNED_INT_SAMPLER_3D
+from ._egraphics import GL_UNSIGNED_INT_SAMPLER_BUFFER
+from ._egraphics import GL_UNSIGNED_INT_SAMPLER_CUBE
+from ._egraphics import GL_UNSIGNED_INT_SAMPLER_CUBE_MAP_ARRAY
+from ._egraphics import GL_UNSIGNED_INT_VEC2
+from ._egraphics import GL_UNSIGNED_INT_VEC3
+from ._egraphics import GL_UNSIGNED_INT_VEC4
 from ._egraphics import GL_ZERO
+from ._egraphics import GlType
 from ._egraphics import get_gl_shader_uniforms
 from ._g_buffer_view import GBufferView
 from ._texture import Texture
@@ -633,81 +708,81 @@ def _wrap_uniform_matrix(f: Any) -> Any:
     return _
 
 
-_GL_TYPE_TO_PY: Final[Mapping] = {
-    OpenGL.GL.GL_FLOAT: ctypes.c_float,
-    OpenGL.GL.GL_FLOAT_VEC2: emath.FVector2,
-    OpenGL.GL.GL_FLOAT_VEC3: emath.FVector3,
-    OpenGL.GL.GL_FLOAT_VEC4: emath.FVector4,
-    OpenGL.GL.GL_DOUBLE: ctypes.c_double,
-    OpenGL.GL.GL_DOUBLE_VEC2: emath.DVector2,
-    OpenGL.GL.GL_DOUBLE_VEC3: emath.DVector3,
-    OpenGL.GL.GL_DOUBLE_VEC4: emath.DVector4,
-    OpenGL.GL.GL_INT: ctypes.c_int32,
-    OpenGL.GL.GL_INT_VEC2: emath.I32Vector2,
-    OpenGL.GL.GL_INT_VEC3: emath.I32Vector3,
-    OpenGL.GL.GL_INT_VEC4: emath.I32Vector4,
-    OpenGL.GL.GL_UNSIGNED_INT: ctypes.c_uint32,
-    OpenGL.GL.GL_UNSIGNED_INT_VEC2: emath.U32Vector2,
-    OpenGL.GL.GL_UNSIGNED_INT_VEC3: emath.U32Vector3,
-    OpenGL.GL.GL_UNSIGNED_INT_VEC4: emath.U32Vector4,
-    OpenGL.GL.GL_BOOL: ctypes.c_bool,
-    OpenGL.GL.GL_FLOAT_MAT2: emath.FMatrix2x2,
-    OpenGL.GL.GL_FLOAT_MAT3: emath.FMatrix3x3,
-    OpenGL.GL.GL_FLOAT_MAT4: emath.FMatrix4x4,
-    OpenGL.GL.GL_FLOAT_MAT2x3: emath.FMatrix2x3,
-    OpenGL.GL.GL_FLOAT_MAT2x4: emath.FMatrix2x4,
-    OpenGL.GL.GL_FLOAT_MAT3x2: emath.FMatrix3x2,
-    OpenGL.GL.GL_FLOAT_MAT3x4: emath.FMatrix3x4,
-    OpenGL.GL.GL_FLOAT_MAT4x2: emath.FMatrix4x2,
-    OpenGL.GL.GL_FLOAT_MAT4x3: emath.FMatrix4x3,
-    OpenGL.GL.GL_DOUBLE_MAT2: emath.DMatrix2x2,
-    OpenGL.GL.GL_DOUBLE_MAT3: emath.DMatrix3x3,
-    OpenGL.GL.GL_DOUBLE_MAT4: emath.DMatrix4x4,
-    OpenGL.GL.GL_DOUBLE_MAT2x3: emath.DMatrix2x3,
-    OpenGL.GL.GL_DOUBLE_MAT2x4: emath.DMatrix2x4,
-    OpenGL.GL.GL_DOUBLE_MAT3x2: emath.DMatrix3x2,
-    OpenGL.GL.GL_DOUBLE_MAT3x4: emath.DMatrix3x4,
-    OpenGL.GL.GL_DOUBLE_MAT4x2: emath.DMatrix4x2,
-    OpenGL.GL.GL_DOUBLE_MAT4x3: emath.DMatrix4x3,
-    OpenGL.GL.GL_SAMPLER_1D: Texture,
-    OpenGL.GL.GL_INT_SAMPLER_1D: Texture,
-    OpenGL.GL.GL_UNSIGNED_INT_SAMPLER_1D: Texture,
-    OpenGL.GL.GL_SAMPLER_2D: Texture,
-    OpenGL.GL.GL_INT_SAMPLER_2D: Texture,
-    OpenGL.GL.GL_UNSIGNED_INT_SAMPLER_2D: Texture,
-    OpenGL.GL.GL_SAMPLER_3D: Texture,
-    OpenGL.GL.GL_INT_SAMPLER_3D: Texture,
-    OpenGL.GL.GL_UNSIGNED_INT_SAMPLER_3D: Texture,
-    OpenGL.GL.GL_SAMPLER_CUBE: Texture,
-    OpenGL.GL.GL_INT_SAMPLER_CUBE: Texture,
-    OpenGL.GL.GL_UNSIGNED_INT_SAMPLER_CUBE: Texture,
-    OpenGL.GL.GL_SAMPLER_2D_RECT: Texture,
-    OpenGL.GL.GL_INT_SAMPLER_2D_RECT: Texture,
-    OpenGL.GL.GL_UNSIGNED_INT_SAMPLER_2D_RECT: Texture,
-    OpenGL.GL.GL_SAMPLER_1D_ARRAY: Texture,
-    OpenGL.GL.GL_INT_SAMPLER_1D_ARRAY: Texture,
-    OpenGL.GL.GL_UNSIGNED_INT_SAMPLER_1D_ARRAY: Texture,
-    OpenGL.GL.GL_SAMPLER_2D_ARRAY: Texture,
-    OpenGL.GL.GL_INT_SAMPLER_2D_ARRAY: Texture,
-    OpenGL.GL.GL_UNSIGNED_INT_SAMPLER_2D_ARRAY: Texture,
-    OpenGL.GL.GL_SAMPLER_CUBE_MAP_ARRAY: Texture,
-    OpenGL.GL.GL_INT_SAMPLER_CUBE_MAP_ARRAY: Texture,
-    OpenGL.GL.GL_UNSIGNED_INT_SAMPLER_CUBE_MAP_ARRAY: Texture,
-    OpenGL.GL.GL_SAMPLER_BUFFER: Texture,
-    OpenGL.GL.GL_INT_SAMPLER_BUFFER: Texture,
-    OpenGL.GL.GL_UNSIGNED_INT_SAMPLER_BUFFER: Texture,
-    OpenGL.GL.GL_SAMPLER_2D_MULTISAMPLE: Texture,
-    OpenGL.GL.GL_INT_SAMPLER_2D_MULTISAMPLE: Texture,
-    OpenGL.GL.GL_UNSIGNED_INT_SAMPLER_2D_MULTISAMPLE: Texture,
-    OpenGL.GL.GL_SAMPLER_2D_MULTISAMPLE_ARRAY: Texture,
-    OpenGL.GL.GL_INT_SAMPLER_2D_MULTISAMPLE_ARRAY: Texture,
-    OpenGL.GL.GL_UNSIGNED_INT_SAMPLER_2D_MULTISAMPLE_ARRAY: Texture,
-    OpenGL.GL.GL_SAMPLER_1D_SHADOW: Texture,
-    OpenGL.GL.GL_SAMPLER_2D_SHADOW: Texture,
-    OpenGL.GL.GL_SAMPLER_CUBE_SHADOW: Texture,
-    OpenGL.GL.GL_SAMPLER_2D_RECT_SHADOW: Texture,
-    OpenGL.GL.GL_SAMPLER_1D_ARRAY_SHADOW: Texture,
-    OpenGL.GL.GL_SAMPLER_2D_ARRAY_SHADOW: Texture,
+_GL_TYPE_TO_PY: Final[Mapping[GlType, Any]] = {
+    GL_FLOAT: ctypes.c_float,
+    GL_FLOAT_VEC2: emath.FVector2,
+    GL_FLOAT_VEC3: emath.FVector3,
+    GL_FLOAT_VEC4: emath.FVector4,
+    GL_DOUBLE: ctypes.c_double,
+    GL_DOUBLE_VEC2: emath.DVector2,
+    GL_DOUBLE_VEC3: emath.DVector3,
+    GL_DOUBLE_VEC4: emath.DVector4,
+    GL_INT: ctypes.c_int32,
+    GL_INT_VEC2: emath.I32Vector2,
+    GL_INT_VEC3: emath.I32Vector3,
+    GL_INT_VEC4: emath.I32Vector4,
+    GL_UNSIGNED_INT: ctypes.c_uint32,
+    GL_UNSIGNED_INT_VEC2: emath.U32Vector2,
+    GL_UNSIGNED_INT_VEC3: emath.U32Vector3,
+    GL_UNSIGNED_INT_VEC4: emath.U32Vector4,
+    GL_BOOL: ctypes.c_bool,
+    GL_FLOAT_MAT2: emath.FMatrix2x2,
+    GL_FLOAT_MAT3: emath.FMatrix3x3,
+    GL_FLOAT_MAT4: emath.FMatrix4x4,
+    GL_FLOAT_MAT2x3: emath.FMatrix2x3,
+    GL_FLOAT_MAT2x4: emath.FMatrix2x4,
+    GL_FLOAT_MAT3x2: emath.FMatrix3x2,
+    GL_FLOAT_MAT3x4: emath.FMatrix3x4,
+    GL_FLOAT_MAT4x2: emath.FMatrix4x2,
+    GL_FLOAT_MAT4x3: emath.FMatrix4x3,
+    GL_DOUBLE_MAT2: emath.DMatrix2x2,
+    GL_DOUBLE_MAT3: emath.DMatrix3x3,
+    GL_DOUBLE_MAT4: emath.DMatrix4x4,
+    GL_DOUBLE_MAT2x3: emath.DMatrix2x3,
+    GL_DOUBLE_MAT2x4: emath.DMatrix2x4,
+    GL_DOUBLE_MAT3x2: emath.DMatrix3x2,
+    GL_DOUBLE_MAT3x4: emath.DMatrix3x4,
+    GL_DOUBLE_MAT4x2: emath.DMatrix4x2,
+    GL_DOUBLE_MAT4x3: emath.DMatrix4x3,
+    GL_SAMPLER_1D: Texture,
+    GL_INT_SAMPLER_1D: Texture,
+    GL_UNSIGNED_INT_SAMPLER_1D: Texture,
+    GL_SAMPLER_2D: Texture,
+    GL_INT_SAMPLER_2D: Texture,
+    GL_UNSIGNED_INT_SAMPLER_2D: Texture,
+    GL_SAMPLER_3D: Texture,
+    GL_INT_SAMPLER_3D: Texture,
+    GL_UNSIGNED_INT_SAMPLER_3D: Texture,
+    GL_SAMPLER_CUBE: Texture,
+    GL_INT_SAMPLER_CUBE: Texture,
+    GL_UNSIGNED_INT_SAMPLER_CUBE: Texture,
+    GL_SAMPLER_2D_RECT: Texture,
+    GL_INT_SAMPLER_2D_RECT: Texture,
+    GL_UNSIGNED_INT_SAMPLER_2D_RECT: Texture,
+    GL_SAMPLER_1D_ARRAY: Texture,
+    GL_INT_SAMPLER_1D_ARRAY: Texture,
+    GL_UNSIGNED_INT_SAMPLER_1D_ARRAY: Texture,
+    GL_SAMPLER_2D_ARRAY: Texture,
+    GL_INT_SAMPLER_2D_ARRAY: Texture,
+    GL_UNSIGNED_INT_SAMPLER_2D_ARRAY: Texture,
+    GL_SAMPLER_CUBE_MAP_ARRAY: Texture,
+    GL_INT_SAMPLER_CUBE_MAP_ARRAY: Texture,
+    GL_UNSIGNED_INT_SAMPLER_CUBE_MAP_ARRAY: Texture,
+    GL_SAMPLER_BUFFER: Texture,
+    GL_INT_SAMPLER_BUFFER: Texture,
+    GL_UNSIGNED_INT_SAMPLER_BUFFER: Texture,
+    GL_SAMPLER_2D_MULTISAMPLE: Texture,
+    GL_INT_SAMPLER_2D_MULTISAMPLE: Texture,
+    GL_UNSIGNED_INT_SAMPLER_2D_MULTISAMPLE: Texture,
+    GL_SAMPLER_2D_MULTISAMPLE_ARRAY: Texture,
+    GL_INT_SAMPLER_2D_MULTISAMPLE_ARRAY: Texture,
+    GL_UNSIGNED_INT_SAMPLER_2D_MULTISAMPLE_ARRAY: Texture,
+    GL_SAMPLER_1D_SHADOW: Texture,
+    GL_SAMPLER_2D_SHADOW: Texture,
+    GL_SAMPLER_CUBE_SHADOW: Texture,
+    GL_SAMPLER_2D_RECT_SHADOW: Texture,
+    GL_SAMPLER_1D_ARRAY_SHADOW: Texture,
+    GL_SAMPLER_2D_ARRAY_SHADOW: Texture,
 }
 
 
