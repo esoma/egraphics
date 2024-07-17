@@ -15,6 +15,10 @@ __all__ = [
 
 # egraphics
 from ._egraphics import GL_ALWAYS
+from ._egraphics import GL_CONSTANT_ALPHA
+from ._egraphics import GL_CONSTANT_COLOR
+from ._egraphics import GL_DST_ALPHA
+from ._egraphics import GL_DST_COLOR
 from ._egraphics import GL_EQUAL
 from ._egraphics import GL_GEQUAL
 from ._egraphics import GL_GREATER
@@ -22,6 +26,16 @@ from ._egraphics import GL_LEQUAL
 from ._egraphics import GL_LESS
 from ._egraphics import GL_NEVER
 from ._egraphics import GL_NOTEQUAL
+from ._egraphics import GL_ONE
+from ._egraphics import GL_ONE_MINUS_CONSTANT_ALPHA
+from ._egraphics import GL_ONE_MINUS_CONSTANT_COLOR
+from ._egraphics import GL_ONE_MINUS_DST_ALPHA
+from ._egraphics import GL_ONE_MINUS_DST_COLOR
+from ._egraphics import GL_ONE_MINUS_SRC_ALPHA
+from ._egraphics import GL_ONE_MINUS_SRC_COLOR
+from ._egraphics import GL_SRC_ALPHA
+from ._egraphics import GL_SRC_COLOR
+from ._egraphics import GL_ZERO
 from ._egraphics import get_gl_shader_uniforms
 from ._g_buffer_view import GBufferView
 from ._texture import Texture
@@ -118,20 +132,20 @@ class DepthTest(Enum):
 
 
 class BlendFactor(Enum):
-    ZERO = int(OpenGL.GL.GL_ZERO)
-    ONE = int(OpenGL.GL.GL_ONE)
-    SOURCE_COLOR = int(OpenGL.GL.GL_SRC_COLOR)
-    ONE_MINUS_SOURCE_COLOR = int(OpenGL.GL.GL_ONE_MINUS_SRC_COLOR)
-    DESTINATION_COLOR = int(OpenGL.GL.GL_DST_COLOR)
-    ONE_MINUS_DESTINATION_COLOR = int(OpenGL.GL.GL_ONE_MINUS_DST_COLOR)
-    SOURCE_ALPHA = int(OpenGL.GL.GL_SRC_ALPHA)
-    ONE_MINUS_SOURCE_ALPHA = int(OpenGL.GL.GL_ONE_MINUS_SRC_ALPHA)
-    DESTINATION_ALPHA = int(OpenGL.GL.GL_DST_ALPHA)
-    ONE_MINUS_DESTINATION_ALPHA = int(OpenGL.GL.GL_ONE_MINUS_DST_ALPHA)
-    BLEND_COLOR = int(OpenGL.GL.GL_CONSTANT_COLOR)
-    ONE_MINUS_BLEND_COLOR = int(OpenGL.GL.GL_ONE_MINUS_CONSTANT_COLOR)
-    BLEND_ALPHA = int(OpenGL.GL.GL_CONSTANT_COLOR)
-    ONE_MINUS_BLEND_ALPHA = int(OpenGL.GL.GL_ONE_MINUS_CONSTANT_ALPHA)
+    ZERO = GL_ZERO
+    ONE = GL_ONE
+    SOURCE_COLOR = GL_SRC_COLOR
+    ONE_MINUS_SOURCE_COLOR = GL_ONE_MINUS_SRC_COLOR
+    DESTINATION_COLOR = GL_DST_COLOR
+    ONE_MINUS_DESTINATION_COLOR = GL_ONE_MINUS_DST_COLOR
+    SOURCE_ALPHA = GL_SRC_ALPHA
+    ONE_MINUS_SOURCE_ALPHA = GL_ONE_MINUS_SRC_ALPHA
+    DESTINATION_ALPHA = GL_DST_ALPHA
+    ONE_MINUS_DESTINATION_ALPHA = GL_ONE_MINUS_DST_ALPHA
+    BLEND_COLOR = GL_CONSTANT_COLOR
+    ONE_MINUS_BLEND_COLOR = GL_ONE_MINUS_CONSTANT_COLOR
+    BLEND_ALPHA = GL_CONSTANT_ALPHA
+    ONE_MINUS_BLEND_ALPHA = GL_ONE_MINUS_CONSTANT_ALPHA
 
 
 class BlendFunction(Enum):

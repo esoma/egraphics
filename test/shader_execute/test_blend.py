@@ -112,7 +112,7 @@ def calculate_factor(factor, source_color, destination_color, blend_color) -> FV
     elif factor == BlendFactor.ONE_MINUS_BLEND_COLOR:
         return 1 - blend_color
     elif factor == BlendFactor.BLEND_ALPHA:
-        return blend_color.a
+        return blend_color.aaaa
     elif factor == BlendFactor.ONE_MINUS_BLEND_ALPHA:
         return FVector4(1 - blend_color.a)
     assert False

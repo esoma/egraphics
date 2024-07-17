@@ -1,4 +1,5 @@
 __all__ = [
+    "GlBlendFactor",
     "GlBuffer",
     "GlBufferTarget",
     "GlBufferUsage",
@@ -47,6 +48,20 @@ __all__ = [
     "GL_GEQUAL",
     "GL_EQUAL",
     "GL_NOTEQUAL",
+    "GL_ZERO",
+    "GL_ONE",
+    "GL_SRC_COLOR",
+    "GL_ONE_MINUS_SRC_COLOR",
+    "GL_DST_COLOR",
+    "GL_ONE_MINUS_DST_COLOR",
+    "GL_SRC_ALPHA",
+    "GL_ONE_MINUS_SRC_ALPHA",
+    "GL_DST_ALPHA",
+    "GL_ONE_MINUS_DST_ALPHA",
+    "GL_CONSTANT_COLOR",
+    "GL_ONE_MINUS_CONSTANT_COLOR",
+    "GL_CONSTANT_ALPHA",
+    "GL_ONE_MINUS_CONSTANT_ALPHA",
     "activate_gl_vertex_array",
     "set_gl_buffer_target",
     "create_gl_buffer",
@@ -85,6 +100,7 @@ from emath import UVector2
 from collections.abc import Buffer
 from typing import NewType
 
+GlBlendFactor = NewType("GlBlendFactor", int)
 GlBuffer = NewType("GlBuffer", int)
 GlBufferTarget = NewType("GlBufferTarget", int)
 GlBufferUsage = NewType("GlBufferUsage", int)
@@ -150,6 +166,21 @@ GL_GREATER: GlFunc
 GL_GEQUAL: GlFunc
 GL_EQUAL: GlFunc
 GL_NOTEQUAL: GlFunc
+
+GL_ZERO: GlBlendFactor
+GL_ONE: GlBlendFactor
+GL_SRC_COLOR: GlBlendFactor
+GL_ONE_MINUS_SRC_COLOR: GlBlendFactor
+GL_DST_COLOR: GlBlendFactor
+GL_ONE_MINUS_DST_COLOR: GlBlendFactor
+GL_SRC_ALPHA: GlBlendFactor
+GL_ONE_MINUS_SRC_ALPHA: GlBlendFactor
+GL_DST_ALPHA: GlBlendFactor
+GL_ONE_MINUS_DST_ALPHA: GlBlendFactor
+GL_CONSTANT_COLOR: GlBlendFactor
+GL_ONE_MINUS_CONSTANT_COLOR: GlBlendFactor
+GL_CONSTANT_ALPHA: GlBlendFactor
+GL_ONE_MINUS_CONSTANT_ALPHA: GlBlendFactor
 
 def activate_gl_vertex_array(gl_vertex_array: GlVertexArray | None) -> None: ...
 def set_gl_buffer_target(target: GlBufferTarget, gl_buffer: GlBuffer | None, /) -> None: ...
