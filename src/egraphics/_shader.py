@@ -108,6 +108,7 @@ from ._egraphics import GL_SRC_COLOR
 from ._egraphics import GL_TRIANGLES
 from ._egraphics import GL_TRIANGLE_FAN
 from ._egraphics import GL_TRIANGLE_STRIP
+from ._egraphics import GL_UNSIGNED_BYTE
 from ._egraphics import GL_UNSIGNED_INT
 from ._egraphics import GL_UNSIGNED_INT_SAMPLER_1D
 from ._egraphics import GL_UNSIGNED_INT_SAMPLER_1D_ARRAY
@@ -123,6 +124,7 @@ from ._egraphics import GL_UNSIGNED_INT_SAMPLER_CUBE_MAP_ARRAY
 from ._egraphics import GL_UNSIGNED_INT_VEC2
 from ._egraphics import GL_UNSIGNED_INT_VEC3
 from ._egraphics import GL_UNSIGNED_INT_VEC4
+from ._egraphics import GL_UNSIGNED_SHORT
 from ._egraphics import GL_ZERO
 from ._egraphics import GlType
 from ._egraphics import get_gl_shader_uniforms
@@ -965,8 +967,8 @@ UniformValue = (
 
 UniformMap = Mapping[str, UniformValue]
 
-_INDEX_BUFFER_VIEW_TYPE_TO_VERTEX_ATTRIB_POINTER: Final[Mapping] = {
-    ctypes.c_uint8: OpenGL.GL.GL_UNSIGNED_BYTE,
-    ctypes.c_uint16: OpenGL.GL.GL_UNSIGNED_SHORT,
-    ctypes.c_uint32: OpenGL.GL.GL_UNSIGNED_INT,
+_INDEX_BUFFER_VIEW_TYPE_TO_VERTEX_ATTRIB_POINTER: Final[Mapping[Any, GlType]] = {
+    ctypes.c_uint8: GL_UNSIGNED_BYTE,
+    ctypes.c_uint16: GL_UNSIGNED_SHORT,
+    ctypes.c_uint32: GL_UNSIGNED_INT,
 }
