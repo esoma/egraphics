@@ -699,6 +699,61 @@ error:
 
 
 static PyObject *
+get_gl_program_attributes(PyObject *module, PyObject *py_gl_shader)
+{
+    PyObject *result = 0;
+    GLchar *name = 0;
+
+    GLuint gl_shader = PyLong_AsUnsignedLong(py_gl_shader);
+    CHECK_UNEXPECTED_PYTHON_ERROR();
+
+    GLint attr_count = 0;
+    glGetProgramiv(gl_shader, GL_ACTIVE_ATTRIBUTES, &attr_count);
+    CHECK_GL_ERROR();
+
+    GLint max_name_length = 0;
+    glGetProgramiv(gl_shader, GL_ACTIVE_ATTRIBUTE_MAX_LENGTH, &max_name_length);
+    CHECK_GL_ERROR();
+
+    name = malloc(sizeof(GLchar) * max_name_length + 1);
+    if (!name)
+    {
+        PyErr_Format(PyExc_MemoryError, "out of memory");
+        goto error;
+    }
+    GLsizei name_length;
+    GLint size;
+    GLenum type;
+
+    result = PyTuple_New(attr_count);
+    CHECK_UNEXPECTED_PYTHON_ERROR();
+
+    for (GLint i = 0; i < attr_count; i++)
+    {
+        glGetActiveAttrib(gl_shader, i, max_name_length, &name_length, &size, &type, name);
+        CHECK_GL_ERROR();
+        name[name_length] = 0;
+
+        GLint location = glGetAttribLocation(gl_shader, name);
+        CHECK_GL_ERROR();
+
+        PyObject *attr = Py_BuildValue("siii", name, size, type, location);
+        CHECK_UNEXPECTED_PYTHON_ERROR();
+
+        PyTuple_SET_ITEM(result, i, attr);
+    }
+
+    free(name);
+
+    return result;
+error:
+    Py_XDECREF(result);
+    if (name){ free(name); }
+    return 0;
+}
+
+
+static PyObject *
 create_gl_program(PyObject *module, PyObject **args, Py_ssize_t nargs)
 {
     static const char * SHADER_STAGE_NAME[] = {
@@ -897,6 +952,7 @@ static PyMethodDef module_PyMethodDef[] = {
     {"generate_gl_texture_target_mipmaps", generate_gl_texture_target_mipmaps, METH_O, 0},
     {"set_gl_texture_target_parameters", (PyCFunction)set_gl_texture_target_parameters, METH_FASTCALL, 0},
     {"get_gl_program_uniforms", get_gl_program_uniforms, METH_O, 0},
+    {"get_gl_program_attributes", get_gl_program_attributes, METH_O, 0},
     {"create_gl_program", (PyCFunction)create_gl_program, METH_FASTCALL, 0},
     {"delete_gl_program", delete_gl_program, METH_O, 0},
     {"use_gl_program", use_gl_program, METH_O, 0},

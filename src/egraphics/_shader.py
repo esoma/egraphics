@@ -129,6 +129,7 @@ from ._egraphics import GL_ZERO
 from ._egraphics import GlType
 from ._egraphics import create_gl_program
 from ._egraphics import delete_gl_program
+from ._egraphics import get_gl_program_attributes
 from ._egraphics import get_gl_program_uniforms
 from ._egraphics import use_gl_program
 from ._g_buffer_view import GBufferView
@@ -146,7 +147,6 @@ from eplatform import set_draw_render_target
 
 # pyopengl
 import OpenGL.GL
-from OpenGL.GL import GL_ACTIVE_ATTRIBUTES
 from OpenGL.GL import GL_BLEND
 from OpenGL.GL import GL_CULL_FACE
 from OpenGL.GL import GL_DEPTH_TEST
@@ -164,18 +164,13 @@ from OpenGL.GL import glDrawArraysInstanced
 from OpenGL.GL import glDrawElements
 from OpenGL.GL import glDrawElementsInstanced
 from OpenGL.GL import glEnable
-from OpenGL.GL import glGetActiveAttrib
-from OpenGL.GL import glGetAttribLocation
-from OpenGL.GL import glGetProgramiv
 
 # python
 from collections.abc import Mapping
 from collections.abc import Set
 from contextlib import ExitStack
 import ctypes
-from ctypes import c_char_p
 from ctypes import c_void_p
-from ctypes import cast as c_cast
 from enum import Enum
 from typing import Any
 from typing import BinaryIO
@@ -273,21 +268,15 @@ class Shader:
             None if fragment is None else fragment.read(),
         )
 
-        attributes: list[ShaderAttribute] = []
-        attribute_count = glGetProgramiv(self._gl_program, GL_ACTIVE_ATTRIBUTES)
-        for i in range(attribute_count):
-            c_name, size, type = glGetActiveAttrib(self._gl_program, i)
-            name = c_cast(c_name, c_char_p).value.decode("utf8")  # type: ignore
-            location = glGetAttribLocation(self._gl_program, name)
-            attributes.append(
-                ShaderAttribute(
-                    name.removesuffix("[0]"),
-                    _GL_TYPE_TO_PY[type],
-                    size,
-                    location,
-                )
+        self._attributes = tuple(
+            ShaderAttribute(
+                name.removesuffix("[0]"),
+                _GL_TYPE_TO_PY[type],
+                size,
+                location,
             )
-        self._attributes = tuple(attributes)
+            for name, size, type, location in get_gl_program_attributes(self._gl_program)
+        )
 
         self._uniforms = tuple(
             ShaderUniform(
@@ -300,7 +289,7 @@ class Shader:
         )
 
         self._inputs: dict[str, ShaderAttribute | ShaderUniform] = {
-            **{attribute.name: attribute for attribute in attributes},
+            **{attribute.name: attribute for attribute in self._attributes},
             **{uniform.name: uniform for uniform in self._uniforms},
         }
 

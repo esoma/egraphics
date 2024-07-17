@@ -171,6 +171,7 @@ __all__ = [
     "generate_gl_texture_target_mipmaps",
     "set_gl_texture_target_filters",
     "get_gl_program_uniforms",
+    "get_gl_program_attributes",
     "create_gl_program",
     "delete_gl_program",
     "use_gl_program",
@@ -411,6 +412,9 @@ def set_gl_texture_target_parameters(
     /,
 ) -> None: ...
 def get_gl_program_uniforms(program: GlProgram, /) -> tuple[tuple[str, int, GlType, int], ...]: ...
+def get_gl_program_attributes(
+    program: GlProgram, /
+) -> tuple[tuple[str, int, GlType, int], ...]: ...
 def create_gl_program(
     vertex: Buffer | None, geometry: Buffer | None, fragment: Buffer | None, /
 ) -> GlProgram: ...
