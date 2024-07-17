@@ -812,6 +812,7 @@ PyInit__egraphics()
     ADD_ALIAS("GlBufferUsage", PyLong_Type);
     ADD_ALIAS("GlCull", PyLong_Type);
     ADD_ALIAS("GlFunc", PyLong_Type);
+    ADD_ALIAS("GlPrimitive", PyLong_Type);
     ADD_ALIAS("GlShader", PyLong_Type);
     ADD_ALIAS("GlVertexArray", PyLong_Type);
     ADD_ALIAS("GlType", PyLong_Type);
@@ -978,6 +979,14 @@ PyInit__egraphics()
 
     ADD_CONSTANT(GL_FRONT);
     ADD_CONSTANT(GL_BACK);
+
+    ADD_CONSTANT(GL_POINTS);
+    ADD_CONSTANT(GL_LINES);
+    ADD_CONSTANT(GL_LINE_STRIP);
+    ADD_CONSTANT(GL_LINE_LOOP);
+    ADD_CONSTANT(GL_TRIANGLES);
+    ADD_CONSTANT(GL_TRIANGLE_STRIP);
+    ADD_CONSTANT(GL_TRIANGLE_FAN);
 
     {
         PyObject *eplatform = PyImport_ImportModule("eplatform");

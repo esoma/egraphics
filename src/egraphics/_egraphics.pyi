@@ -6,6 +6,7 @@ __all__ = [
     "GlBufferUsage",
     "GlCull",
     "GlFunc",
+    "GlPrimitive",
     "GlShader",
     "GlVertexArray",
     "GlType",
@@ -141,6 +142,13 @@ __all__ = [
     "GL_SAMPLER_2D_RECT_SHADOW",
     "GL_SAMPLER_1D_ARRAY_SHADOW",
     "GL_SAMPLER_2D_ARRAY_SHADOW",
+    "GL_POINTS",
+    "GL_LINES",
+    "GL_LINE_STRIP",
+    "GL_LINE_LOOP",
+    "GL_TRIANGLES",
+    "GL_TRIANGLE_STRIP",
+    "GL_TRIANGLE_FAN",
     "activate_gl_vertex_array",
     "set_gl_buffer_target",
     "create_gl_buffer",
@@ -186,6 +194,7 @@ GlBufferTarget = NewType("GlBufferTarget", int)
 GlBufferUsage = NewType("GlBufferUsage", int)
 GlCull = NewType("GlCull", int)
 GlFunc = NewType("GlFunc", int)
+GlPrimitive = NewType("GlPrimitive", int)
 GlShader = NewType("GlShader", int)
 GlVertexArray = NewType("GlVertexArray", int)
 GlType = NewType("GlType", int)
@@ -341,6 +350,14 @@ GL_MAX: GlBlendFunction
 
 GL_FRONT: GlCull
 GL_BACK: GlCull
+
+GL_POINTS: GlPrimitive
+GL_LINES: GlPrimitive
+GL_LINE_STRIP: GlPrimitive
+GL_LINE_LOOP: GlPrimitive
+GL_TRIANGLES: GlPrimitive
+GL_TRIANGLE_STRIP: GlPrimitive
+GL_TRIANGLE_FAN: GlPrimitive
 
 def activate_gl_vertex_array(gl_vertex_array: GlVertexArray | None) -> None: ...
 def set_gl_buffer_target(target: GlBufferTarget, gl_buffer: GlBuffer | None, /) -> None: ...

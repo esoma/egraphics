@@ -71,6 +71,9 @@ from ._egraphics import GL_INT_VEC3
 from ._egraphics import GL_INT_VEC4
 from ._egraphics import GL_LEQUAL
 from ._egraphics import GL_LESS
+from ._egraphics import GL_LINES
+from ._egraphics import GL_LINE_LOOP
+from ._egraphics import GL_LINE_STRIP
 from ._egraphics import GL_MAX
 from ._egraphics import GL_MIN
 from ._egraphics import GL_NEVER
@@ -82,6 +85,7 @@ from ._egraphics import GL_ONE_MINUS_DST_ALPHA
 from ._egraphics import GL_ONE_MINUS_DST_COLOR
 from ._egraphics import GL_ONE_MINUS_SRC_ALPHA
 from ._egraphics import GL_ONE_MINUS_SRC_COLOR
+from ._egraphics import GL_POINTS
 from ._egraphics import GL_SAMPLER_1D
 from ._egraphics import GL_SAMPLER_1D_ARRAY
 from ._egraphics import GL_SAMPLER_1D_ARRAY_SHADOW
@@ -101,6 +105,9 @@ from ._egraphics import GL_SAMPLER_CUBE_MAP_ARRAY
 from ._egraphics import GL_SAMPLER_CUBE_SHADOW
 from ._egraphics import GL_SRC_ALPHA
 from ._egraphics import GL_SRC_COLOR
+from ._egraphics import GL_TRIANGLES
+from ._egraphics import GL_TRIANGLE_FAN
+from ._egraphics import GL_TRIANGLE_STRIP
 from ._egraphics import GL_UNSIGNED_INT
 from ._egraphics import GL_UNSIGNED_INT_SAMPLER_1D
 from ._egraphics import GL_UNSIGNED_INT_SAMPLER_1D_ARRAY
@@ -873,13 +880,13 @@ _PY_TYPE_TO_ARRAY: Final[Mapping] = {
 
 
 class PrimitiveMode(Enum):
-    POINT = OpenGL.GL.GL_POINTS
-    LINE = OpenGL.GL.GL_LINES
-    LINE_STRIP = OpenGL.GL.GL_LINE_STRIP
-    LINE_LOOP = OpenGL.GL.GL_LINE_LOOP
-    TRIANGLE = OpenGL.GL.GL_TRIANGLES
-    TRIANGLE_STRIP = OpenGL.GL.GL_TRIANGLE_STRIP
-    TRIANGLE_FAN = OpenGL.GL.GL_TRIANGLE_FAN
+    POINT = GL_POINTS
+    LINE = GL_LINES
+    LINE_STRIP = GL_LINE_STRIP
+    LINE_LOOP = GL_LINE_LOOP
+    TRIANGLE = GL_TRIANGLES
+    TRIANGLE_STRIP = GL_TRIANGLE_STRIP
+    TRIANGLE_FAN = GL_TRIANGLE_FAN
 
 
 UniformValue = (
