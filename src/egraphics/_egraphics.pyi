@@ -2,6 +2,7 @@ __all__ = [
     "GlBuffer",
     "GlBufferTarget",
     "GlBufferUsage",
+    "GlFunc",
     "GlShader",
     "GlVertexArray",
     "GlType",
@@ -38,6 +39,14 @@ __all__ = [
     "GL_LINEAR_MIPMAP_LINEAR",
     "GL_TEXTURE_2D",
     "GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS_VALUE",
+    "GL_NEVER",
+    "GL_ALWAYS",
+    "GL_LESS",
+    "GL_LEQUAL",
+    "GL_GREATER",
+    "GL_GEQUAL",
+    "GL_EQUAL",
+    "GL_NOTEQUAL",
     "activate_gl_vertex_array",
     "set_gl_buffer_target",
     "create_gl_buffer",
@@ -79,6 +88,7 @@ from typing import NewType
 GlBuffer = NewType("GlBuffer", int)
 GlBufferTarget = NewType("GlBufferTarget", int)
 GlBufferUsage = NewType("GlBufferUsage", int)
+GlFunc = NewType("GlFunc", int)
 GlShader = NewType("GlShader", int)
 GlVertexArray = NewType("GlVertexArray", int)
 GlType = NewType("GlType", int)
@@ -131,6 +141,15 @@ GL_LINEAR_MIPMAP_LINEAR: GlTextureFilter
 GL_TEXTURE_2D: GlTextureTarget
 
 GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS_VALUE: int
+
+GL_NEVER: GlFunc
+GL_ALWAYS: GlFunc
+GL_LESS: GlFunc
+GL_LEQUAL: GlFunc
+GL_GREATER: GlFunc
+GL_GEQUAL: GlFunc
+GL_EQUAL: GlFunc
+GL_NOTEQUAL: GlFunc
 
 def activate_gl_vertex_array(gl_vertex_array: GlVertexArray | None) -> None: ...
 def set_gl_buffer_target(target: GlBufferTarget, gl_buffer: GlBuffer | None, /) -> None: ...

@@ -14,6 +14,14 @@ __all__ = [
 
 
 # egraphics
+from ._egraphics import GL_ALWAYS
+from ._egraphics import GL_EQUAL
+from ._egraphics import GL_GEQUAL
+from ._egraphics import GL_GREATER
+from ._egraphics import GL_LEQUAL
+from ._egraphics import GL_LESS
+from ._egraphics import GL_NEVER
+from ._egraphics import GL_NOTEQUAL
 from ._egraphics import get_gl_shader_uniforms
 from ._g_buffer_view import GBufferView
 from ._texture import Texture
@@ -99,14 +107,14 @@ _T = TypeVar("_T")
 
 
 class DepthTest(Enum):
-    NEVER = int(OpenGL.GL.GL_NEVER)
-    ALWAYS = int(OpenGL.GL.GL_ALWAYS)
-    LESS = int(OpenGL.GL.GL_LESS)
-    LESS_EQUAL = int(OpenGL.GL.GL_LEQUAL)
-    GREATER = int(OpenGL.GL.GL_GREATER)
-    GREATER_EQUAL = int(OpenGL.GL.GL_GEQUAL)
-    EQUAL = int(OpenGL.GL.GL_EQUAL)
-    NOT_EQUAL = int(OpenGL.GL.GL_NOTEQUAL)
+    NEVER = GL_NEVER
+    ALWAYS = GL_ALWAYS
+    LESS = GL_LESS
+    LESS_EQUAL = GL_LEQUAL
+    GREATER = GL_GREATER
+    GREATER_EQUAL = GL_GEQUAL
+    EQUAL = GL_EQUAL
+    NOT_EQUAL = GL_NOTEQUAL
 
 
 class BlendFactor(Enum):

@@ -808,6 +808,7 @@ PyInit__egraphics()
     ADD_ALIAS("GlBuffer", PyLong_Type);
     ADD_ALIAS("GlBufferTarget", PyLong_Type);
     ADD_ALIAS("GlBufferUsage", PyLong_Type);
+    ADD_ALIAS("GlFunc", PyLong_Type);
     ADD_ALIAS("GlShader", PyLong_Type);
     ADD_ALIAS("GlVertexArray", PyLong_Type);
     ADD_ALIAS("GlType", PyLong_Type);
@@ -871,6 +872,15 @@ PyInit__egraphics()
     ADD_CONSTANT(GL_TEXTURE_2D);
 
     ADD_CONSTANT(GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS_VALUE);
+
+    ADD_CONSTANT(GL_NEVER);
+    ADD_CONSTANT(GL_ALWAYS);
+    ADD_CONSTANT(GL_LESS);
+    ADD_CONSTANT(GL_LEQUAL);
+    ADD_CONSTANT(GL_GREATER);
+    ADD_CONSTANT(GL_GEQUAL);
+    ADD_CONSTANT(GL_EQUAL);
+    ADD_CONSTANT(GL_NOTEQUAL);
 
     {
         PyObject *eplatform = PyImport_ImportModule("eplatform");
