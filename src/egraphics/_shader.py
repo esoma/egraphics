@@ -15,11 +15,13 @@ __all__ = [
 
 # egraphics
 from ._egraphics import GL_ALWAYS
+from ._egraphics import GL_BACK
 from ._egraphics import GL_CONSTANT_ALPHA
 from ._egraphics import GL_CONSTANT_COLOR
 from ._egraphics import GL_DST_ALPHA
 from ._egraphics import GL_DST_COLOR
 from ._egraphics import GL_EQUAL
+from ._egraphics import GL_FRONT
 from ._egraphics import GL_FUNC_ADD
 from ._egraphics import GL_FUNC_REVERSE_SUBTRACT
 from ._egraphics import GL_FUNC_SUBTRACT
@@ -163,8 +165,8 @@ class BlendFunction(Enum):
 
 class FaceCull(Enum):
     NONE = 0
-    FRONT = int(OpenGL.GL.GL_FRONT)
-    BACK = int(OpenGL.GL.GL_BACK)
+    FRONT = GL_FRONT
+    BACK = GL_BACK
 
 
 class Shader:

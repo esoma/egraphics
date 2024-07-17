@@ -4,6 +4,7 @@ __all__ = [
     "GlBuffer",
     "GlBufferTarget",
     "GlBufferUsage",
+    "GlCull",
     "GlFunc",
     "GlShader",
     "GlVertexArray",
@@ -68,6 +69,8 @@ __all__ = [
     "GL_FUNC_REVERSE_SUBTRACT",
     "GL_MIN",
     "GL_MAX",
+    "GL_FRONT",
+    "GL_BACK",
     "activate_gl_vertex_array",
     "set_gl_buffer_target",
     "create_gl_buffer",
@@ -111,6 +114,7 @@ GlBlendFunction = NewType("GlBlendFunction", int)
 GlBuffer = NewType("GlBuffer", int)
 GlBufferTarget = NewType("GlBufferTarget", int)
 GlBufferUsage = NewType("GlBufferUsage", int)
+GlCull = NewType("GlCull", int)
 GlFunc = NewType("GlFunc", int)
 GlShader = NewType("GlShader", int)
 GlVertexArray = NewType("GlVertexArray", int)
@@ -194,6 +198,9 @@ GL_FUNC_SUBTRACT: GlBlendFunction
 GL_FUNC_REVERSE_SUBTRACT: GlBlendFunction
 GL_MIN: GlBlendFunction
 GL_MAX: GlBlendFunction
+
+GL_FRONT: GlCull
+GL_BACK: GlCull
 
 def activate_gl_vertex_array(gl_vertex_array: GlVertexArray | None) -> None: ...
 def set_gl_buffer_target(target: GlBufferTarget, gl_buffer: GlBuffer | None, /) -> None: ...
