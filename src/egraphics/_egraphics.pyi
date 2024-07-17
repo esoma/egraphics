@@ -173,6 +173,7 @@ __all__ = [
     "get_gl_program_uniforms",
     "create_gl_program",
     "delete_gl_program",
+    "use_gl_program",
 ]
 
 # egeometry
@@ -414,3 +415,4 @@ def create_gl_program(
     vertex: Buffer | None, geometry: Buffer | None, fragment: Buffer | None, /
 ) -> GlProgram: ...
 def delete_gl_program(gl_program: GlProgram, /) -> None: ...
+def use_gl_program(gl_program: GlProgram | None, /) -> None: ...

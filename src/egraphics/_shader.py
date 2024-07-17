@@ -130,6 +130,7 @@ from ._egraphics import GlType
 from ._egraphics import create_gl_program
 from ._egraphics import delete_gl_program
 from ._egraphics import get_gl_program_uniforms
+from ._egraphics import use_gl_program
 from ._g_buffer_view import GBufferView
 from ._texture import Texture
 
@@ -166,7 +167,6 @@ from OpenGL.GL import glEnable
 from OpenGL.GL import glGetActiveAttrib
 from OpenGL.GL import glGetAttribLocation
 from OpenGL.GL import glGetProgramiv
-from OpenGL.GL import glUseProgram
 
 # python
 from collections.abc import Mapping
@@ -306,7 +306,7 @@ class Shader:
 
     def __del__(self) -> None:
         if self._active and self._active() is self:
-            glUseProgram(0)
+            use_gl_program(None)
             Shader._active = None
         if hasattr(self, "_gl_program") and self._gl_program is not None:
             delete_gl_program(self._gl_program)
@@ -476,7 +476,7 @@ class Shader:
     def _activate(self) -> None:
         if self._active and self._active() is self:
             return
-        glUseProgram(self._gl_program)
+        use_gl_program(self._gl_program)
         Shader._active = ref(self)
 
     def execute(

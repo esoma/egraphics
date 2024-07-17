@@ -854,6 +854,25 @@ error:
     return 0;
 }
 
+static PyObject *
+use_gl_program(PyObject *module, PyObject *py_gl_program)
+{
+    GLuint gl_program = 0;
+
+    if (py_gl_program != Py_None)
+    {
+        gl_program = PyLong_AsUnsignedLong(py_gl_program);
+        CHECK_UNEXPECTED_PYTHON_ERROR();
+    }
+
+    glUseProgram(gl_program);
+    CHECK_GL_ERROR();
+
+    Py_RETURN_NONE;
+error:
+    return 0;
+}
+
 static PyMethodDef module_PyMethodDef[] = {
     {"reset_module_state", reset_module_state, METH_NOARGS, 0},
     {"activate_gl_vertex_array", activate_gl_vertex_array, METH_O, 0},
@@ -880,6 +899,7 @@ static PyMethodDef module_PyMethodDef[] = {
     {"get_gl_program_uniforms", get_gl_program_uniforms, METH_O, 0},
     {"create_gl_program", (PyCFunction)create_gl_program, METH_FASTCALL, 0},
     {"delete_gl_program", delete_gl_program, METH_O, 0},
+    {"use_gl_program", use_gl_program, METH_O, 0},
     {0},
 };
 
