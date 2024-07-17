@@ -20,10 +20,15 @@ from ._egraphics import GL_CONSTANT_COLOR
 from ._egraphics import GL_DST_ALPHA
 from ._egraphics import GL_DST_COLOR
 from ._egraphics import GL_EQUAL
+from ._egraphics import GL_FUNC_ADD
+from ._egraphics import GL_FUNC_REVERSE_SUBTRACT
+from ._egraphics import GL_FUNC_SUBTRACT
 from ._egraphics import GL_GEQUAL
 from ._egraphics import GL_GREATER
 from ._egraphics import GL_LEQUAL
 from ._egraphics import GL_LESS
+from ._egraphics import GL_MAX
+from ._egraphics import GL_MIN
 from ._egraphics import GL_NEVER
 from ._egraphics import GL_NOTEQUAL
 from ._egraphics import GL_ONE
@@ -149,11 +154,11 @@ class BlendFactor(Enum):
 
 
 class BlendFunction(Enum):
-    ADD = int(OpenGL.GL.GL_FUNC_ADD)
-    SUBTRACT = int(OpenGL.GL.GL_FUNC_SUBTRACT)
-    SUBTRACT_REVERSED = int(OpenGL.GL.GL_FUNC_REVERSE_SUBTRACT)
-    MIN = int(OpenGL.GL.GL_MIN)
-    MAX = int(OpenGL.GL.GL_MAX)
+    ADD = GL_FUNC_ADD
+    SUBTRACT = GL_FUNC_SUBTRACT
+    SUBTRACT_REVERSED = GL_FUNC_REVERSE_SUBTRACT
+    MIN = GL_MIN
+    MAX = GL_MAX
 
 
 class FaceCull(Enum):

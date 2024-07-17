@@ -806,6 +806,7 @@ PyInit__egraphics()
     }
 
     ADD_ALIAS("GlBlendFactor", PyLong_Type);
+    ADD_ALIAS("GlBlendFunction", PyLong_Type);
     ADD_ALIAS("GlBuffer", PyLong_Type);
     ADD_ALIAS("GlBufferTarget", PyLong_Type);
     ADD_ALIAS("GlBufferUsage", PyLong_Type);
@@ -897,6 +898,12 @@ PyInit__egraphics()
     ADD_CONSTANT(GL_ONE_MINUS_CONSTANT_COLOR);
     ADD_CONSTANT(GL_CONSTANT_ALPHA);
     ADD_CONSTANT(GL_ONE_MINUS_CONSTANT_ALPHA);
+
+    ADD_CONSTANT(GL_FUNC_ADD);
+    ADD_CONSTANT(GL_FUNC_SUBTRACT);
+    ADD_CONSTANT(GL_FUNC_REVERSE_SUBTRACT);
+    ADD_CONSTANT(GL_MIN);
+    ADD_CONSTANT(GL_MAX);
 
     {
         PyObject *eplatform = PyImport_ImportModule("eplatform");

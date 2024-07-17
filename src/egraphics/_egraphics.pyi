@@ -1,5 +1,6 @@
 __all__ = [
     "GlBlendFactor",
+    "GlBlendFunction",
     "GlBuffer",
     "GlBufferTarget",
     "GlBufferUsage",
@@ -62,6 +63,11 @@ __all__ = [
     "GL_ONE_MINUS_CONSTANT_COLOR",
     "GL_CONSTANT_ALPHA",
     "GL_ONE_MINUS_CONSTANT_ALPHA",
+    "GL_FUNC_ADD",
+    "GL_FUNC_SUBTRACT",
+    "GL_FUNC_REVERSE_SUBTRACT",
+    "GL_MIN",
+    "GL_MAX",
     "activate_gl_vertex_array",
     "set_gl_buffer_target",
     "create_gl_buffer",
@@ -101,6 +107,7 @@ from collections.abc import Buffer
 from typing import NewType
 
 GlBlendFactor = NewType("GlBlendFactor", int)
+GlBlendFunction = NewType("GlBlendFunction", int)
 GlBuffer = NewType("GlBuffer", int)
 GlBufferTarget = NewType("GlBufferTarget", int)
 GlBufferUsage = NewType("GlBufferUsage", int)
@@ -181,6 +188,12 @@ GL_CONSTANT_COLOR: GlBlendFactor
 GL_ONE_MINUS_CONSTANT_COLOR: GlBlendFactor
 GL_CONSTANT_ALPHA: GlBlendFactor
 GL_ONE_MINUS_CONSTANT_ALPHA: GlBlendFactor
+
+GL_FUNC_ADD: GlBlendFunction
+GL_FUNC_SUBTRACT: GlBlendFunction
+GL_FUNC_REVERSE_SUBTRACT: GlBlendFunction
+GL_MIN: GlBlendFunction
+GL_MAX: GlBlendFunction
 
 def activate_gl_vertex_array(gl_vertex_array: GlVertexArray | None) -> None: ...
 def set_gl_buffer_target(target: GlBufferTarget, gl_buffer: GlBuffer | None, /) -> None: ...
