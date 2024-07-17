@@ -570,12 +570,9 @@ error:
     return 0;
 }
 
-
 static PyObject *
 set_gl_texture_target_parameters(PyObject *module, PyObject **args, Py_ssize_t nargs)
 {
-    glewInit();
-
     PyObject *ex = 0;
     struct EMathApi *emath_api = 0;
 
@@ -700,6 +697,150 @@ error:
     return 0;
 }
 
+
+static PyObject *
+create_gl_program(PyObject *module, PyObject **args, Py_ssize_t nargs)
+{
+    static const char * SHADER_STAGE_NAME[] = {
+        "vertex",
+        "geometry",
+        "fragment"
+    };
+    static const GLenum SHADER_STAGES[] = {
+        GL_VERTEX_SHADER,
+        GL_GEOMETRY_SHADER,
+        GL_FRAGMENT_SHADER
+    };
+    static const size_t SHADER_STAGES_LENGTH = sizeof(SHADER_STAGES) / sizeof(SHADER_STAGES[0]);
+    GLuint shaders[] = {0, 0, 0};
+    GLchar *log = 0;
+    GLuint gl_program = 0;
+
+    CHECK_UNEXPECTED_ARG_COUNT_ERROR(3);
+
+    for(size_t i = 0; i < SHADER_STAGES_LENGTH; i++)
+    {
+        PyObject *shader_code = args[i];
+        if (shader_code == Py_None){ continue; }
+
+        GLuint shader = glCreateShader(SHADER_STAGES[i]);
+        shaders[i] = shader;
+        CHECK_GL_ERROR();
+
+        {
+            Py_buffer buffer;
+            if (PyObject_GetBuffer(shader_code, &buffer, PyBUF_CONTIG_RO) == -1){ goto error; }
+            GLint length = buffer.len;
+            glShaderSource(shader, 1, (GLchar *const *)&buffer.buf, &length);
+            PyBuffer_Release(&buffer);
+            CHECK_GL_ERROR();
+        }
+
+        glCompileShader(shader);
+        CHECK_GL_ERROR();
+
+        {
+            GLint compile_status;
+            glGetShaderiv(shader, GL_COMPILE_STATUS, &compile_status);
+            CHECK_GL_ERROR();
+            if (compile_status == GL_FALSE)
+            {
+                GLint log_length;
+                glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &log_length);
+                CHECK_GL_ERROR();
+
+                log = malloc(sizeof(GLchar *) * log_length);
+                if (!log)
+                {
+                    PyErr_Format(PyExc_MemoryError, "out of memory");
+                    goto error;
+                }
+
+                glGetShaderInfoLog(shader, log_length, 0, log);
+                CHECK_GL_ERROR();
+
+                PyErr_Format(
+                    PyExc_RuntimeError,
+                    "%s stage failed to compile:\n%s",
+                    SHADER_STAGE_NAME[i],
+                    log
+                );
+                free(log);
+                log = 0;
+
+                goto error;
+            }
+        }
+    }
+
+    gl_program = glCreateProgram();
+    CHECK_GL_ERROR();
+
+    for(size_t i = 0; i < SHADER_STAGES_LENGTH; i++)
+    {
+        GLuint shader = shaders[i];
+        if (shader == 0){ continue; }
+        glAttachShader(gl_program, shader);
+        CHECK_GL_ERROR();
+    }
+
+    glLinkProgram(gl_program);
+    CHECK_GL_ERROR();
+    {
+        GLint link_status;
+        glGetProgramiv(gl_program, GL_LINK_STATUS, &link_status);
+        CHECK_GL_ERROR();
+
+        if (link_status == GL_FALSE)
+        {
+            GLint log_length;
+            glGetProgramiv(gl_program, GL_INFO_LOG_LENGTH, &log_length);
+            CHECK_GL_ERROR();
+
+            log = malloc(sizeof(GLchar *) * log_length);
+            if (!log)
+            {
+                PyErr_Format(PyExc_MemoryError, "out of memory");
+                goto error;
+            }
+
+            glGetProgramInfoLog(gl_program, log_length, 0, log);
+            CHECK_GL_ERROR();
+
+            PyErr_Format(
+                PyExc_RuntimeError,
+                "failed to link:\n%s",
+                log
+            );
+            free(log);
+            log = 0;
+
+            goto error;
+        }
+    }
+
+    for(size_t i = 0; i < SHADER_STAGES_LENGTH; i++)
+    {
+        GLuint shader = shaders[i];
+        if (shader == 0){ continue; }
+        glDeleteShader(shader);
+        CHECK_GL_ERROR();
+    }
+
+    return PyLong_FromUnsignedLong(gl_program);
+error:
+    if (log){ free(log); }
+    if (gl_program != 0){ glDeleteProgram(gl_program); }
+    for(size_t i = 0; i < SHADER_STAGES_LENGTH; i++)
+    {
+        GLuint shader = shaders[i];
+        if (shader == 0){ continue; }
+        glDeleteShader(shader);
+        CHECK_GL_ERROR();
+    }
+    return 0;
+}
+
 static PyMethodDef module_PyMethodDef[] = {
     {"reset_module_state", reset_module_state, METH_NOARGS, 0},
     {"activate_gl_vertex_array", activate_gl_vertex_array, METH_O, 0},
@@ -724,6 +865,7 @@ static PyMethodDef module_PyMethodDef[] = {
     {"generate_gl_texture_target_mipmaps", generate_gl_texture_target_mipmaps, METH_O, 0},
     {"set_gl_texture_target_parameters", (PyCFunction)set_gl_texture_target_parameters, METH_FASTCALL, 0},
     {"get_gl_shader_uniforms", get_gl_shader_uniforms, METH_O, 0},
+    {"create_gl_program", (PyCFunction)create_gl_program, METH_FASTCALL, 0},
     {0},
 };
 
@@ -813,7 +955,7 @@ PyInit__egraphics()
     ADD_ALIAS("GlCull", PyLong_Type);
     ADD_ALIAS("GlFunc", PyLong_Type);
     ADD_ALIAS("GlPrimitive", PyLong_Type);
-    ADD_ALIAS("GlShader", PyLong_Type);
+    ADD_ALIAS("GlProgram", PyLong_Type);
     ADD_ALIAS("GlVertexArray", PyLong_Type);
     ADD_ALIAS("GlType", PyLong_Type);
     ADD_ALIAS("GlTexture", PyLong_Type);

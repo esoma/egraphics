@@ -69,7 +69,7 @@ def test_link_error(platform):
                 )
             ),
         )
-    assert str(excinfo.value).startswith(f"Failed to link:\n")
+    assert str(excinfo.value).startswith(f"failed to link:\n")
 
 
 def test_vertex_only(platform):
@@ -152,7 +152,7 @@ def test_delete(platform):
     )
     shader._activate()
 
-    gl_program = shader._gl_shader
+    gl_program = shader._gl_program
 
     assert glIsProgram(gl_program)
     del shader

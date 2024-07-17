@@ -7,7 +7,7 @@ __all__ = [
     "GlCull",
     "GlFunc",
     "GlPrimitive",
-    "GlShader",
+    "GlProgram",
     "GlVertexArray",
     "GlType",
     "GlTexture",
@@ -171,6 +171,7 @@ __all__ = [
     "generate_gl_texture_target_mipmaps",
     "set_gl_texture_target_filters",
     "get_gl_shader_uniforms",
+    "create_gl_program",
 ]
 
 # egeometry
@@ -195,7 +196,7 @@ GlBufferUsage = NewType("GlBufferUsage", int)
 GlCull = NewType("GlCull", int)
 GlFunc = NewType("GlFunc", int)
 GlPrimitive = NewType("GlPrimitive", int)
-GlShader = NewType("GlShader", int)
+GlProgram = NewType("GlProgram", int)
 GlVertexArray = NewType("GlVertexArray", int)
 GlType = NewType("GlType", int)
 GlTexture = NewType("GlTexture", int)
@@ -407,4 +408,7 @@ def set_gl_texture_target_parameters(
     anisotropy: float,
     /,
 ) -> None: ...
-def get_gl_shader_uniforms(shader: GlShader, /) -> tuple[tuple[str, int, GlType, int], ...]: ...
+def get_gl_shader_uniforms(program: GlProgram, /) -> tuple[tuple[str, int, GlType, int], ...]: ...
+def create_gl_program(
+    vertex: Buffer | None, geometry: Buffer | None, fragment: Buffer | None, /
+) -> GlProgram: ...

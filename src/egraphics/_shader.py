@@ -127,6 +127,7 @@ from ._egraphics import GL_UNSIGNED_INT_VEC4
 from ._egraphics import GL_UNSIGNED_SHORT
 from ._egraphics import GL_ZERO
 from ._egraphics import GlType
+from ._egraphics import create_gl_program
 from ._egraphics import get_gl_shader_uniforms
 from ._g_buffer_view import GBufferView
 from ._texture import Texture
@@ -145,25 +146,15 @@ from eplatform import set_draw_render_target
 import OpenGL.GL
 from OpenGL.GL import GL_ACTIVE_ATTRIBUTES
 from OpenGL.GL import GL_BLEND
-from OpenGL.GL import GL_COMPILE_STATUS
 from OpenGL.GL import GL_CULL_FACE
 from OpenGL.GL import GL_DEPTH_TEST
 from OpenGL.GL import GL_FALSE
-from OpenGL.GL import GL_FRAGMENT_SHADER
-from OpenGL.GL import GL_GEOMETRY_SHADER
-from OpenGL.GL import GL_LINK_STATUS
-from OpenGL.GL import GL_VERTEX_SHADER
-from OpenGL.GL import glAttachShader
 from OpenGL.GL import glBlendColor
 from OpenGL.GL import glBlendEquation
 from OpenGL.GL import glBlendFuncSeparate
 from OpenGL.GL import glColorMask
-from OpenGL.GL import glCompileShader
-from OpenGL.GL import glCreateProgram
-from OpenGL.GL import glCreateShader
 from OpenGL.GL import glCullFace
 from OpenGL.GL import glDeleteProgram
-from OpenGL.GL import glDeleteShader
 from OpenGL.GL import glDepthFunc
 from OpenGL.GL import glDepthMask
 from OpenGL.GL import glDisable
@@ -174,12 +165,7 @@ from OpenGL.GL import glDrawElementsInstanced
 from OpenGL.GL import glEnable
 from OpenGL.GL import glGetActiveAttrib
 from OpenGL.GL import glGetAttribLocation
-from OpenGL.GL import glGetProgramInfoLog
 from OpenGL.GL import glGetProgramiv
-from OpenGL.GL import glGetShaderInfoLog
-from OpenGL.GL import glGetShaderiv
-from OpenGL.GL import glLinkProgram
-from OpenGL.GL import glShaderSource
 from OpenGL.GL import glUseProgram
 from OpenGL.error import GLError
 from OpenGL.error import NullFunctionError
@@ -283,45 +269,18 @@ class Shader:
         if geometry is not None and vertex is None:
             raise TypeError("geometry shader requires vertex shader")
 
-        stages: list[int] = []
-
-        def add_stage(name: str, file: BinaryIO, type: int) -> None:
-            gl = glCreateShader(type)
-            stages.append(gl)
-            glShaderSource(gl, file.read())
-            glCompileShader(gl)
-            if not glGetShaderiv(gl, GL_COMPILE_STATUS):
-                raise RuntimeError(
-                    f"{name} stage failed to compile:\n" + glGetShaderInfoLog(gl).decode("utf8")
-                )
-
-        try:
-            if vertex is not None:
-                add_stage("vertex", vertex, GL_VERTEX_SHADER)
-            if geometry is not None:
-                add_stage("geometry", geometry, GL_GEOMETRY_SHADER)
-            if fragment is not None:
-                add_stage("fragment", fragment, GL_FRAGMENT_SHADER)
-
-            self._gl_shader = glCreateProgram()
-            for stage in stages:
-                glAttachShader(self._gl_shader, stage)
-            glLinkProgram(self._gl_shader)
-
-            if glGetProgramiv(self._gl_shader, GL_LINK_STATUS) == GL_FALSE:
-                raise RuntimeError(
-                    "Failed to link:\n" + glGetProgramInfoLog(self._gl_shader).decode("utf8")
-                )
-        finally:
-            for stage in stages:
-                glDeleteShader(stage)
+        self._gl_program = create_gl_program(
+            None if vertex is None else vertex.read(),
+            None if geometry is None else geometry.read(),
+            None if fragment is None else fragment.read(),
+        )
 
         attributes: list[ShaderAttribute] = []
-        attribute_count = glGetProgramiv(self._gl_shader, GL_ACTIVE_ATTRIBUTES)
+        attribute_count = glGetProgramiv(self._gl_program, GL_ACTIVE_ATTRIBUTES)
         for i in range(attribute_count):
-            c_name, size, type = glGetActiveAttrib(self._gl_shader, i)
+            c_name, size, type = glGetActiveAttrib(self._gl_program, i)
             name = c_cast(c_name, c_char_p).value.decode("utf8")  # type: ignore
-            location = glGetAttribLocation(self._gl_shader, name)
+            location = glGetAttribLocation(self._gl_program, name)
             attributes.append(
                 ShaderAttribute(
                     name.removesuffix("[0]"),
@@ -339,7 +298,7 @@ class Shader:
                 size,
                 location,
             )
-            for name, size, type, location in get_gl_shader_uniforms(self._gl_shader)
+            for name, size, type, location in get_gl_shader_uniforms(self._gl_program)
         )
 
         self._inputs: dict[str, ShaderAttribute | ShaderUniform] = {
@@ -351,12 +310,12 @@ class Shader:
         if self._active and self._active() is self:
             glUseProgram(0)
             Shader._active = None
-        if hasattr(self, "_gl_shader") and self._gl_shader is not None:
+        if hasattr(self, "_gl_program") and self._gl_program is not None:
             try:
-                glDeleteProgram(self._gl_shader)
+                glDeleteProgram(self._gl_program)
             except (TypeError, NullFunctionError, GLError):
                 pass
-            self._gl_shader = None
+            del self._gl_program
 
     def __getitem__(self, name: str) -> ShaderAttribute | ShaderUniform:
         return self._inputs[name]
@@ -522,7 +481,7 @@ class Shader:
     def _activate(self) -> None:
         if self._active and self._active() is self:
             return
-        glUseProgram(self._gl_shader)
+        glUseProgram(self._gl_program)
         Shader._active = ref(self)
 
     def execute(
