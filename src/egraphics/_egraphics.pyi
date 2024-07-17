@@ -172,6 +172,7 @@ __all__ = [
     "set_gl_texture_target_filters",
     "get_gl_program_uniforms",
     "create_gl_program",
+    "delete_gl_program",
 ]
 
 # egeometry
@@ -412,3 +413,4 @@ def get_gl_program_uniforms(program: GlProgram, /) -> tuple[tuple[str, int, GlTy
 def create_gl_program(
     vertex: Buffer | None, geometry: Buffer | None, fragment: Buffer | None, /
 ) -> GlProgram: ...
+def delete_gl_program(gl_program: GlProgram, /) -> None: ...

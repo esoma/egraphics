@@ -841,6 +841,19 @@ error:
     return 0;
 }
 
+static PyObject *
+delete_gl_program(PyObject *module, PyObject *py_gl_program)
+{
+    GLuint gl_program = PyLong_AsUnsignedLong(py_gl_program);
+    CHECK_UNEXPECTED_PYTHON_ERROR();
+
+    glDeleteProgram(gl_program);
+
+    Py_RETURN_NONE;
+error:
+    return 0;
+}
+
 static PyMethodDef module_PyMethodDef[] = {
     {"reset_module_state", reset_module_state, METH_NOARGS, 0},
     {"activate_gl_vertex_array", activate_gl_vertex_array, METH_O, 0},
@@ -866,6 +879,7 @@ static PyMethodDef module_PyMethodDef[] = {
     {"set_gl_texture_target_parameters", (PyCFunction)set_gl_texture_target_parameters, METH_FASTCALL, 0},
     {"get_gl_program_uniforms", get_gl_program_uniforms, METH_O, 0},
     {"create_gl_program", (PyCFunction)create_gl_program, METH_FASTCALL, 0},
+    {"delete_gl_program", delete_gl_program, METH_O, 0},
     {0},
 };
 

@@ -128,6 +128,7 @@ from ._egraphics import GL_UNSIGNED_SHORT
 from ._egraphics import GL_ZERO
 from ._egraphics import GlType
 from ._egraphics import create_gl_program
+from ._egraphics import delete_gl_program
 from ._egraphics import get_gl_program_uniforms
 from ._g_buffer_view import GBufferView
 from ._texture import Texture
@@ -154,7 +155,6 @@ from OpenGL.GL import glBlendEquation
 from OpenGL.GL import glBlendFuncSeparate
 from OpenGL.GL import glColorMask
 from OpenGL.GL import glCullFace
-from OpenGL.GL import glDeleteProgram
 from OpenGL.GL import glDepthFunc
 from OpenGL.GL import glDepthMask
 from OpenGL.GL import glDisable
@@ -167,8 +167,6 @@ from OpenGL.GL import glGetActiveAttrib
 from OpenGL.GL import glGetAttribLocation
 from OpenGL.GL import glGetProgramiv
 from OpenGL.GL import glUseProgram
-from OpenGL.error import GLError
-from OpenGL.error import NullFunctionError
 
 # python
 from collections.abc import Mapping
@@ -311,10 +309,7 @@ class Shader:
             glUseProgram(0)
             Shader._active = None
         if hasattr(self, "_gl_program") and self._gl_program is not None:
-            try:
-                glDeleteProgram(self._gl_program)
-            except (TypeError, NullFunctionError, GLError):
-                pass
+            delete_gl_program(self._gl_program)
             del self._gl_program
 
     def __getitem__(self, name: str) -> ShaderAttribute | ShaderUniform:
