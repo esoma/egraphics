@@ -170,7 +170,7 @@ __all__ = [
     "set_gl_texture_target_2d_data",
     "generate_gl_texture_target_mipmaps",
     "set_gl_texture_target_filters",
-    "get_gl_shader_uniforms",
+    "get_gl_program_uniforms",
     "create_gl_program",
 ]
 
@@ -408,7 +408,7 @@ def set_gl_texture_target_parameters(
     anisotropy: float,
     /,
 ) -> None: ...
-def get_gl_shader_uniforms(program: GlProgram, /) -> tuple[tuple[str, int, GlType, int], ...]: ...
+def get_gl_program_uniforms(program: GlProgram, /) -> tuple[tuple[str, int, GlType, int], ...]: ...
 def create_gl_program(
     vertex: Buffer | None, geometry: Buffer | None, fragment: Buffer | None, /
 ) -> GlProgram: ...

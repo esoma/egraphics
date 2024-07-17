@@ -128,7 +128,7 @@ from ._egraphics import GL_UNSIGNED_SHORT
 from ._egraphics import GL_ZERO
 from ._egraphics import GlType
 from ._egraphics import create_gl_program
-from ._egraphics import get_gl_shader_uniforms
+from ._egraphics import get_gl_program_uniforms
 from ._g_buffer_view import GBufferView
 from ._texture import Texture
 
@@ -298,7 +298,7 @@ class Shader:
                 size,
                 location,
             )
-            for name, size, type, location in get_gl_shader_uniforms(self._gl_program)
+            for name, size, type, location in get_gl_program_uniforms(self._gl_program)
         )
 
         self._inputs: dict[str, ShaderAttribute | ShaderUniform] = {

@@ -644,7 +644,7 @@ error:
 }
 
 static PyObject *
-get_gl_shader_uniforms(PyObject *module, PyObject *py_gl_shader)
+get_gl_program_uniforms(PyObject *module, PyObject *py_gl_shader)
 {
     PyObject *result = 0;
     GLchar *name = 0;
@@ -864,7 +864,7 @@ static PyMethodDef module_PyMethodDef[] = {
     {"set_gl_texture_target_2d_data", (PyCFunction)set_gl_texture_target_2d_data, METH_FASTCALL, 0},
     {"generate_gl_texture_target_mipmaps", generate_gl_texture_target_mipmaps, METH_O, 0},
     {"set_gl_texture_target_parameters", (PyCFunction)set_gl_texture_target_parameters, METH_FASTCALL, 0},
-    {"get_gl_shader_uniforms", get_gl_shader_uniforms, METH_O, 0},
+    {"get_gl_program_uniforms", get_gl_program_uniforms, METH_O, 0},
     {"create_gl_program", (PyCFunction)create_gl_program, METH_FASTCALL, 0},
     {0},
 };
