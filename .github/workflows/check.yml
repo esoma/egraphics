@@ -51,18 +51,20 @@ jobs:
     - name: Install
       run: |
         poetry install
+      env:
+        EGRAPHICS_BUILD_WITH_COVERAGE: ${{ matrix.os == 'windows-latest' && '0' || '1' }}
 
     - name: Test
       if: runner.os != 'Linux'
       run: |
-        poetry run pytest --cov=eplatform --cov-report=xml -vvx
+        poetry run pytest --cov=egraphics --cov-report=xml -vvx
       env:
         LIBGL_ALWAYS_SOFTWARE: "true"
 
     - name: Test with Xvfb
       if: runner.os == 'Linux'
       run: |
-        xvfb-run -a poetry run pytest --cov=eplatform --cov-report=xml -vvx
+        xvfb-run -a poetry run pytest --cov=egraphics --cov-report=xml -vvx
       env:
         LIBGL_ALWAYS_SOFTWARE: "true"
 
