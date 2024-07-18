@@ -41,7 +41,7 @@ jobs:
       if: runner.os == 'Linux'
       run: |
         sudo apt-get update
-        sudo apt-get install libglu1-mesa-dev
+        sudo apt-get install libglu1-mesa-dev freeglut3-dev
 
     - name: Build Wheels
       uses: pypa/cibuildwheel@v2.19.2
