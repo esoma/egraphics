@@ -1009,6 +1009,72 @@ SET_ACTIVE_GL_PROGRAM_UNIFORM(unsigned_int_2, GLuint, 2ui);
 SET_ACTIVE_GL_PROGRAM_UNIFORM(unsigned_int_3, GLuint, 3ui);
 SET_ACTIVE_GL_PROGRAM_UNIFORM(unsigned_int_4, GLuint, 4ui);
 
+static PyObject *
+execute_gl_program_index_buffer(PyObject *module, PyObject **args, Py_ssize_t nargs)
+{
+    CHECK_UNEXPECTED_ARG_COUNT_ERROR(4);
+
+    GLenum mode = PyLong_AsLong(args[0]);
+    CHECK_UNEXPECTED_PYTHON_ERROR();
+
+    GLsizei count = PyLong_AsSize_t(args[1]);
+    CHECK_UNEXPECTED_PYTHON_ERROR();
+
+    GLenum type = PyLong_AsLong(args[2]);
+    CHECK_UNEXPECTED_PYTHON_ERROR();
+
+    GLsizei instances = PyLong_AsSize_t(args[3]);
+    CHECK_UNEXPECTED_PYTHON_ERROR();
+
+    if (instances > 1)
+    {
+        glDrawElementsInstanced(mode, count, type, 0, instances);
+        CHECK_GL_ERROR();
+    }
+    else
+    {
+        glDrawElements(mode, count, type, 0);
+        CHECK_GL_ERROR();
+    }
+
+    Py_RETURN_NONE;
+error:
+    return 0;
+}
+
+static PyObject *
+execute_gl_program_indices(PyObject *module, PyObject **args, Py_ssize_t nargs)
+{
+    CHECK_UNEXPECTED_ARG_COUNT_ERROR(4);
+
+    GLenum mode = PyLong_AsLong(args[0]);
+    CHECK_UNEXPECTED_PYTHON_ERROR();
+
+    GLint first = PyLong_AsLong(args[1]);
+    CHECK_UNEXPECTED_PYTHON_ERROR();
+
+    GLenum count = PyLong_AsLong(args[2]);
+    CHECK_UNEXPECTED_PYTHON_ERROR();
+
+    GLsizei instances = PyLong_AsSize_t(args[3]);
+    CHECK_UNEXPECTED_PYTHON_ERROR();
+
+    if (instances > 1)
+    {
+        glDrawArraysInstanced(mode, first, count, instances);
+        CHECK_GL_ERROR();
+    }
+    else
+    {
+        glDrawArrays(mode, first, count);
+        CHECK_GL_ERROR();
+    }
+
+    Py_RETURN_NONE;
+error:
+    return 0;
+}
+
 static PyMethodDef module_PyMethodDef[] = {
     {"reset_module_state", reset_module_state, METH_NOARGS, 0},
     {"activate_gl_vertex_array", activate_gl_vertex_array, METH_O, 0},
@@ -1071,6 +1137,8 @@ static PyMethodDef module_PyMethodDef[] = {
     {"set_active_gl_program_uniform_double_4x2", (PyCFunction)set_active_gl_program_uniform_double_4x2, METH_FASTCALL, 0},
     {"set_active_gl_program_uniform_double_4x3", (PyCFunction)set_active_gl_program_uniform_double_4x3, METH_FASTCALL, 0},
     {"set_active_gl_program_uniform_double_4x4", (PyCFunction)set_active_gl_program_uniform_double_4x4, METH_FASTCALL, 0},
+    {"execute_gl_program_index_buffer", (PyCFunction)execute_gl_program_index_buffer, METH_FASTCALL, 0},
+    {"execute_gl_program_indices", (PyCFunction)execute_gl_program_indices, METH_FASTCALL, 0},
     {0},
 };
 

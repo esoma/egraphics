@@ -129,6 +129,8 @@ from ._egraphics import GL_ZERO
 from ._egraphics import GlType
 from ._egraphics import create_gl_program
 from ._egraphics import delete_gl_program
+from ._egraphics import execute_gl_program_index_buffer
+from ._egraphics import execute_gl_program_indices
 from ._egraphics import get_gl_program_attributes
 from ._egraphics import get_gl_program_uniforms
 from ._egraphics import set_active_gl_program_uniform_double
@@ -191,10 +193,6 @@ from OpenGL.GL import glCullFace
 from OpenGL.GL import glDepthFunc
 from OpenGL.GL import glDepthMask
 from OpenGL.GL import glDisable
-from OpenGL.GL import glDrawArrays
-from OpenGL.GL import glDrawArraysInstanced
-from OpenGL.GL import glDrawElements
-from OpenGL.GL import glDrawElementsInstanced
 from OpenGL.GL import glEnable
 
 # python
@@ -204,7 +202,6 @@ from contextlib import ExitStack
 import ctypes
 from ctypes import addressof
 from ctypes import c_int32
-from ctypes import c_void_p
 from enum import Enum
 from typing import Any
 from typing import BinaryIO
@@ -585,29 +582,17 @@ class Shader:
                 index_gl_type = _INDEX_BUFFER_VIEW_TYPE_TO_VERTEX_ATTRIB_POINTER[
                     buffer_view_map.indices.data_type
                 ]
-                if instances > 1:
-                    glDrawElementsInstanced(
-                        primitive_mode.value,
-                        len(buffer_view_map.indices),
-                        index_gl_type,
-                        c_void_p(0),
-                        instances,
-                    )
-                else:
-                    glDrawElements(
-                        primitive_mode.value,
-                        len(buffer_view_map.indices),
-                        index_gl_type,
-                        c_void_p(0),
-                    )
+                execute_gl_program_index_buffer(
+                    primitive_mode.value,
+                    len(buffer_view_map.indices),
+                    index_gl_type,
+                    instances,
+                )
             else:
                 index_range = buffer_view_map.indices
-                if instances > 1:
-                    glDrawArraysInstanced(
-                        primitive_mode.value, index_range[0], index_range[1], instances
-                    )
-                else:
-                    glDrawArrays(primitive_mode.value, index_range[0], index_range[1])
+                execute_gl_program_indices(
+                    primitive_mode.value, index_range[0], index_range[1], instances
+                )
 
 
 @Platform.register_deactivate_callback

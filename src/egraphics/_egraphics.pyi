@@ -209,6 +209,8 @@ __all__ = [
     "set_active_gl_program_uniform_double_4x2",
     "set_active_gl_program_uniform_double_4x3",
     "set_active_gl_program_uniform_double_4x4",
+    "execute_gl_program_index_buffer",
+    "execute_gl_program_indices",
 ]
 
 # egeometry
@@ -513,4 +515,10 @@ def set_active_gl_program_uniform_double_4x3(
 ) -> None: ...
 def set_active_gl_program_uniform_double_4x4(
     location: int, count: int, value_ptr: int
+) -> None: ...
+def execute_gl_program_index_buffer(
+    mode: GlPrimitive, count: int, type: GlType, instances: int
+) -> None: ...
+def execute_gl_program_indices(
+    mode: GlPrimitive, first: int, count: int, instances: int
 ) -> None: ...

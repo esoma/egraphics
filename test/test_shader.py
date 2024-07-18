@@ -16,6 +16,7 @@ from emath import U32Array
 from emath import UVector2
 
 # pyopengl
+from OpenGL.GL import glGetUniformLocation
 from OpenGL.GL import glGetUniformfv
 from OpenGL.GL import glGetUniformiv
 from OpenGL.GL import glIsProgram
@@ -296,7 +297,11 @@ def test_pod_uniforms(platform, gl_version, location, glsl_type, python_type, ar
             get_value_0 = ctypes.c_float()
             glGetUniformfv(shader._gl_program, uni.location, get_value_0)
             get_value_1 = ctypes.c_float()
-            glGetUniformfv(shader._gl_program, uni.location + 1, get_value_1)
+            glGetUniformfv(
+                shader._gl_program,
+                glGetUniformLocation(shader._gl_program, "uni_name[1]"),
+                get_value_1,
+            )
             assert get_value_0.value == 0
             assert get_value_1.value == 1
         else:
@@ -415,7 +420,11 @@ def test_sampler_uniforms(platform, gl_version, location, prefix, postfix, compo
             get_value_0 = ctypes.c_int32()
             glGetUniformiv(shader._gl_program, uni.location, get_value_0)
             get_value_1 = ctypes.c_int32()
-            glGetUniformiv(shader._gl_program, uni.location + 1, get_value_1)
+            glGetUniformiv(
+                shader._gl_program,
+                glGetUniformLocation(shader._gl_program, "uni_name[1]"),
+                get_value_1,
+            )
             assert get_value_0.value == tex1._unit
             assert get_value_1.value == tex2._unit
         else:
@@ -521,7 +530,11 @@ def test_shadow_sampler_uniforms(
             get_value_0 = ctypes.c_int32()
             glGetUniformiv(shader._gl_program, uni.location, get_value_0)
             get_value_1 = ctypes.c_int32()
-            glGetUniformiv(shader._gl_program, uni.location + 1, get_value_1)
+            glGetUniformiv(
+                shader._gl_program,
+                glGetUniformLocation(shader._gl_program, "uni_name[1]"),
+                get_value_1,
+            )
             assert get_value_0.value == tex1._unit
             assert get_value_1.value == tex2._unit
         else:
@@ -682,7 +695,11 @@ def test_vector_uniforms(
                 assert get_value_0[i] == 25
 
             get_value_1 = (ctypes.c_float * components)()
-            glGetUniformfv(shader._gl_program, uni.location + 1, get_value_1)
+            glGetUniformfv(
+                shader._gl_program,
+                glGetUniformLocation(shader._gl_program, "uni_name[1]"),
+                get_value_1,
+            )
             for i in range(components):
                 assert get_value_1[i] == 26
         else:
@@ -868,7 +885,11 @@ def test_matrix_uniforms(
                     assert get_value_0[c][r] == 25
 
             get_value_1 = (ctypes.c_float * rows * columns)()
-            glGetUniformfv(shader._gl_program, uni.location + 1, get_value_1)
+            glGetUniformfv(
+                shader._gl_program,
+                glGetUniformLocation(shader._gl_program, "uni_name[1]"),
+                get_value_1,
+            )
             for r in range(rows):
                 for c in range(columns):
                     assert get_value_1[c][r] == 50
