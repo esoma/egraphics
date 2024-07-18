@@ -188,7 +188,6 @@ from OpenGL.GL import GL_CULL_FACE
 from OpenGL.GL import glBlendColor
 from OpenGL.GL import glBlendEquation
 from OpenGL.GL import glBlendFuncSeparate
-from OpenGL.GL import glColorMask
 from OpenGL.GL import glCullFace
 from OpenGL.GL import glDisable
 from OpenGL.GL import glEnable
@@ -263,10 +262,6 @@ class FaceCull(Enum):
 
 class Shader:
     _active: ClassVar[ref[Shader] | None] = None
-    _color_mask: ClassVar[tuple[bool, bool, bool, bool]] = (True, True, True, True)
-    _depth_test: ClassVar[bool] = False
-    _depth_mask: ClassVar[bool] = True
-    _depth_func: ClassVar[DepthTest] = DepthTest.LESS
     _blend: ClassVar[bool] = False
     _blend_factors: ClassVar[tuple[BlendFactor, BlendFactor, BlendFactor, BlendFactor]] = (
         BlendFactor.ONE,
@@ -409,12 +404,6 @@ class Shader:
         return self._uniforms
 
     @staticmethod
-    def _set_color_mask(mask: tuple[bool, bool, bool, bool]) -> None:
-        if Shader._color_mask != mask:
-            glColorMask(*mask)
-            Shader._color_mask = mask
-
-    @staticmethod
     def _set_blend(blend: bool) -> None:
         if Shader._blend == blend:
             return
@@ -511,9 +500,7 @@ class Shader:
         elif instances == 0:
             return
 
-        set_gl_execution_state(depth_write, depth_test.value)
-
-        self._set_color_mask(color_write)
+        set_gl_execution_state(depth_write, depth_test.value, *color_write)
 
         if blend_source_alpha is None:
             blend_source_alpha = blend_source
@@ -567,7 +554,6 @@ class Shader:
 @Platform.register_deactivate_callback
 def _reset_shader_state() -> None:
     Shader._active = None
-    Shader._color_mask = (True, True, True, True)
     Shader._blend = False
     Shader._blend_factors = (BlendFactor.ONE, BlendFactor.ZERO, BlendFactor.ONE, BlendFactor.ZERO)
     Shader._blend_equation = BlendFunction.ADD

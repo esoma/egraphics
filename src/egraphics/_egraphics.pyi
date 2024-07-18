@@ -523,4 +523,12 @@ def execute_gl_program_index_buffer(
 def execute_gl_program_indices(
     mode: GlPrimitive, first: int, count: int, instances: int
 ) -> None: ...
-def set_gl_execution_state(depth_write: bool, depth_func: GlFunc) -> None: ...
+def set_gl_execution_state(
+    depth_write: bool,
+    depth_func: GlFunc,
+    color_mask_r: bool,
+    color_mask_g: bool,
+    color_mask_b: bool,
+    color_mask_a: bool,
+    /,
+) -> None: ...

@@ -45,6 +45,10 @@ typedef struct ModuleState
     bool depth_test;
     bool depth_mask;
     GLenum depth_func;
+    bool color_mask_r;
+    bool color_mask_g;
+    bool color_mask_b;
+    bool color_mask_a;
 } ModuleState;
 
 static PyObject *
@@ -61,6 +65,10 @@ reset_module_state(PyObject *module, PyObject *unused)
     state->depth_test = false;
     state->depth_mask = true;
     state->depth_func = GL_LESS;
+    state->color_mask_r = true;
+    state->color_mask_g = true;
+    state->color_mask_b = true;
+    state->color_mask_a = true;
 
     state->texture_filter_anisotropic_supported = GLEW_EXT_texture_filter_anisotropic;
     Py_RETURN_NONE;
@@ -1084,12 +1092,17 @@ error:
 static PyObject *
 set_gl_execution_state(PyObject *module, PyObject **args, Py_ssize_t nargs)
 {
-    CHECK_UNEXPECTED_ARG_COUNT_ERROR(2);
+    CHECK_UNEXPECTED_ARG_COUNT_ERROR(6);
 
     bool depth_write = (args[0] == Py_True);
 
     GLenum depth_func = PyLong_AsLong(args[1]);
     CHECK_UNEXPECTED_PYTHON_ERROR();
+
+    GLboolean color_mask_r = (args[2] == Py_True);
+    GLboolean color_mask_g = (args[3] == Py_True);
+    GLboolean color_mask_b = (args[4] == Py_True);
+    GLboolean color_mask_a = (args[5] == Py_True);
 
     ModuleState *state = (ModuleState *)PyModule_GetState(module);
     CHECK_UNEXPECTED_PYTHON_ERROR();
@@ -1122,6 +1135,20 @@ set_gl_execution_state(PyObject *module, PyObject **args, Py_ssize_t nargs)
             CHECK_GL_ERROR();
             state->depth_func = depth_func;
         }
+    }
+
+    if (
+        state->color_mask_r != color_mask_r ||
+        state->color_mask_g != color_mask_g ||
+        state->color_mask_b != color_mask_b ||
+        state->color_mask_a != color_mask_a
+    )
+    {
+        glColorMask(color_mask_r, color_mask_g, color_mask_b, color_mask_a);
+        state->color_mask_r = color_mask_r;
+        state->color_mask_g = color_mask_g;
+        state->color_mask_b = color_mask_b;
+        state->color_mask_a = color_mask_a;
     }
 
     Py_RETURN_NONE;
