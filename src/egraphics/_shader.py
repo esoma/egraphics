@@ -131,6 +131,40 @@ from ._egraphics import create_gl_program
 from ._egraphics import delete_gl_program
 from ._egraphics import get_gl_program_attributes
 from ._egraphics import get_gl_program_uniforms
+from ._egraphics import set_active_gl_program_uniform_double
+from ._egraphics import set_active_gl_program_uniform_double_2
+from ._egraphics import set_active_gl_program_uniform_double_2x2
+from ._egraphics import set_active_gl_program_uniform_double_2x3
+from ._egraphics import set_active_gl_program_uniform_double_2x4
+from ._egraphics import set_active_gl_program_uniform_double_3
+from ._egraphics import set_active_gl_program_uniform_double_3x2
+from ._egraphics import set_active_gl_program_uniform_double_3x3
+from ._egraphics import set_active_gl_program_uniform_double_3x4
+from ._egraphics import set_active_gl_program_uniform_double_4
+from ._egraphics import set_active_gl_program_uniform_double_4x2
+from ._egraphics import set_active_gl_program_uniform_double_4x3
+from ._egraphics import set_active_gl_program_uniform_double_4x4
+from ._egraphics import set_active_gl_program_uniform_float
+from ._egraphics import set_active_gl_program_uniform_float_2
+from ._egraphics import set_active_gl_program_uniform_float_2x2
+from ._egraphics import set_active_gl_program_uniform_float_2x3
+from ._egraphics import set_active_gl_program_uniform_float_2x4
+from ._egraphics import set_active_gl_program_uniform_float_3
+from ._egraphics import set_active_gl_program_uniform_float_3x2
+from ._egraphics import set_active_gl_program_uniform_float_3x3
+from ._egraphics import set_active_gl_program_uniform_float_3x4
+from ._egraphics import set_active_gl_program_uniform_float_4
+from ._egraphics import set_active_gl_program_uniform_float_4x2
+from ._egraphics import set_active_gl_program_uniform_float_4x3
+from ._egraphics import set_active_gl_program_uniform_float_4x4
+from ._egraphics import set_active_gl_program_uniform_int
+from ._egraphics import set_active_gl_program_uniform_int_2
+from ._egraphics import set_active_gl_program_uniform_int_3
+from ._egraphics import set_active_gl_program_uniform_int_4
+from ._egraphics import set_active_gl_program_uniform_unsigned_int
+from ._egraphics import set_active_gl_program_uniform_unsigned_int_2
+from ._egraphics import set_active_gl_program_uniform_unsigned_int_3
+from ._egraphics import set_active_gl_program_uniform_unsigned_int_4
 from ._egraphics import use_gl_program
 from ._g_buffer_view import GBufferView
 from ._texture import Texture
@@ -146,11 +180,9 @@ from eplatform import RenderTarget
 from eplatform import set_draw_render_target
 
 # pyopengl
-import OpenGL.GL
 from OpenGL.GL import GL_BLEND
 from OpenGL.GL import GL_CULL_FACE
 from OpenGL.GL import GL_DEPTH_TEST
-from OpenGL.GL import GL_FALSE
 from OpenGL.GL import glBlendColor
 from OpenGL.GL import glBlendEquation
 from OpenGL.GL import glBlendFuncSeparate
@@ -170,6 +202,8 @@ from collections.abc import Mapping
 from collections.abc import Set
 from contextlib import ExitStack
 import ctypes
+from ctypes import addressof
+from ctypes import c_int32
 from ctypes import c_void_p
 from enum import Enum
 from typing import Any
@@ -343,7 +377,7 @@ class Shader:
                     raise ValueError(
                         f"expected {Texture} for {uniform.name} " f"(got {type(value)})"
                     )
-                input_value = exit_stack.enter_context(value.bind_unit())
+                input_value = c_int32(exit_stack.enter_context(value.bind_unit()))
         else:
             if uniform.size > 1:
                 array_type = _PY_TYPE_TO_ARRAY[uniform.data_type]
@@ -365,7 +399,7 @@ class Shader:
                         f"expected {uniform._set_type} for {uniform.name} " f"(got {type(value)})"
                     )
                 if uniform._set_type in _POD_UNIFORM_TYPES:
-                    input_value = value.value
+                    input_value = value
                     cache_key = value.value
                 else:
                     input_value = value.pointer
@@ -624,7 +658,7 @@ class ShaderUniform(Generic[_T]):
         self._size = size
         self._location = location
         self._setter = _TYPE_TO_UNIFORM_SETTER[data_type]
-        self._set_type: Any = ctypes.c_int32 if data_type is Texture else data_type
+        self._set_type: Any = c_int32 if data_type is Texture else data_type
         self._cache: Any = None
 
     def __repr__(self) -> str:
@@ -633,7 +667,11 @@ class ShaderUniform(Generic[_T]):
     def _set(self, location: int, size: int, gl_value: Any, cache_key: Any) -> None:
         if self._cache == cache_key:
             return
-        self._setter(location, size, gl_value)
+        try:
+            value_ptr = addressof(gl_value.contents)
+        except AttributeError:
+            value_ptr = addressof(gl_value)
+        self._setter(location, size, value_ptr)
         self._cache = cache_key
 
     @property
@@ -651,13 +689,6 @@ class ShaderUniform(Generic[_T]):
     @property
     def location(self) -> int:
         return self._location
-
-
-def _wrap_uniform_matrix(f: Any) -> Any:
-    def _(location: Any, count: Any, value: Any) -> None:
-        f(location, count, GL_FALSE, value)
-
-    return _
 
 
 _GL_TYPE_TO_PY: Final[Mapping[GlType, Any]] = {
@@ -739,42 +770,42 @@ _GL_TYPE_TO_PY: Final[Mapping[GlType, Any]] = {
 
 
 _TYPE_TO_UNIFORM_SETTER: Final[Mapping] = {
-    ctypes.c_float: OpenGL.GL.glUniform1fv,
-    emath.FVector2: OpenGL.GL.glUniform2fv,
-    emath.FVector3: OpenGL.GL.glUniform3fv,
-    emath.FVector4: OpenGL.GL.glUniform4fv,
-    ctypes.c_double: OpenGL.GL.glUniform1dv,
-    emath.DVector2: OpenGL.GL.glUniform2dv,
-    emath.DVector3: OpenGL.GL.glUniform3dv,
-    emath.DVector4: OpenGL.GL.glUniform4dv,
-    ctypes.c_int32: OpenGL.GL.glUniform1iv,
-    emath.I32Vector2: OpenGL.GL.glUniform2iv,
-    emath.I32Vector3: OpenGL.GL.glUniform3iv,
-    emath.I32Vector4: OpenGL.GL.glUniform4iv,
-    ctypes.c_uint32: OpenGL.GL.glUniform1uiv,
-    emath.U32Vector2: OpenGL.GL.glUniform2uiv,
-    emath.U32Vector3: OpenGL.GL.glUniform3uiv,
-    emath.U32Vector4: OpenGL.GL.glUniform4uiv,
-    ctypes.c_bool: OpenGL.GL.glUniform1iv,
-    emath.FMatrix2x2: _wrap_uniform_matrix(OpenGL.GL.glUniformMatrix2fv),
-    emath.FMatrix2x3: _wrap_uniform_matrix(OpenGL.GL.glUniformMatrix2x3fv),
-    emath.FMatrix2x4: _wrap_uniform_matrix(OpenGL.GL.glUniformMatrix2x4fv),
-    emath.FMatrix3x2: _wrap_uniform_matrix(OpenGL.GL.glUniformMatrix3x2fv),
-    emath.FMatrix3x3: _wrap_uniform_matrix(OpenGL.GL.glUniformMatrix3fv),
-    emath.FMatrix3x4: _wrap_uniform_matrix(OpenGL.GL.glUniformMatrix3x4fv),
-    emath.FMatrix4x2: _wrap_uniform_matrix(OpenGL.GL.glUniformMatrix4x2fv),
-    emath.FMatrix4x3: _wrap_uniform_matrix(OpenGL.GL.glUniformMatrix4x3fv),
-    emath.FMatrix4x4: _wrap_uniform_matrix(OpenGL.GL.glUniformMatrix4fv),
-    emath.DMatrix2x2: _wrap_uniform_matrix(OpenGL.GL.glUniformMatrix2dv),
-    emath.DMatrix2x3: _wrap_uniform_matrix(OpenGL.GL.glUniformMatrix2x3dv),
-    emath.DMatrix2x4: _wrap_uniform_matrix(OpenGL.GL.glUniformMatrix2x4dv),
-    emath.DMatrix3x2: _wrap_uniform_matrix(OpenGL.GL.glUniformMatrix3x2dv),
-    emath.DMatrix3x3: _wrap_uniform_matrix(OpenGL.GL.glUniformMatrix3dv),
-    emath.DMatrix3x4: _wrap_uniform_matrix(OpenGL.GL.glUniformMatrix3x4dv),
-    emath.DMatrix4x2: _wrap_uniform_matrix(OpenGL.GL.glUniformMatrix4x2dv),
-    emath.DMatrix4x3: _wrap_uniform_matrix(OpenGL.GL.glUniformMatrix4x3dv),
-    emath.DMatrix4x4: _wrap_uniform_matrix(OpenGL.GL.glUniformMatrix4dv),
-    Texture: OpenGL.GL.glUniform1iv,
+    ctypes.c_float: set_active_gl_program_uniform_float,
+    emath.FVector2: set_active_gl_program_uniform_float_2,
+    emath.FVector3: set_active_gl_program_uniform_float_3,
+    emath.FVector4: set_active_gl_program_uniform_float_4,
+    ctypes.c_double: set_active_gl_program_uniform_double,
+    emath.DVector2: set_active_gl_program_uniform_double_2,
+    emath.DVector3: set_active_gl_program_uniform_double_3,
+    emath.DVector4: set_active_gl_program_uniform_double_4,
+    ctypes.c_int32: set_active_gl_program_uniform_int,
+    emath.I32Vector2: set_active_gl_program_uniform_int_2,
+    emath.I32Vector3: set_active_gl_program_uniform_int_3,
+    emath.I32Vector4: set_active_gl_program_uniform_int_4,
+    ctypes.c_uint32: set_active_gl_program_uniform_unsigned_int,
+    emath.U32Vector2: set_active_gl_program_uniform_unsigned_int_2,
+    emath.U32Vector3: set_active_gl_program_uniform_unsigned_int_3,
+    emath.U32Vector4: set_active_gl_program_uniform_unsigned_int_4,
+    ctypes.c_bool: set_active_gl_program_uniform_int,
+    emath.FMatrix2x2: set_active_gl_program_uniform_float_2x2,
+    emath.FMatrix2x3: set_active_gl_program_uniform_float_2x3,
+    emath.FMatrix2x4: set_active_gl_program_uniform_float_2x4,
+    emath.FMatrix3x2: set_active_gl_program_uniform_float_3x2,
+    emath.FMatrix3x3: set_active_gl_program_uniform_float_3x3,
+    emath.FMatrix3x4: set_active_gl_program_uniform_float_3x4,
+    emath.FMatrix4x2: set_active_gl_program_uniform_float_4x2,
+    emath.FMatrix4x3: set_active_gl_program_uniform_float_4x3,
+    emath.FMatrix4x4: set_active_gl_program_uniform_float_4x4,
+    emath.DMatrix2x2: set_active_gl_program_uniform_double_2x2,
+    emath.DMatrix2x3: set_active_gl_program_uniform_double_2x3,
+    emath.DMatrix2x4: set_active_gl_program_uniform_double_2x4,
+    emath.DMatrix3x2: set_active_gl_program_uniform_double_3x2,
+    emath.DMatrix3x3: set_active_gl_program_uniform_double_3x3,
+    emath.DMatrix3x4: set_active_gl_program_uniform_double_3x4,
+    emath.DMatrix4x2: set_active_gl_program_uniform_double_4x2,
+    emath.DMatrix4x3: set_active_gl_program_uniform_double_4x3,
+    emath.DMatrix4x4: set_active_gl_program_uniform_double_4x4,
+    Texture: set_active_gl_program_uniform_int,
 }
 
 _POD_UNIFORM_TYPES: Final[Set] = {
@@ -802,7 +833,7 @@ _PY_TYPE_TO_ARRAY: Final[Mapping] = {
     emath.U32Vector2: emath.U32Vector2Array,
     emath.U32Vector3: emath.U32Vector3Array,
     emath.U32Vector4: emath.U32Vector4Array,
-    ctypes.c_bool: emath.BArray,
+    ctypes.c_bool: emath.I32Array,
     emath.FMatrix2x2: emath.FMatrix2x2Array,
     emath.FMatrix3x3: emath.FMatrix3x3Array,
     emath.FMatrix4x4: emath.FMatrix4x4Array,

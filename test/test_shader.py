@@ -8,7 +8,6 @@ from egraphics import TextureComponents
 
 # emath
 import emath
-from emath import BArray
 from emath import DArray
 from emath import FArray
 from emath import I32Array
@@ -17,6 +16,8 @@ from emath import U32Array
 from emath import UVector2
 
 # pyopengl
+from OpenGL.GL import glGetUniformfv
+from OpenGL.GL import glGetUniformiv
 from OpenGL.GL import glIsProgram
 
 # pytest
@@ -225,7 +226,7 @@ def test_pod_attributes(platform, gl_version, location, glsl_type, python_type, 
         ("double", ctypes.c_double, DArray),
         ("int", ctypes.c_int32, I32Array),
         ("uint", ctypes.c_uint32, U32Array),
-        ("bool", ctypes.c_bool, BArray),
+        ("bool", ctypes.c_bool, I32Array),
     ],
 )
 @pytest.mark.parametrize("array", [False, True])
@@ -283,19 +284,30 @@ def test_pod_uniforms(platform, gl_version, location, glsl_type, python_type, ar
                 shader._set_uniform(uni, None, exit_stack)
             assert str(excinfo.value) == f"expected {array_type} for uni_name (got {type(None)})"
             with pytest.raises(ValueError) as excinfo:
-                shader._set_uniform(uni, U8Array(0, 100), exit_stack)
+                shader._set_uniform(uni, U8Array(0, 1), exit_stack)
             assert str(excinfo.value) == f"expected {array_type} for uni_name (got {U8Array})"
             with pytest.raises(ValueError) as excinfo:
                 shader._set_uniform(uni, array_type(0), exit_stack)
             assert str(excinfo.value) == (
                 f"expected array of length 2 for uni_name " f"(got array of length 1)"
             )
-            shader._set_uniform(uni, array_type(0, 100), exit_stack)
+            shader._set_uniform(uni, array_type(0, 1), exit_stack)
+
+            get_value_0 = ctypes.c_float()
+            glGetUniformfv(shader._gl_program, uni.location, get_value_0)
+            get_value_1 = ctypes.c_float()
+            glGetUniformfv(shader._gl_program, uni.location + 1, get_value_1)
+            assert get_value_0.value == 0
+            assert get_value_1.value == 1
         else:
             with pytest.raises(ValueError) as excinfo:
                 shader._set_uniform(uni, None, exit_stack)
             assert str(excinfo.value) == f"expected {python_type} for uni_name (got {type(None)})"
-            shader._set_uniform(uni, python_type(100), exit_stack)
+            shader._set_uniform(uni, python_type(1), exit_stack)
+
+            get_value = ctypes.c_float()
+            glGetUniformfv(shader._gl_program, uni.location, get_value)
+            assert get_value.value == 1
 
 
 @pytest.mark.parametrize("location", [None, 1])
@@ -399,12 +411,23 @@ def test_sampler_uniforms(platform, gl_version, location, prefix, postfix, compo
             tex1 = Texture2d(UVector2(1, 1), TextureComponents.R, ctypes.c_uint8, b"\x00")
             tex2 = Texture2d(UVector2(1, 1), TextureComponents.R, ctypes.c_uint8, b"\x00")
             shader._set_uniform(uni, [tex1, tex2], exit_stack)
+
+            get_value_0 = ctypes.c_int32()
+            glGetUniformiv(shader._gl_program, uni.location, get_value_0)
+            get_value_1 = ctypes.c_int32()
+            glGetUniformiv(shader._gl_program, uni.location + 1, get_value_1)
+            assert get_value_0.value == tex1._unit
+            assert get_value_1.value == tex2._unit
         else:
             with pytest.raises(ValueError) as excinfo:
                 shader._set_uniform(uni, None, exit_stack)
             assert str(excinfo.value) == (f"expected {Texture} for uni_name (got {type(None)})")
             tex = Texture2d(UVector2(1, 1), TextureComponents.R, ctypes.c_uint8, b"\x00")
             shader._set_uniform(uni, tex, exit_stack)
+
+            get_value = ctypes.c_int32()
+            glGetUniformiv(shader._gl_program, uni.location, get_value)
+            assert get_value.value == tex._unit
 
 
 @pytest.mark.parametrize("location", [None, 1])
@@ -494,12 +517,23 @@ def test_shadow_sampler_uniforms(
             tex1 = Texture2d(UVector2(1, 1), TextureComponents.R, ctypes.c_uint8, b"\x00")
             tex2 = Texture2d(UVector2(1, 1), TextureComponents.R, ctypes.c_uint8, b"\x00")
             shader._set_uniform(uni, [tex1, tex2], exit_stack)
+
+            get_value_0 = ctypes.c_int32()
+            glGetUniformiv(shader._gl_program, uni.location, get_value_0)
+            get_value_1 = ctypes.c_int32()
+            glGetUniformiv(shader._gl_program, uni.location + 1, get_value_1)
+            assert get_value_0.value == tex1._unit
+            assert get_value_1.value == tex2._unit
         else:
             with pytest.raises(ValueError) as excinfo:
                 shader._set_uniform(uni, None, exit_stack)
             assert str(excinfo.value) == (f"expected {Texture} for uni_name (got {type(None)})")
             tex = Texture2d(UVector2(1, 1), TextureComponents.R, ctypes.c_uint8, b"\x00")
             shader._set_uniform(uni, tex, exit_stack)
+
+            get_value = ctypes.c_int32()
+            glGetUniformiv(shader._gl_program, uni.location, get_value)
+            assert get_value.value == tex._unit
 
 
 @pytest.mark.parametrize("location", [None, 1])
@@ -640,7 +674,17 @@ def test_vector_uniforms(
             assert str(excinfo.value) == (
                 f"expected array of length 2 for uni_name " f"(got array of length 1)"
             )
-            shader._set_uniform(uni, array_type(python_type(25), python_type(25)), exit_stack)
+            shader._set_uniform(uni, array_type(python_type(25), python_type(26)), exit_stack)
+
+            get_value_0 = (ctypes.c_float * components)()
+            glGetUniformfv(shader._gl_program, uni.location, get_value_0)
+            for i in range(components):
+                assert get_value_0[i] == 25
+
+            get_value_1 = (ctypes.c_float * components)()
+            glGetUniformfv(shader._gl_program, uni.location + 1, get_value_1)
+            for i in range(components):
+                assert get_value_1[i] == 26
         else:
             with pytest.raises(ValueError) as excinfo:
                 shader._set_uniform(uni, None, exit_stack)
@@ -648,6 +692,11 @@ def test_vector_uniforms(
                 f"expected {python_type} for uni_name (got {type(None)})"
             )
             shader._set_uniform(uni, python_type(100), exit_stack)
+
+            get_value = (ctypes.c_float * components)()
+            glGetUniformfv(shader._gl_program, uni.location, get_value)
+            for i in range(components):
+                assert get_value[i] == 100
 
 
 @pytest.mark.parametrize("location", [None, 1])
@@ -803,11 +852,38 @@ def test_matrix_uniforms(
             assert str(excinfo.value) == (
                 f"expected array of length 2 for uni_name " f"(got array of length 1)"
             )
-            shader._set_uniform(uni, array_type(python_type(25), python_type(25)), exit_stack)
+            shader._set_uniform(
+                uni,
+                array_type(
+                    python_type(*(25 for i in range(rows * columns))),
+                    python_type(*(50 for i in range(rows * columns))),
+                ),
+                exit_stack,
+            )
+
+            get_value_0 = (ctypes.c_float * rows * columns)()
+            glGetUniformfv(shader._gl_program, uni.location, get_value_0)
+            for r in range(rows):
+                for c in range(columns):
+                    assert get_value_0[c][r] == 25
+
+            get_value_1 = (ctypes.c_float * rows * columns)()
+            glGetUniformfv(shader._gl_program, uni.location + 1, get_value_1)
+            for r in range(rows):
+                for c in range(columns):
+                    assert get_value_1[c][r] == 50
         else:
             with pytest.raises(ValueError) as excinfo:
                 shader._set_uniform(uni, None, exit_stack)
             assert str(excinfo.value) == (
                 f"expected {python_type} for uni_name (got {type(None)})"
             )
-            shader._set_uniform(uni, python_type(100), exit_stack)
+            shader._set_uniform(
+                uni, python_type(*(100 for i in range(rows * columns))), exit_stack
+            )
+
+            get_value = (ctypes.c_float * rows * columns)()
+            glGetUniformfv(shader._gl_program, uni.location, get_value)
+            for r in range(rows):
+                for c in range(columns):
+                    assert get_value[c][r] == 100

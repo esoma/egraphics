@@ -928,6 +928,64 @@ error:
     return 0;
 }
 
+#define SET_ACTIVE_GL_PROGRAM_UNIFORM(name, gl_type, uniform_name, ...)\
+    static PyObject *\
+    set_active_gl_program_uniform_##name(PyObject *module, PyObject **args, Py_ssize_t nargs)\
+    {\
+        CHECK_UNEXPECTED_ARG_COUNT_ERROR(3);\
+        \
+        GLint location = PyLong_AsLong(args[0]);\
+        CHECK_UNEXPECTED_PYTHON_ERROR();\
+        \
+        GLsizei count = (GLsizei)PyLong_AsSize_t(args[1]);\
+        CHECK_UNEXPECTED_PYTHON_ERROR();\
+        \
+        gl_type *value = (gl_type *)PyLong_AsVoidPtr(args[2]);\
+        CHECK_UNEXPECTED_PYTHON_ERROR();\
+        \
+        glUniform##uniform_name##v(location, count, __VA_ARGS__, value);\
+        CHECK_GL_ERROR();\
+        \
+        Py_RETURN_NONE;\
+    error:\
+        return 0;\
+    }
+
+SET_ACTIVE_GL_PROGRAM_UNIFORM(float, GLfloat, 1f);
+SET_ACTIVE_GL_PROGRAM_UNIFORM(float_2, GLfloat, 2f);
+SET_ACTIVE_GL_PROGRAM_UNIFORM(float_3, GLfloat, 3f);
+SET_ACTIVE_GL_PROGRAM_UNIFORM(float_4, GLfloat, 4f);
+SET_ACTIVE_GL_PROGRAM_UNIFORM(float_2x2, GLfloat, Matrix2f, GL_FALSE);
+SET_ACTIVE_GL_PROGRAM_UNIFORM(float_2x3, GLfloat, Matrix2x3f, GL_FALSE);
+SET_ACTIVE_GL_PROGRAM_UNIFORM(float_2x4, GLfloat, Matrix2x4f, GL_FALSE);
+SET_ACTIVE_GL_PROGRAM_UNIFORM(float_3x2, GLfloat, Matrix3x2f, GL_FALSE);
+SET_ACTIVE_GL_PROGRAM_UNIFORM(float_3x3, GLfloat, Matrix3f, GL_FALSE);
+SET_ACTIVE_GL_PROGRAM_UNIFORM(float_3x4, GLfloat, Matrix3x4f, GL_FALSE);
+SET_ACTIVE_GL_PROGRAM_UNIFORM(float_4x2, GLfloat, Matrix4x2f, GL_FALSE);
+SET_ACTIVE_GL_PROGRAM_UNIFORM(float_4x3, GLfloat, Matrix4x3f, GL_FALSE);
+SET_ACTIVE_GL_PROGRAM_UNIFORM(float_4x4, GLfloat, Matrix4f, GL_FALSE);
+SET_ACTIVE_GL_PROGRAM_UNIFORM(double, GLdouble, 1d);
+SET_ACTIVE_GL_PROGRAM_UNIFORM(double_2, GLdouble, 2d);
+SET_ACTIVE_GL_PROGRAM_UNIFORM(double_3, GLdouble, 3d);
+SET_ACTIVE_GL_PROGRAM_UNIFORM(double_4, GLdouble, 4d);
+SET_ACTIVE_GL_PROGRAM_UNIFORM(double_2x2, GLdouble, Matrix2d, GL_FALSE);
+SET_ACTIVE_GL_PROGRAM_UNIFORM(double_2x3, GLdouble, Matrix2x3d, GL_FALSE);
+SET_ACTIVE_GL_PROGRAM_UNIFORM(double_2x4, GLdouble, Matrix2x4d, GL_FALSE);
+SET_ACTIVE_GL_PROGRAM_UNIFORM(double_3x2, GLdouble, Matrix3x2d, GL_FALSE);
+SET_ACTIVE_GL_PROGRAM_UNIFORM(double_3x3, GLdouble, Matrix3d, GL_FALSE);
+SET_ACTIVE_GL_PROGRAM_UNIFORM(double_3x4, GLdouble, Matrix3x4d, GL_FALSE);
+SET_ACTIVE_GL_PROGRAM_UNIFORM(double_4x2, GLdouble, Matrix4x2d, GL_FALSE);
+SET_ACTIVE_GL_PROGRAM_UNIFORM(double_4x3, GLdouble, Matrix4x3d, GL_FALSE);
+SET_ACTIVE_GL_PROGRAM_UNIFORM(double_4x4, GLdouble, Matrix4d, GL_FALSE);
+SET_ACTIVE_GL_PROGRAM_UNIFORM(int, GLint, 1i);
+SET_ACTIVE_GL_PROGRAM_UNIFORM(int_2, GLint, 2i);
+SET_ACTIVE_GL_PROGRAM_UNIFORM(int_3, GLint, 3i);
+SET_ACTIVE_GL_PROGRAM_UNIFORM(int_4, GLint, 4i);
+SET_ACTIVE_GL_PROGRAM_UNIFORM(unsigned_int, GLuint, 1ui);
+SET_ACTIVE_GL_PROGRAM_UNIFORM(unsigned_int_2, GLuint, 2ui);
+SET_ACTIVE_GL_PROGRAM_UNIFORM(unsigned_int_3, GLuint, 3ui);
+SET_ACTIVE_GL_PROGRAM_UNIFORM(unsigned_int_4, GLuint, 4ui);
+
 static PyMethodDef module_PyMethodDef[] = {
     {"reset_module_state", reset_module_state, METH_NOARGS, 0},
     {"activate_gl_vertex_array", activate_gl_vertex_array, METH_O, 0},
@@ -956,6 +1014,40 @@ static PyMethodDef module_PyMethodDef[] = {
     {"create_gl_program", (PyCFunction)create_gl_program, METH_FASTCALL, 0},
     {"delete_gl_program", delete_gl_program, METH_O, 0},
     {"use_gl_program", use_gl_program, METH_O, 0},
+    {"set_active_gl_program_uniform_float", (PyCFunction)set_active_gl_program_uniform_float, METH_FASTCALL, 0},
+    {"set_active_gl_program_uniform_double", (PyCFunction)set_active_gl_program_uniform_double, METH_FASTCALL, 0},
+    {"set_active_gl_program_uniform_int", (PyCFunction)set_active_gl_program_uniform_int, METH_FASTCALL, 0},
+    {"set_active_gl_program_uniform_unsigned_int", (PyCFunction)set_active_gl_program_uniform_unsigned_int, METH_FASTCALL, 0},
+    {"set_active_gl_program_uniform_float_2", (PyCFunction)set_active_gl_program_uniform_float_2, METH_FASTCALL, 0},
+    {"set_active_gl_program_uniform_double_2", (PyCFunction)set_active_gl_program_uniform_double_2, METH_FASTCALL, 0},
+    {"set_active_gl_program_uniform_int_2", (PyCFunction)set_active_gl_program_uniform_int_2, METH_FASTCALL, 0},
+    {"set_active_gl_program_uniform_unsigned_int_2", (PyCFunction)set_active_gl_program_uniform_unsigned_int_2, METH_FASTCALL, 0},
+    {"set_active_gl_program_uniform_float_3", (PyCFunction)set_active_gl_program_uniform_float_3, METH_FASTCALL, 0},
+    {"set_active_gl_program_uniform_double_3", (PyCFunction)set_active_gl_program_uniform_double_3, METH_FASTCALL, 0},
+    {"set_active_gl_program_uniform_int_3", (PyCFunction)set_active_gl_program_uniform_int_3, METH_FASTCALL, 0},
+    {"set_active_gl_program_uniform_unsigned_int_3", (PyCFunction)set_active_gl_program_uniform_unsigned_int_3, METH_FASTCALL, 0},
+    {"set_active_gl_program_uniform_float_4", (PyCFunction)set_active_gl_program_uniform_float_4, METH_FASTCALL, 0},
+    {"set_active_gl_program_uniform_double_4", (PyCFunction)set_active_gl_program_uniform_double_4, METH_FASTCALL, 0},
+    {"set_active_gl_program_uniform_int_4", (PyCFunction)set_active_gl_program_uniform_int_4, METH_FASTCALL, 0},
+    {"set_active_gl_program_uniform_unsigned_int_4", (PyCFunction)set_active_gl_program_uniform_unsigned_int_4, METH_FASTCALL, 0},
+    {"set_active_gl_program_uniform_float_2x2", (PyCFunction)set_active_gl_program_uniform_float_2x2, METH_FASTCALL, 0},
+    {"set_active_gl_program_uniform_float_2x3", (PyCFunction)set_active_gl_program_uniform_float_2x3, METH_FASTCALL, 0},
+    {"set_active_gl_program_uniform_float_2x4", (PyCFunction)set_active_gl_program_uniform_float_2x4, METH_FASTCALL, 0},
+    {"set_active_gl_program_uniform_float_3x2", (PyCFunction)set_active_gl_program_uniform_float_3x2, METH_FASTCALL, 0},
+    {"set_active_gl_program_uniform_float_3x3", (PyCFunction)set_active_gl_program_uniform_float_3x3, METH_FASTCALL, 0},
+    {"set_active_gl_program_uniform_float_3x4", (PyCFunction)set_active_gl_program_uniform_float_3x4, METH_FASTCALL, 0},
+    {"set_active_gl_program_uniform_float_4x2", (PyCFunction)set_active_gl_program_uniform_float_4x2, METH_FASTCALL, 0},
+    {"set_active_gl_program_uniform_float_4x3", (PyCFunction)set_active_gl_program_uniform_float_4x3, METH_FASTCALL, 0},
+    {"set_active_gl_program_uniform_float_4x4", (PyCFunction)set_active_gl_program_uniform_float_4x4, METH_FASTCALL, 0},
+    {"set_active_gl_program_uniform_double_2x2", (PyCFunction)set_active_gl_program_uniform_double_2x2, METH_FASTCALL, 0},
+    {"set_active_gl_program_uniform_double_2x3", (PyCFunction)set_active_gl_program_uniform_double_2x3, METH_FASTCALL, 0},
+    {"set_active_gl_program_uniform_double_2x4", (PyCFunction)set_active_gl_program_uniform_double_2x4, METH_FASTCALL, 0},
+    {"set_active_gl_program_uniform_double_3x2", (PyCFunction)set_active_gl_program_uniform_double_3x2, METH_FASTCALL, 0},
+    {"set_active_gl_program_uniform_double_3x3", (PyCFunction)set_active_gl_program_uniform_double_3x3, METH_FASTCALL, 0},
+    {"set_active_gl_program_uniform_double_3x4", (PyCFunction)set_active_gl_program_uniform_double_3x4, METH_FASTCALL, 0},
+    {"set_active_gl_program_uniform_double_4x2", (PyCFunction)set_active_gl_program_uniform_double_4x2, METH_FASTCALL, 0},
+    {"set_active_gl_program_uniform_double_4x3", (PyCFunction)set_active_gl_program_uniform_double_4x3, METH_FASTCALL, 0},
+    {"set_active_gl_program_uniform_double_4x4", (PyCFunction)set_active_gl_program_uniform_double_4x4, METH_FASTCALL, 0},
     {0},
 };
 
