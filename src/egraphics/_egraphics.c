@@ -42,6 +42,9 @@ typedef struct ModuleState
     float clear_color[3];
     float clear_depth;
     int texture_filter_anisotropic_supported;
+    bool depth_test;
+    bool depth_mask;
+    GLenum depth_func;
 } ModuleState;
 
 static PyObject *
@@ -55,6 +58,9 @@ reset_module_state(PyObject *module, PyObject *unused)
     state->clear_color[1] = -1;
     state->clear_color[2] = -1;
     state->clear_depth = -1;
+    state->depth_test = false;
+    state->depth_mask = true;
+    state->depth_func = GL_LESS;
 
     state->texture_filter_anisotropic_supported = GLEW_EXT_texture_filter_anisotropic;
     Py_RETURN_NONE;
@@ -1075,6 +1081,54 @@ error:
     return 0;
 }
 
+static PyObject *
+set_gl_execution_state(PyObject *module, PyObject **args, Py_ssize_t nargs)
+{
+    CHECK_UNEXPECTED_ARG_COUNT_ERROR(2);
+
+    bool depth_write = (args[0] == Py_True);
+
+    GLenum depth_func = PyLong_AsLong(args[1]);
+    CHECK_UNEXPECTED_PYTHON_ERROR();
+
+    ModuleState *state = (ModuleState *)PyModule_GetState(module);
+    CHECK_UNEXPECTED_PYTHON_ERROR();
+
+    if (!depth_write && depth_func == GL_ALWAYS)
+    {
+        if (state->depth_test)
+        {
+            glDisable(GL_DEPTH_TEST);
+            CHECK_GL_ERROR();
+            state->depth_test = false;
+        }
+    }
+    {
+        if (!state->depth_test)
+        {
+            glEnable(GL_DEPTH_TEST);
+            CHECK_GL_ERROR();
+            state->depth_test = true;
+        }
+        if (state->depth_mask != depth_write)
+        {
+            glDepthMask(depth_write);
+            CHECK_GL_ERROR();
+            state->depth_mask = depth_write;
+        }
+        if (state->depth_func != depth_func)
+        {
+            glDepthFunc(depth_func);
+            CHECK_GL_ERROR();
+            state->depth_func = depth_func;
+        }
+    }
+
+    Py_RETURN_NONE;
+error:
+    return 0;
+}
+
 static PyMethodDef module_PyMethodDef[] = {
     {"reset_module_state", reset_module_state, METH_NOARGS, 0},
     {"activate_gl_vertex_array", activate_gl_vertex_array, METH_O, 0},
@@ -1139,6 +1193,7 @@ static PyMethodDef module_PyMethodDef[] = {
     {"set_active_gl_program_uniform_double_4x4", (PyCFunction)set_active_gl_program_uniform_double_4x4, METH_FASTCALL, 0},
     {"execute_gl_program_index_buffer", (PyCFunction)execute_gl_program_index_buffer, METH_FASTCALL, 0},
     {"execute_gl_program_indices", (PyCFunction)execute_gl_program_indices, METH_FASTCALL, 0},
+    {"set_gl_execution_state", (PyCFunction)set_gl_execution_state, METH_FASTCALL, 0},
     {0},
 };
 

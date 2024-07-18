@@ -167,6 +167,7 @@ from ._egraphics import set_active_gl_program_uniform_unsigned_int
 from ._egraphics import set_active_gl_program_uniform_unsigned_int_2
 from ._egraphics import set_active_gl_program_uniform_unsigned_int_3
 from ._egraphics import set_active_gl_program_uniform_unsigned_int_4
+from ._egraphics import set_gl_execution_state
 from ._egraphics import use_gl_program
 from ._g_buffer_view import GBufferView
 from ._texture import Texture
@@ -184,14 +185,11 @@ from eplatform import set_draw_render_target
 # pyopengl
 from OpenGL.GL import GL_BLEND
 from OpenGL.GL import GL_CULL_FACE
-from OpenGL.GL import GL_DEPTH_TEST
 from OpenGL.GL import glBlendColor
 from OpenGL.GL import glBlendEquation
 from OpenGL.GL import glBlendFuncSeparate
 from OpenGL.GL import glColorMask
 from OpenGL.GL import glCullFace
-from OpenGL.GL import glDepthFunc
-from OpenGL.GL import glDepthMask
 from OpenGL.GL import glDisable
 from OpenGL.GL import glEnable
 
@@ -417,30 +415,6 @@ class Shader:
             Shader._color_mask = mask
 
     @staticmethod
-    def _set_depth_test(test: bool) -> None:
-        if Shader._depth_test == test:
-            return
-        if test:
-            glEnable(GL_DEPTH_TEST)
-        else:
-            glDisable(GL_DEPTH_TEST)
-        Shader._depth_test = test
-
-    @staticmethod
-    def _set_depth_mask(mask: bool) -> None:
-        if Shader._depth_mask == mask:
-            return
-        glDepthMask(mask)
-        Shader._depth_mask = mask
-
-    @staticmethod
-    def _set_depth_func(func: DepthTest) -> None:
-        if Shader._depth_func == func:
-            return
-        glDepthFunc(func.value)
-        Shader._depth_func = func
-
-    @staticmethod
     def _set_blend(blend: bool) -> None:
         if Shader._blend == blend:
             return
@@ -537,12 +511,7 @@ class Shader:
         elif instances == 0:
             return
 
-        if not depth_write and depth_test == DepthTest.ALWAYS:
-            self._set_depth_test(False)
-        else:
-            self._set_depth_test(True)
-            self._set_depth_mask(depth_write)
-            self._set_depth_func(depth_test)
+        set_gl_execution_state(depth_write, depth_test.value)
 
         self._set_color_mask(color_write)
 
@@ -599,9 +568,6 @@ class Shader:
 def _reset_shader_state() -> None:
     Shader._active = None
     Shader._color_mask = (True, True, True, True)
-    Shader._depth_test = False
-    Shader._depth_mask = True
-    Shader._depth_func = DepthTest.LESS
     Shader._blend = False
     Shader._blend_factors = (BlendFactor.ONE, BlendFactor.ZERO, BlendFactor.ONE, BlendFactor.ZERO)
     Shader._blend_equation = BlendFunction.ADD
