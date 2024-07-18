@@ -56,6 +56,9 @@ typedef struct ModuleState
     GLenum blend_destination_alpha;
     GLenum blend_equation;
     float blend_color[4];
+    bool cull_face_enabled;
+    GLenum cull_face;
+
 } ModuleState;
 
 static PyObject *
@@ -86,6 +89,8 @@ reset_module_state(PyObject *module, PyObject *unused)
     state->blend_color[1] = 1;
     state->blend_color[2] = 2;
     state->blend_color[3] = 3;
+    state->cull_face_enabled = false;
+    state->cull_face = GL_BACK;
 
     state->texture_filter_anisotropic_supported = GLEW_EXT_texture_filter_anisotropic;
     Py_RETURN_NONE;
@@ -1112,7 +1117,7 @@ set_gl_execution_state(PyObject *module, PyObject **args, Py_ssize_t nargs)
     PyObject *ex = 0;
     struct EMathApi *emath_api = 0;
 
-    CHECK_UNEXPECTED_ARG_COUNT_ERROR(12);
+    CHECK_UNEXPECTED_ARG_COUNT_ERROR(13);
 
     bool depth_write = (args[0] == Py_True);
 
@@ -1148,6 +1153,8 @@ set_gl_execution_state(PyObject *module, PyObject **args, Py_ssize_t nargs)
     CHECK_UNEXPECTED_PYTHON_ERROR();
 
     PyObject *py_blend_color = args[11];
+
+    PyObject *py_cull_face = args[12];
 
     ModuleState *state = (ModuleState *)PyModule_GetState(module);
     CHECK_UNEXPECTED_PYTHON_ERROR();
@@ -1261,6 +1268,35 @@ set_gl_execution_state(PyObject *module, PyObject **args, Py_ssize_t nargs)
             glBlendColor(blend_color[0], blend_color[1], blend_color[2], blend_color[3]);
             CHECK_GL_ERROR();
             memcpy(state->blend_color, blend_color, sizeof(float) * 4);
+        }
+    }
+
+    if (py_cull_face == Py_None)
+    {
+        if (state->cull_face_enabled)
+        {
+            glDisable(GL_CULL_FACE);
+            CHECK_GL_ERROR();
+            state->cull_face_enabled = false;
+        }
+    }
+    else
+    {
+        if (!state->cull_face_enabled)
+        {
+            glEnable(GL_CULL_FACE);
+            CHECK_GL_ERROR();
+            state->cull_face_enabled = true;
+        }
+
+        GLenum cull_face = PyLong_AsLong(args[12]);
+        CHECK_UNEXPECTED_PYTHON_ERROR();
+
+        if (state->cull_face != cull_face)
+        {
+            glCullFace(cull_face);
+            CHECK_GL_ERROR();
+            state->cull_face = cull_face;
         }
     }
 

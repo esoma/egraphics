@@ -536,5 +536,6 @@ def set_gl_execution_state(
     blend_destination_alpha: GlBlendFactor | None,
     blend_function: GlBlendFunction,
     blend_color: FVector4 | None,
+    cull_face: GlCull | None,
     /,
 ) -> None: ...

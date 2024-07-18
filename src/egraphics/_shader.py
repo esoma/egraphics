@@ -182,12 +182,6 @@ from eplatform import Platform
 from eplatform import RenderTarget
 from eplatform import set_draw_render_target
 
-# pyopengl
-from OpenGL.GL import GL_CULL_FACE
-from OpenGL.GL import glCullFace
-from OpenGL.GL import glDisable
-from OpenGL.GL import glEnable
-
 # python
 from collections.abc import Mapping
 from collections.abc import Set
@@ -251,14 +245,13 @@ class BlendFunction(Enum):
 
 
 class FaceCull(Enum):
-    NONE = 0
+    NONE = None
     FRONT = GL_FRONT
     BACK = GL_BACK
 
 
 class Shader:
     _active: ClassVar[ref[Shader] | None] = None
-    _face_cull: FaceCull = FaceCull.NONE
 
     def __init__(
         self,
@@ -390,17 +383,6 @@ class Shader:
     def uniforms(self) -> tuple[ShaderUniform, ...]:
         return self._uniforms
 
-    @staticmethod
-    def _set_face_cull(face_cull: FaceCull) -> None:
-        if Shader._face_cull == face_cull:
-            return
-        if face_cull == FaceCull.NONE:
-            glDisable(GL_CULL_FACE)
-        else:
-            glEnable(GL_CULL_FACE)
-            glCullFace(face_cull.value)
-        Shader._face_cull = face_cull
-
     def _activate(self) -> None:
         if self._active and self._active() is self:
             return
@@ -455,9 +437,8 @@ class Shader:
             None if blend_destination_alpha is None else blend_destination_alpha.value,
             blend_function.value,
             blend_color,
+            face_cull.value,
         )
-
-        self._set_face_cull(face_cull)
 
         set_draw_render_target(render_target)
         self._activate()
@@ -487,7 +468,6 @@ class Shader:
 @Platform.register_deactivate_callback
 def _reset_shader_state() -> None:
     Shader._active = None
-    Shader._face_cull = FaceCull.NONE
 
 
 class ShaderAttribute(Generic[_T]):
