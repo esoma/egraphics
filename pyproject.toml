@@ -6,6 +6,10 @@ name = "egraphics"
 version = "0.1.0"
 description = "Graphics Library"
 authors = ["Erik Soma <stillusingirc@gmail.com>"]
+include = [
+    {path = "src/egraphics/*.so", format = "wheel"},
+    {path = "src/egraphics/*.pyd", format = "wheel"},
+]
 
 [tool.poetry.build]
 generate-setup-file = false
