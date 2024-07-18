@@ -34,3 +34,7 @@ build-backend = "poetry.core.masonry.api"
 before-all = [
     "yum install mesa-libGL-devel mesa-libGLU-devel -y",
 ]
+
+[[tool.cibuildwheel.overrides]]
+select = "*-musllinux*"
+before-all = "apk add mesa-gl glu-dev"

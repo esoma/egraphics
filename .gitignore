@@ -8,5 +8,6 @@
 *.egg-info
 build/
 dist/
+wheelhouse/
 
 test.py
