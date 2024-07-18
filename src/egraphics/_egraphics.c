@@ -928,7 +928,7 @@ error:
     return 0;
 }
 
-#define SET_ACTIVE_GL_PROGRAM_UNIFORM(name, gl_type, uniform_name, ...)\
+#define SET_ACTIVE_GL_PROGRAM_UNIFORM(name, gl_type, uniform_name)\
     static PyObject *\
     set_active_gl_program_uniform_##name(PyObject *module, PyObject **args, Py_ssize_t nargs)\
     {\
@@ -943,7 +943,30 @@ error:
         gl_type *value = (gl_type *)PyLong_AsVoidPtr(args[2]);\
         CHECK_UNEXPECTED_PYTHON_ERROR();\
         \
-        glUniform##uniform_name##v(location, count, __VA_ARGS__, value);\
+        glUniform##uniform_name##v(location, count, value);\
+        CHECK_GL_ERROR();\
+        \
+        Py_RETURN_NONE;\
+    error:\
+        return 0;\
+    }
+
+#define SET_ACTIVE_GL_PROGRAM_UNIFORM_MATRIX(name, gl_type, uniform_name)\
+    static PyObject *\
+    set_active_gl_program_uniform_##name(PyObject *module, PyObject **args, Py_ssize_t nargs)\
+    {\
+        CHECK_UNEXPECTED_ARG_COUNT_ERROR(3);\
+        \
+        GLint location = PyLong_AsLong(args[0]);\
+        CHECK_UNEXPECTED_PYTHON_ERROR();\
+        \
+        GLsizei count = (GLsizei)PyLong_AsSize_t(args[1]);\
+        CHECK_UNEXPECTED_PYTHON_ERROR();\
+        \
+        gl_type *value = (gl_type *)PyLong_AsVoidPtr(args[2]);\
+        CHECK_UNEXPECTED_PYTHON_ERROR();\
+        \
+        glUniform##uniform_name##v(location, count, GL_FALSE, value);\
         CHECK_GL_ERROR();\
         \
         Py_RETURN_NONE;\
@@ -955,28 +978,28 @@ SET_ACTIVE_GL_PROGRAM_UNIFORM(float, GLfloat, 1f);
 SET_ACTIVE_GL_PROGRAM_UNIFORM(float_2, GLfloat, 2f);
 SET_ACTIVE_GL_PROGRAM_UNIFORM(float_3, GLfloat, 3f);
 SET_ACTIVE_GL_PROGRAM_UNIFORM(float_4, GLfloat, 4f);
-SET_ACTIVE_GL_PROGRAM_UNIFORM(float_2x2, GLfloat, Matrix2f, GL_FALSE);
-SET_ACTIVE_GL_PROGRAM_UNIFORM(float_2x3, GLfloat, Matrix2x3f, GL_FALSE);
-SET_ACTIVE_GL_PROGRAM_UNIFORM(float_2x4, GLfloat, Matrix2x4f, GL_FALSE);
-SET_ACTIVE_GL_PROGRAM_UNIFORM(float_3x2, GLfloat, Matrix3x2f, GL_FALSE);
-SET_ACTIVE_GL_PROGRAM_UNIFORM(float_3x3, GLfloat, Matrix3f, GL_FALSE);
-SET_ACTIVE_GL_PROGRAM_UNIFORM(float_3x4, GLfloat, Matrix3x4f, GL_FALSE);
-SET_ACTIVE_GL_PROGRAM_UNIFORM(float_4x2, GLfloat, Matrix4x2f, GL_FALSE);
-SET_ACTIVE_GL_PROGRAM_UNIFORM(float_4x3, GLfloat, Matrix4x3f, GL_FALSE);
-SET_ACTIVE_GL_PROGRAM_UNIFORM(float_4x4, GLfloat, Matrix4f, GL_FALSE);
+SET_ACTIVE_GL_PROGRAM_UNIFORM_MATRIX(float_2x2, GLfloat, Matrix2f);
+SET_ACTIVE_GL_PROGRAM_UNIFORM_MATRIX(float_2x3, GLfloat, Matrix2x3f);
+SET_ACTIVE_GL_PROGRAM_UNIFORM_MATRIX(float_2x4, GLfloat, Matrix2x4f);
+SET_ACTIVE_GL_PROGRAM_UNIFORM_MATRIX(float_3x2, GLfloat, Matrix3x2f);
+SET_ACTIVE_GL_PROGRAM_UNIFORM_MATRIX(float_3x3, GLfloat, Matrix3f);
+SET_ACTIVE_GL_PROGRAM_UNIFORM_MATRIX(float_3x4, GLfloat, Matrix3x4f);
+SET_ACTIVE_GL_PROGRAM_UNIFORM_MATRIX(float_4x2, GLfloat, Matrix4x2f);
+SET_ACTIVE_GL_PROGRAM_UNIFORM_MATRIX(float_4x3, GLfloat, Matrix4x3f);
+SET_ACTIVE_GL_PROGRAM_UNIFORM_MATRIX(float_4x4, GLfloat, Matrix4f);
 SET_ACTIVE_GL_PROGRAM_UNIFORM(double, GLdouble, 1d);
 SET_ACTIVE_GL_PROGRAM_UNIFORM(double_2, GLdouble, 2d);
 SET_ACTIVE_GL_PROGRAM_UNIFORM(double_3, GLdouble, 3d);
 SET_ACTIVE_GL_PROGRAM_UNIFORM(double_4, GLdouble, 4d);
-SET_ACTIVE_GL_PROGRAM_UNIFORM(double_2x2, GLdouble, Matrix2d, GL_FALSE);
-SET_ACTIVE_GL_PROGRAM_UNIFORM(double_2x3, GLdouble, Matrix2x3d, GL_FALSE);
-SET_ACTIVE_GL_PROGRAM_UNIFORM(double_2x4, GLdouble, Matrix2x4d, GL_FALSE);
-SET_ACTIVE_GL_PROGRAM_UNIFORM(double_3x2, GLdouble, Matrix3x2d, GL_FALSE);
-SET_ACTIVE_GL_PROGRAM_UNIFORM(double_3x3, GLdouble, Matrix3d, GL_FALSE);
-SET_ACTIVE_GL_PROGRAM_UNIFORM(double_3x4, GLdouble, Matrix3x4d, GL_FALSE);
-SET_ACTIVE_GL_PROGRAM_UNIFORM(double_4x2, GLdouble, Matrix4x2d, GL_FALSE);
-SET_ACTIVE_GL_PROGRAM_UNIFORM(double_4x3, GLdouble, Matrix4x3d, GL_FALSE);
-SET_ACTIVE_GL_PROGRAM_UNIFORM(double_4x4, GLdouble, Matrix4d, GL_FALSE);
+SET_ACTIVE_GL_PROGRAM_UNIFORM_MATRIX(double_2x2, GLdouble, Matrix2d);
+SET_ACTIVE_GL_PROGRAM_UNIFORM_MATRIX(double_2x3, GLdouble, Matrix2x3d);
+SET_ACTIVE_GL_PROGRAM_UNIFORM_MATRIX(double_2x4, GLdouble, Matrix2x4d);
+SET_ACTIVE_GL_PROGRAM_UNIFORM_MATRIX(double_3x2, GLdouble, Matrix3x2d);
+SET_ACTIVE_GL_PROGRAM_UNIFORM_MATRIX(double_3x3, GLdouble, Matrix3d);
+SET_ACTIVE_GL_PROGRAM_UNIFORM_MATRIX(double_3x4, GLdouble, Matrix3x4d);
+SET_ACTIVE_GL_PROGRAM_UNIFORM_MATRIX(double_4x2, GLdouble, Matrix4x2d);
+SET_ACTIVE_GL_PROGRAM_UNIFORM_MATRIX(double_4x3, GLdouble, Matrix4x3d);
+SET_ACTIVE_GL_PROGRAM_UNIFORM_MATRIX(double_4x4, GLdouble, Matrix4d);
 SET_ACTIVE_GL_PROGRAM_UNIFORM(int, GLint, 1i);
 SET_ACTIVE_GL_PROGRAM_UNIFORM(int_2, GLint, 2i);
 SET_ACTIVE_GL_PROGRAM_UNIFORM(int_3, GLint, 3i);
