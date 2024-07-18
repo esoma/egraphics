@@ -11,7 +11,6 @@ script = "buildscript.py"
 [tool.poetry.dependencies]
 python = "^3.12"
 emath = "^0.1.13"
-pyopengl = "^3.1.7"
 egeometry = "^0.3.0"
 eplatform = "^0.2.3"
 
