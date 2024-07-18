@@ -23,9 +23,6 @@ from eplatform import Window
 # pytest
 import pytest
 
-# python
-from io import BytesIO
-
 VERTEX_SHADER = b"""
 #version 140
 in vec2 xy;
@@ -78,7 +75,7 @@ def test_basic(render_target, face_cull, expected_color):
     ignore_alpha = isinstance(render_target, Window)
     clear_render_target(render_target, color=FVector3(0, 0, 0))
 
-    shader = Shader(vertex=BytesIO(VERTEX_SHADER), fragment=BytesIO(FRAGMENT_SHADER))
+    shader = Shader(vertex=VERTEX_SHADER, fragment=FRAGMENT_SHADER)
 
     def test_draw_fullscreen_quad(color, front, face_cull) -> None:
         draw_fullscreen_quad(

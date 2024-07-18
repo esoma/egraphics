@@ -23,7 +23,6 @@ from emath import U32Array
 import pytest
 
 # python
-from io import BytesIO
 from pathlib import Path
 
 DIR = Path(__file__).parent
@@ -31,16 +30,14 @@ DIR = Path(__file__).parent
 
 def test_not_a_uniform(render_target):
     shader = Shader(
-        vertex=BytesIO(
-            b"""
+        vertex=b"""
         #version 140
         in vec2 xy;
         void main()
         {
             gl_Position = vec4(xy, 0, 1.0);
         }
-        """
-        ),
+        """,
     )
     with pytest.raises(ValueError) as excinfo:
         shader.execute(
@@ -66,8 +63,7 @@ def test_not_a_uniform(render_target):
 
 def test_missing_uniform(render_target):
     shader = Shader(
-        vertex=BytesIO(
-            b"""
+        vertex=b"""
         #version 140
         in vec2 xy;
         uniform float z;
@@ -76,7 +72,6 @@ def test_missing_uniform(render_target):
             gl_Position = vec4(xy, z, 1.0);
         }
         """
-        )
     )
     with pytest.raises(ValueError) as excinfo:
         shader.execute(
@@ -102,15 +97,13 @@ def test_missing_uniform(render_target):
 
 def test_not_an_attribute(render_target):
     shader = Shader(
-        vertex=BytesIO(
-            b"""
+        vertex=b"""
         #version 140
         void main()
         {
             gl_Position = vec4(0, 0, 0, 1.0);
         }
-        """
-        ),
+        """,
     )
     with pytest.raises(ValueError) as excinfo:
         shader.execute(
@@ -136,8 +129,7 @@ def test_not_an_attribute(render_target):
 
 def test_missing_attribute(render_target):
     shader = Shader(
-        vertex=BytesIO(
-            b"""
+        vertex=b"""
         #version 140
         in vec2 xy;
         in float z;
@@ -145,8 +137,7 @@ def test_missing_attribute(render_target):
         {
             gl_Position = vec4(xy, z, 1.0);
         }
-        """
-        ),
+        """,
     )
     with pytest.raises(ValueError) as excinfo:
         shader.execute(
@@ -197,18 +188,15 @@ def test_basic(render_target, primitive_mode, color, index_array_type):
         )
 
     shader = Shader(
-        vertex=BytesIO(
-            b"""
+        vertex=b"""
         #version 140
         in vec2 xy;
         void main()
         {
             gl_Position = vec4(xy, 0, 1.0);
         }
-        """
-        ),
-        fragment=BytesIO(
-            b"""
+        """,
+        fragment=b"""
         #version 140
         uniform vec4 color;
         out vec4 FragColor;
@@ -216,8 +204,7 @@ def test_basic(render_target, primitive_mode, color, index_array_type):
         {
             FragColor = color;
         }
-        """
-        ),
+        """,
     )
     shader.execute(
         render_target,

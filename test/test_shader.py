@@ -27,7 +27,6 @@ import pytest
 # python
 from contextlib import ExitStack
 import ctypes
-from io import BytesIO
 import sys
 
 
@@ -42,14 +41,12 @@ def test_compile_error(platform, stage):
     with pytest.raises(RuntimeError) as excinfo:
         Shader(
             **{
-                stage: BytesIO(
-                    b"""#version 140
+                stage: b"""#version 140
             void main()
             {
                 what--what
             }
             """
-                )
             }
         )
     assert str(excinfo.value).startswith(f"{stage} stage failed to compile:\n")
@@ -58,8 +55,7 @@ def test_compile_error(platform, stage):
 def test_link_error(platform):
     with pytest.raises(RuntimeError) as excinfo:
         Shader(
-            vertex=BytesIO(
-                f"""
+            vertex=f"""
             #version 140
             vec4 some_function_that_doesnt_exist();
             void main()
@@ -67,31 +63,27 @@ def test_link_error(platform):
                 gl_Position = some_function_that_doesnt_exist();
             }}
             """.encode(
-                    "utf-8"
-                )
-            ),
+                "utf-8"
+            )
         )
     assert str(excinfo.value).startswith(f"failed to link:\n")
 
 
 def test_vertex_only(platform):
     shader = Shader(
-        vertex=BytesIO(
-            b"""#version 140
+        vertex=b"""#version 140
     void main()
     {
         gl_Position = vec4(0, 0, 0, 1);
     }
     """
-        )
     )
 
 
 def test_geometry_only(platform):
     with pytest.raises(TypeError) as excinfo:
         shader = Shader(
-            geometry=BytesIO(
-                b"""#version 150
+            geometry=b"""#version 150
         layout(triangles) in;
         layout(triangle_strip) out;
 
@@ -100,57 +92,48 @@ def test_geometry_only(platform):
             gl_Position = vec4(0, 0, 0, 1);
         }
         """
-            )
         )
     assert str(excinfo.value) == "geometry shader requires vertex shader"
 
 
 def test_fragment_only(platform):
     shader = Shader(
-        fragment=BytesIO(
-            b"""#version 140
+        fragment=b"""#version 140
     out vec4 FragColor;
     void main()
     {
         FragColor = vec4(0, 0, 0, 1);
     }
     """
-        )
     )
 
 
 def test_vertex_and_fragment(platform):
     shader = Shader(
-        vertex=BytesIO(
-            b"""#version 140
+        vertex=b"""#version 140
     void main()
     {
         gl_Position = vec4(0, 0, 0, 1);
     }
-    """
-        ),
-        fragment=BytesIO(
-            b"""#version 330
+    """,
+        fragment=b"""#version 330
     out vec4 FragColor;
     void main()
     {
         FragColor = vec4(0, 0, 0, 1);
     }
-    """
-        ),
+    """,
     )
 
 
 def test_delete(platform):
     shader = Shader(
-        vertex=BytesIO(
-            b"""#version 140
+        vertex=b"""#version 140
     void main()
     {
         gl_Position = vec4(0, 0, 0, 1);
     }
     """
-        )
     )
     shader._activate()
 
@@ -197,16 +180,14 @@ def test_pod_attributes(platform, gl_version, location, glsl_type, python_type, 
         x_value = "attr_name"
         y_value = "0"
     shader = Shader(
-        vertex=BytesIO(
-            f"""#version {glsl_version}
+        vertex=f"""#version {glsl_version}
     {layout} in {glsl_type} attr_name{array_def};
     void main()
     {{
         gl_Position = vec4({x_value}, {y_value}, 0, 1);
     }}
     """.encode(
-                "utf-8"
-            )
+            "utf-8"
         )
     )
     attr = shader["attr_name"]
@@ -257,16 +238,14 @@ def test_pod_uniforms(platform, gl_version, location, glsl_type, python_type, ar
         x_value = "uni_name"
         y_value = "0"
     shader = Shader(
-        vertex=BytesIO(
-            f"""#version {glsl_version}
+        vertex=f"""#version {glsl_version}
     {layout} uniform {glsl_type} uni_name{array_def};
     void main()
     {{
         gl_Position = vec4({x_value}, {y_value}, 0, 1);
     }}
     """.encode(
-                "utf-8"
-            )
+            "utf-8"
         )
     )
     uni = shader["uni_name"]
@@ -373,16 +352,14 @@ def test_sampler_uniforms(platform, gl_version, location, prefix, postfix, compo
         x_value = f"{texture_function}(uni_name, {texture_lookup}).r"
         y_value = "0"
     shader = Shader(
-        vertex=BytesIO(
-            f"""#version {glsl_version}
+        vertex=f"""#version {glsl_version}
     {layout} uniform {prefix}sampler{postfix} uni_name{array_def};
     void main()
     {{
         gl_Position = vec4({x_value}, {y_value}, 0, 1);
     }}
     """.encode(
-                "utf-8"
-            )
+            "utf-8"
         )
     )
     uni = shader["uni_name"]
@@ -483,16 +460,14 @@ def test_shadow_sampler_uniforms(
         x_value = f"texture(uni_name, {texture_lookup})"
         y_value = "0"
     shader = Shader(
-        vertex=BytesIO(
-            f"""#version {glsl_version}
+        vertex=f"""#version {glsl_version}
     {layout} uniform sampler{postfix} uni_name{array_def};
     void main()
     {{
         gl_Position = vec4({x_value}, {y_value}, 0, 1);
     }}
     """.encode(
-                "utf-8"
-            )
+            "utf-8"
         )
     )
     uni = shader["uni_name"]
@@ -588,16 +563,14 @@ def test_vector_attributes(
         x_value = "attr_name.x"
         y_value = "0"
     shader = Shader(
-        vertex=BytesIO(
-            f"""#version {glsl_version}
+        vertex=f"""#version {glsl_version}
     {layout} in {glsl_prefix}vec{components} attr_name{array_def};
     void main()
     {{
         gl_Position = vec4({x_value}, {y_value}, 0, 1);
     }}
     """.encode(
-                "utf-8"
-            )
+            "utf-8"
         )
     )
     attr = shader["attr_name"]
@@ -650,16 +623,14 @@ def test_vector_uniforms(
         x_value = "uni_name.x"
         y_value = "0"
     shader = Shader(
-        vertex=BytesIO(
-            f"""#version {glsl_version}
+        vertex=f"""#version {glsl_version}
     {layout} uniform {glsl_prefix}vec{components} uni_name{array_def};
     void main()
     {{
         gl_Position = vec4({x_value}, {y_value}, 0, 1);
     }}
     """.encode(
-                "utf-8"
-            )
+            "utf-8"
         )
     )
     uni = shader["uni_name"]
@@ -764,16 +735,14 @@ def test_matrix_attributes(
         x_value = "attr_name[0][0]"
         y_value = "0"
     shader = Shader(
-        vertex=BytesIO(
-            f"""#version {glsl_version}
+        vertex=f"""#version {glsl_version}
     {layout} in {glsl_prefix}mat{rows}x{columns} attr_name{array_def};
     void main()
     {{
         gl_Position = vec4({x_value}, {y_value}, 0, 1);
     }}
     """.encode(
-                "utf-8"
-            )
+            "utf-8"
         )
     )
     attr = shader["attr_name"]
@@ -832,16 +801,14 @@ def test_matrix_uniforms(
         x_value = "uni_name[0][0]"
         y_value = "0"
     shader = Shader(
-        vertex=BytesIO(
-            f"""#version {glsl_version}
+        vertex=f"""#version {glsl_version}
     {layout} uniform {glsl_prefix}mat{rows}x{columns} uni_name{array_def};
     void main()
     {{
         gl_Position = vec4({x_value}, {y_value}, 0, 1);
     }}
     """.encode(
-                "utf-8"
-            )
+            "utf-8"
         )
     )
     uni = shader["uni_name"]

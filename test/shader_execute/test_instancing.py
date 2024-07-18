@@ -25,7 +25,6 @@ from eplatform import Window
 import pytest
 
 # python
-from io import BytesIO
 from itertools import permutations
 
 VERTEX_SHADER = b"""
@@ -81,7 +80,7 @@ def draw_fullscreen_quads(
 
 
 def test_negative_instances(render_target):
-    shader = Shader(vertex=BytesIO(VERTEX_SHADER), fragment=BytesIO(FRAGMENT_SHADER))
+    shader = Shader(vertex=VERTEX_SHADER, fragment=FRAGMENT_SHADER)
     with pytest.raises(ValueError) as excinfo:
         shader.execute(
             render_target,
@@ -101,7 +100,7 @@ def test_negative_instances(render_target):
 
 def test_zero_instances(render_target):
     clear_render_target(render_target, color=FVector3(0, 0, 0))
-    shader = Shader(vertex=BytesIO(VERTEX_SHADER), fragment=BytesIO(FRAGMENT_SHADER))
+    shader = Shader(vertex=VERTEX_SHADER, fragment=FRAGMENT_SHADER)
     draw_fullscreen_quads(render_target, shader, [])
 
     expected_color = FVector4(0, 0, 0, 1)
@@ -132,7 +131,7 @@ def test_zero_instances(render_target):
 def test_basic(render_target, colors) -> None:
     clear_render_target(render_target, color=FVector3(0, 0, 0))
 
-    shader = Shader(vertex=BytesIO(VERTEX_SHADER), fragment=BytesIO(FRAGMENT_SHADER))
+    shader = Shader(vertex=VERTEX_SHADER, fragment=FRAGMENT_SHADER)
 
     draw_fullscreen_quads(render_target, shader, colors)
 

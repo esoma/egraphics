@@ -183,6 +183,7 @@ from eplatform import RenderTarget
 from eplatform import set_draw_render_target
 
 # python
+from collections.abc import Buffer
 from collections.abc import Mapping
 from collections.abc import Set
 from contextlib import ExitStack
@@ -191,7 +192,6 @@ from ctypes import addressof
 from ctypes import c_int32
 from enum import Enum
 from typing import Any
-from typing import BinaryIO
 from typing import ClassVar
 from typing import Final
 from typing import Generic
@@ -256,9 +256,9 @@ class Shader:
     def __init__(
         self,
         *,
-        vertex: BinaryIO | None = None,
-        geometry: BinaryIO | None = None,
-        fragment: BinaryIO | None = None,
+        vertex: Buffer | None = None,
+        geometry: Buffer | None = None,
+        fragment: Buffer | None = None,
     ):
         if vertex is None and geometry is None and fragment is None:
             raise TypeError("vertex, geometry or fragment must be provided")
@@ -266,11 +266,7 @@ class Shader:
         if geometry is not None and vertex is None:
             raise TypeError("geometry shader requires vertex shader")
 
-        self._gl_program = create_gl_program(
-            None if vertex is None else vertex.read(),
-            None if geometry is None else geometry.read(),
-            None if fragment is None else fragment.read(),
-        )
+        self._gl_program = create_gl_program(vertex, geometry, fragment)
 
         self._attributes = tuple(
             ShaderAttribute(

@@ -26,7 +26,6 @@ import pytest
 
 # python
 import ctypes
-from io import BytesIO
 
 VERTEX_SHADER = b"""
 #version 140
@@ -107,7 +106,7 @@ def test_basic(render_target, depth_test, depth_write, expected_color, expected_
     ignore_alpha = isinstance(render_target, Window)
     clear_render_target(render_target, color=FVector3(0, 0, 0), depth=0.5)
 
-    shader = Shader(vertex=BytesIO(VERTEX_SHADER), fragment=BytesIO(FRAGMENT_SHADER))
+    shader = Shader(vertex=VERTEX_SHADER, fragment=FRAGMENT_SHADER)
 
     def test_draw_fullscreen_quad(color, depth):
         draw_fullscreen_quad(render_target, shader, color, depth, depth_test, depth_write)

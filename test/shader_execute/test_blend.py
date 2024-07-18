@@ -24,9 +24,6 @@ from eplatform import Window
 # pytest
 import pytest
 
-# python
-from io import BytesIO
-
 VERTEX_SHADER = b"""
 #version 140
 in vec2 xy;
@@ -131,7 +128,7 @@ def test_source_destination_factors(
 
     clear_render_target(render_target, color=clear_color.rgb)
 
-    shader = Shader(vertex=BytesIO(VERTEX_SHADER), fragment=BytesIO(FRAGMENT_SHADER))
+    shader = Shader(vertex=VERTEX_SHADER, fragment=FRAGMENT_SHADER)
     draw_fullscreen_quad(
         render_target,
         shader,
@@ -174,7 +171,7 @@ def test_source_destination_alpha_factors(
 
     clear_render_target(render_target, color=clear_color.rgb)
 
-    shader = Shader(vertex=BytesIO(VERTEX_SHADER), fragment=BytesIO(FRAGMENT_SHADER))
+    shader = Shader(vertex=VERTEX_SHADER, fragment=FRAGMENT_SHADER)
 
     draw_fullscreen_quad(
         render_target,
@@ -217,7 +214,7 @@ def test_function(render_target, blend_function):
 
     clear_render_target(render_target, color=clear_color.rgb)
 
-    shader = Shader(vertex=BytesIO(VERTEX_SHADER), fragment=BytesIO(FRAGMENT_SHADER))
+    shader = Shader(vertex=VERTEX_SHADER, fragment=FRAGMENT_SHADER)
 
     draw_fullscreen_quad(
         render_target,
@@ -261,7 +258,7 @@ def test_function(render_target, blend_function):
 def test_default_blend_color(render_target):
     clear_render_target(render_target, color=FVector3(0, 0, 0))
 
-    shader = Shader(vertex=BytesIO(VERTEX_SHADER), fragment=BytesIO(FRAGMENT_SHADER))
+    shader = Shader(vertex=VERTEX_SHADER, fragment=FRAGMENT_SHADER)
 
     draw_fullscreen_quad(
         render_target,
