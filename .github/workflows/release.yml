@@ -20,7 +20,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest]
+        os: [ubuntu-latest, windows-latest, macos-13, macos-14]
         python-version: ['3.12']
         python-arch: [x64]
 
@@ -40,26 +40,43 @@ jobs:
       run: |
         git submodule update --init --recursive
 
-    - name: Prepare Linux Environment
-      if: runner.os == 'Linux'
-      run: |
-        sudo apt-get update
-        sudo apt-get install libglu1-mesa-dev
+    - name: Build Wheels
+      uses: pypa/cibuildwheel@v2.19.2
 
-    - name: Build
-      run: |
-        poetry build
-
-    - name: Upload Github Release Artifact
+    - name: Upload Github Wheel Release Artifact
       uses: svenstaro/upload-release-action@v2
       with:
         repo_token: ${{ secrets.GITHUB_TOKEN }}
-        file: ./dist/*.whl
+        file: ./wheelhouse/*.whl
         file_glob: true
         tag: ${{ github.ref }}
 
-    - name: Upload to PyPi
+    - name: Upload Wheels to PyPi
       run: |
-        poetry publish --skip-existing
+        pipx run twine upload wheelhouse/* --skip-existing
       env:
-        POETRY_PYPI_TOKEN_PYPI: ${{ secrets.PYPI_TOKEN }}
+        TWINE_USERNAME: __token__
+        TWINE_PASSWORD: ${{ secrets.PYPI_TOKEN }}
+
+    - name: Build Source
+      if: runner.os == 'Linux'
+      run: |
+        pipx install build
+        pipx run build --sdist
+
+    - name: Upload Github Wheel Source Artifact
+      if: runner.os == 'Linux'
+      uses: svenstaro/upload-release-action@v2
+      with:
+        repo_token: ${{ secrets.GITHUB_TOKEN }}
+        file: ./dist/*.tar.gz
+        file_glob: true
+        tag: ${{ github.ref }}
+
+    - name: Upload Source to PyPi
+      if: runner.os == 'Linux'
+      run: |
+        pipx run twine upload dist/* --skip-existing
+      env:
+        TWINE_USERNAME: __token__
+        TWINE_PASSWORD: ${{ secrets.PYPI_TOKEN }}
