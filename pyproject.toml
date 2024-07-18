@@ -32,6 +32,6 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.cibuildwheel.linux]
 before-all = [
-    "sudo apt-get update",
-    "sudo apt-get install libglu1-mesa-dev",
+    "apt-get update",
+    "apt-get install libglu1-mesa-dev",
 ]
