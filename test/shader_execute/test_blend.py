@@ -132,7 +132,6 @@ def test_source_destination_factors(
     clear_render_target(render_target, color=clear_color.rgb)
 
     shader = Shader(vertex=BytesIO(VERTEX_SHADER), fragment=BytesIO(FRAGMENT_SHADER))
-
     draw_fullscreen_quad(
         render_target,
         shader,
@@ -153,7 +152,6 @@ def test_source_destination_factors(
     colors = read_color_from_render_target(
         render_target, IRectangle(IVector2(0), render_target.size)
     )
-
     assert all(
         c.r == pytest.approx(expected_color[0], abs=0.01)
         and c.g == pytest.approx(expected_color[1], abs=0.01)

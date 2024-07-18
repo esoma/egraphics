@@ -530,5 +530,11 @@ def set_gl_execution_state(
     color_mask_g: bool,
     color_mask_b: bool,
     color_mask_a: bool,
+    blend_source: GlBlendFactor,
+    blend_destination: GlBlendFactor,
+    blend_source_alpha: GlBlendFactor | None,
+    blend_destination_alpha: GlBlendFactor | None,
+    blend_function: GlBlendFunction,
+    blend_color: FVector4 | None,
     /,
 ) -> None: ...

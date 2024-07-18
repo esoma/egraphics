@@ -183,11 +183,7 @@ from eplatform import RenderTarget
 from eplatform import set_draw_render_target
 
 # pyopengl
-from OpenGL.GL import GL_BLEND
 from OpenGL.GL import GL_CULL_FACE
-from OpenGL.GL import glBlendColor
-from OpenGL.GL import glBlendEquation
-from OpenGL.GL import glBlendFuncSeparate
 from OpenGL.GL import glCullFace
 from OpenGL.GL import glDisable
 from OpenGL.GL import glEnable
@@ -262,15 +258,6 @@ class FaceCull(Enum):
 
 class Shader:
     _active: ClassVar[ref[Shader] | None] = None
-    _blend: ClassVar[bool] = False
-    _blend_factors: ClassVar[tuple[BlendFactor, BlendFactor, BlendFactor, BlendFactor]] = (
-        BlendFactor.ONE,
-        BlendFactor.ZERO,
-        BlendFactor.ONE,
-        BlendFactor.ZERO,
-    )
-    _blend_equation: ClassVar[BlendFunction] = BlendFunction.ADD
-    _blend_color: FVector4 = FVector4(0)
     _face_cull: FaceCull = FaceCull.NONE
 
     def __init__(
@@ -404,48 +391,6 @@ class Shader:
         return self._uniforms
 
     @staticmethod
-    def _set_blend(blend: bool) -> None:
-        if Shader._blend == blend:
-            return
-        if blend:
-            glEnable(GL_BLEND)
-        else:
-            glDisable(GL_BLEND)
-        Shader._blend = blend
-
-    @staticmethod
-    def _set_blend_factors(
-        blend_source: BlendFactor,
-        blend_destination: BlendFactor,
-        blend_source_alpha: BlendFactor,
-        blend_destination_alpha: BlendFactor,
-    ) -> None:
-        factors = (blend_source, blend_destination, blend_source_alpha, blend_destination_alpha)
-        if Shader._blend_factors == factors:
-            return
-        glBlendFuncSeparate(
-            blend_source.value,
-            blend_destination.value,
-            blend_source_alpha.value,
-            blend_destination_alpha.value,
-        )
-        Shader._blend_factors = factors
-
-    @staticmethod
-    def _set_blend_equation(equation: BlendFunction) -> None:
-        if Shader._blend_equation == equation:
-            return
-        glBlendEquation(equation.value)
-        Shader._blend_equation = equation
-
-    @staticmethod
-    def _set_blend_color(color: FVector4) -> None:
-        if Shader._blend_color == color:
-            return
-        glBlendColor(*color)
-        Shader._blend_color = color
-
-    @staticmethod
     def _set_face_cull(face_cull: FaceCull) -> None:
         if Shader._face_cull == face_cull:
             return
@@ -500,29 +445,17 @@ class Shader:
         elif instances == 0:
             return
 
-        set_gl_execution_state(depth_write, depth_test.value, *color_write)
-
-        if blend_source_alpha is None:
-            blend_source_alpha = blend_source
-        if blend_destination_alpha is None:
-            blend_destination_alpha = blend_destination
-        if blend_color is None:
-            blend_color = FVector4(1)
-
-        if (
-            blend_source == BlendFactor.ONE
-            and blend_source_alpha == BlendFactor.ONE
-            and blend_destination == BlendFactor.ZERO
-            and blend_destination_alpha == BlendFactor.ZERO
-        ):
-            self._set_blend(False)
-        else:
-            self._set_blend(True)
-            self._set_blend_factors(
-                blend_source, blend_destination, blend_source_alpha, blend_destination_alpha
-            )
-            self._set_blend_equation(blend_function)
-            self._set_blend_color(blend_color)
+        set_gl_execution_state(
+            depth_write,
+            depth_test.value,
+            *color_write,
+            blend_source.value,
+            blend_destination.value,
+            None if blend_source_alpha is None else blend_source_alpha.value,
+            None if blend_destination_alpha is None else blend_destination_alpha.value,
+            blend_function.value,
+            blend_color,
+        )
 
         self._set_face_cull(face_cull)
 
@@ -554,10 +487,6 @@ class Shader:
 @Platform.register_deactivate_callback
 def _reset_shader_state() -> None:
     Shader._active = None
-    Shader._blend = False
-    Shader._blend_factors = (BlendFactor.ONE, BlendFactor.ZERO, BlendFactor.ONE, BlendFactor.ZERO)
-    Shader._blend_equation = BlendFunction.ADD
-    Shader._blend_color = FVector4(0)
     Shader._face_cull = FaceCull.NONE
 
 

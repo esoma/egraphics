@@ -10,7 +10,7 @@
 #define CHECK_UNEXPECTED_ARG_COUNT_ERROR(expected_count)\
     if (expected_count != nargs)\
     {\
-        PyErr_Format(PyExc_TypeError, "expected %z args, got %z", expected_count, nargs);\
+        PyErr_Format(PyExc_TypeError, "expected %zi args, got %zi", expected_count, nargs);\
         goto error;\
     }
 
@@ -49,6 +49,13 @@ typedef struct ModuleState
     bool color_mask_g;
     bool color_mask_b;
     bool color_mask_a;
+    bool blend;
+    GLenum blend_source;
+    GLenum blend_destination;
+    GLenum blend_source_alpha;
+    GLenum blend_destination_alpha;
+    GLenum blend_equation;
+    float blend_color[4];
 } ModuleState;
 
 static PyObject *
@@ -69,6 +76,16 @@ reset_module_state(PyObject *module, PyObject *unused)
     state->color_mask_g = true;
     state->color_mask_b = true;
     state->color_mask_a = true;
+    state->blend = false;
+    state->blend_source = GL_ONE;
+    state->blend_destination = GL_ZERO;
+    state->blend_source_alpha = GL_ONE;
+    state->blend_destination_alpha = GL_ZERO;
+    state->blend_equation = GL_FUNC_ADD;
+    state->blend_color[0] = 0;
+    state->blend_color[1] = 1;
+    state->blend_color[2] = 2;
+    state->blend_color[3] = 3;
 
     state->texture_filter_anisotropic_supported = GLEW_EXT_texture_filter_anisotropic;
     Py_RETURN_NONE;
@@ -1092,7 +1109,10 @@ error:
 static PyObject *
 set_gl_execution_state(PyObject *module, PyObject **args, Py_ssize_t nargs)
 {
-    CHECK_UNEXPECTED_ARG_COUNT_ERROR(6);
+    PyObject *ex = 0;
+    struct EMathApi *emath_api = 0;
+
+    CHECK_UNEXPECTED_ARG_COUNT_ERROR(12);
 
     bool depth_write = (args[0] == Py_True);
 
@@ -1103,6 +1123,31 @@ set_gl_execution_state(PyObject *module, PyObject **args, Py_ssize_t nargs)
     GLboolean color_mask_g = (args[3] == Py_True);
     GLboolean color_mask_b = (args[4] == Py_True);
     GLboolean color_mask_a = (args[5] == Py_True);
+
+    GLenum blend_source = PyLong_AsLong(args[6]);
+    CHECK_UNEXPECTED_PYTHON_ERROR();
+
+    GLenum blend_destination = PyLong_AsLong(args[7]);
+    CHECK_UNEXPECTED_PYTHON_ERROR();
+
+    GLenum blend_source_alpha = blend_source;
+    if (args[8] != Py_None)
+    {
+        blend_source_alpha = PyLong_AsLong(args[8]);
+        CHECK_UNEXPECTED_PYTHON_ERROR();
+    }
+
+    GLenum blend_destination_alpha = blend_destination;
+    if (args[9] != Py_None)
+    {
+        blend_destination_alpha = PyLong_AsLong(args[9]);
+        CHECK_UNEXPECTED_PYTHON_ERROR();
+    }
+
+    GLenum blend_function = PyLong_AsLong(args[10]);
+    CHECK_UNEXPECTED_PYTHON_ERROR();
+
+    PyObject *py_blend_color = args[11];
 
     ModuleState *state = (ModuleState *)PyModule_GetState(module);
     CHECK_UNEXPECTED_PYTHON_ERROR();
@@ -1151,8 +1196,80 @@ set_gl_execution_state(PyObject *module, PyObject **args, Py_ssize_t nargs)
         state->color_mask_a = color_mask_a;
     }
 
+    if (
+        blend_source == GL_ONE &&
+        blend_source_alpha == GL_ONE &&
+        blend_destination == GL_ZERO &&
+        blend_destination_alpha == GL_ZERO
+    )
+    {
+        if (state->blend)
+        {
+            glDisable(GL_BLEND);
+            CHECK_GL_ERROR();
+            state->blend = false;
+        }
+    }
+    else
+    {
+        if (!state->blend)
+        {
+            glEnable(GL_BLEND);
+            CHECK_GL_ERROR();
+            state->blend = true;
+        }
+        if (
+            state->blend_source != blend_source ||
+            state->blend_destination != blend_destination ||
+            state->blend_source_alpha != blend_source_alpha ||
+            state->blend_destination_alpha != blend_destination_alpha
+        )
+        {
+            glBlendFuncSeparate(
+                blend_source,
+                blend_destination,
+                blend_source_alpha,
+                blend_destination_alpha
+            );
+            CHECK_GL_ERROR();
+            state->blend_source = blend_source;
+            state->blend_destination = blend_destination;
+            state->blend_source_alpha = blend_source_alpha;
+            state->blend_destination_alpha = blend_destination_alpha;
+        }
+        if (state->blend_equation != blend_function)
+        {
+            glBlendEquation(blend_function);
+            CHECK_GL_ERROR();
+            state->blend_equation = blend_function;
+        }
+
+        static const float default_blend_color[] = {1, 1, 1, 1};
+        const float *blend_color = default_blend_color;
+        if (py_blend_color != Py_None)
+        {
+            if (!emath_api)
+            {
+                emath_api = EMathApi_Get();
+                CHECK_UNEXPECTED_PYTHON_ERROR();
+            }
+            blend_color = emath_api->FVector4_GetValuePointer(py_blend_color);
+            CHECK_UNEXPECTED_PYTHON_ERROR();
+        }
+        if (memcmp(state->blend_color, blend_color, sizeof(float) * 4) != 0)
+        {
+            glBlendColor(blend_color[0], blend_color[1], blend_color[2], blend_color[3]);
+            CHECK_GL_ERROR();
+            memcpy(state->blend_color, blend_color, sizeof(float) * 4);
+        }
+    }
+
+    if (emath_api){ EMathApi_Release(); }
     Py_RETURN_NONE;
 error:
+    ex = PyErr_GetRaisedException();
+    if (emath_api){ EMathApi_Release(); }
+    PyErr_SetRaisedException(ex);
     return 0;
 }
 
