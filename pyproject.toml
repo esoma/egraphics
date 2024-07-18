@@ -32,5 +32,5 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.cibuildwheel.linux]
 before-all = [
-    "yum install mesa-libGL-devel -y",
+    "yum install mesa-libGL-devel mesa-libGLU-devel -y",
 ]
