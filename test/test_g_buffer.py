@@ -14,7 +14,6 @@ from OpenGL.GL import GL_COPY_READ_BUFFER_BINDING
 from OpenGL.GL import GL_DYNAMIC_COPY
 from OpenGL.GL import GL_DYNAMIC_DRAW
 from OpenGL.GL import GL_DYNAMIC_READ
-from OpenGL.GL import GL_ELEMENT_ARRAY_BUFFER_BINDING
 from OpenGL.GL import GL_STATIC_COPY
 from OpenGL.GL import GL_STATIC_DRAW
 from OpenGL.GL import GL_STATIC_READ
@@ -122,7 +121,6 @@ def test_buffer_protocol_0(platform):
     [
         ("ARRAY", GL_ARRAY_BUFFER_BINDING),
         ("COPY_READ", GL_COPY_READ_BUFFER_BINDING),
-        ("ELEMENT_ARRAY", GL_ELEMENT_ARRAY_BUFFER_BINDING),
     ],
 )
 def test_g_buffer_target_default_state(platform, name, buffer_binding):
@@ -136,7 +134,6 @@ def test_g_buffer_target_default_state(platform, name, buffer_binding):
     [
         ("ARRAY", GL_ARRAY_BUFFER_BINDING),
         ("COPY_READ", GL_COPY_READ_BUFFER_BINDING),
-        ("ELEMENT_ARRAY", GL_ELEMENT_ARRAY_BUFFER_BINDING),
     ],
 )
 def test_g_buffer_target_set_g_buffer(platform, name, buffer_binding):

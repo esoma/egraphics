@@ -104,7 +104,7 @@ activate_gl_vertex_array(PyObject *module, PyObject *py_gl_vertex_array)
     GLuint gl_vertex_array = 0;
     if (py_gl_vertex_array != Py_None)
     {
-        gl_vertex_array = PyLong_AsLong(py_gl_vertex_array);
+        gl_vertex_array = PyLong_AsUnsignedLong(py_gl_vertex_array);
         CHECK_UNEXPECTED_PYTHON_ERROR();
     }
 

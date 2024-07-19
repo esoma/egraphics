@@ -5,6 +5,7 @@ __all__ = ["GBufferViewMap", "IndexGBufferView"]
 # egraphics
 from ._egraphics import GL_BYTE
 from ._egraphics import GL_DOUBLE
+from ._egraphics import GL_ELEMENT_ARRAY_BUFFER
 from ._egraphics import GL_FLOAT
 from ._egraphics import GL_INT
 from ._egraphics import GL_SHORT
@@ -17,7 +18,9 @@ from ._egraphics import activate_gl_vertex_array
 from ._egraphics import configure_gl_vertex_array_location
 from ._egraphics import create_gl_vertex_array
 from ._egraphics import delete_gl_vertex_array
+from ._egraphics import set_gl_buffer_target
 from ._g_buffer import GBufferTarget
+from ._g_buffer import get_g_buffer_gl_buffer
 from ._g_buffer_view import GBufferView
 from ._shader import Shader
 
@@ -107,7 +110,9 @@ class _GlVertexArray:
         self._activate()
 
         if index_g_buffer_view is not None:
-            GBufferTarget.ELEMENT_ARRAY.g_buffer = index_g_buffer_view.g_buffer
+            set_gl_buffer_target(
+                GL_ELEMENT_ARRAY_BUFFER, get_g_buffer_gl_buffer(index_g_buffer_view.g_buffer)
+            )
 
         attributes = shader.attributes
         attribute_names = {a.name for a in shader.attributes}
