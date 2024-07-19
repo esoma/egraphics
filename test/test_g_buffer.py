@@ -153,7 +153,6 @@ def test_g_buffer_reset(platform):
     GBuffer.Target.COPY_READ.g_buffer = g_buffer
 
     _reset_g_buffer_target_state()
+
     assert GBuffer.Target.ARRAY.g_buffer is None
-    assert glGetIntegerv(GL_ARRAY_BUFFER_BINDING) == 0
     assert GBuffer.Target.COPY_READ.g_buffer is None
-    assert glGetIntegerv(GL_COPY_READ_BUFFER_BINDING) == 0

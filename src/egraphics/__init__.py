@@ -9,7 +9,6 @@ __all__ = [
     "GBuffer",
     "GBufferFrequency",
     "GBufferNature",
-    "GBufferTarget",
     "GBufferView",
     "GBufferViewMap",
     "IndexGBufferView",
@@ -37,7 +36,6 @@ __all__ = [
 from ._g_buffer import GBuffer
 from ._g_buffer import GBufferFrequency
 from ._g_buffer import GBufferNature
-from ._g_buffer import GBufferTarget
 from ._g_buffer_view import GBufferView
 from ._g_buffer_view_map import GBufferViewMap
 from ._g_buffer_view_map import IndexGBufferView

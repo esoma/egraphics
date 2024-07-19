@@ -101,7 +101,7 @@ GBufferTarget.COPY_READ = GBufferTarget(GL_COPY_READ_BUFFER)
 @register_reset_state_callback
 def _reset_g_buffer_target_state() -> None:
     for target in GBufferTarget._targets:
-        target.g_buffer = None
+        target._g_buffer = None
 
 
 class GBuffer:
