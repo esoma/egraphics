@@ -12,6 +12,8 @@ __all__ = [
     "GBufferView",
     "GBufferViewMap",
     "IndexGBufferView",
+    "Image",
+    "ImageInvalidError",
     "MipmapSelection",
     "PrimitiveMode",
     "read_color_from_render_target",
@@ -39,6 +41,8 @@ from ._g_buffer import GBufferNature
 from ._g_buffer_view import GBufferView
 from ._g_buffer_view_map import GBufferViewMap
 from ._g_buffer_view_map import IndexGBufferView
+from ._image import Image
+from ._image import ImageInvalidError
 from ._render_target import RenderTarget
 from ._render_target import WindowRenderTargetMixin
 from ._render_target import clear_render_target

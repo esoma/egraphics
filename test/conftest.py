@@ -1,3 +1,7 @@
+# doorlord
+# egraphics
+from . import resources
+
 # egraphics
 from egraphics import clear_render_target
 from egraphics._render_target import WindowRenderTargetMixin
@@ -18,6 +22,7 @@ import pytest
 # python
 import gc
 from math import isclose
+from pathlib import Path
 
 
 class TestWindow(Window, WindowRenderTargetMixin):
@@ -83,3 +88,8 @@ def render_target(window):
     window.size = (10, 10)
     clear_render_target(window, depth=1, color=FVector3(0))
     return window
+
+
+@pytest.fixture
+def resource_dir():
+    return Path(resources.__file__).parent

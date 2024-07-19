@@ -26,6 +26,7 @@ repos:
     - emath==0.1.13
     - egeometry==0.3.0
     - eplatform==0.2.1
+    - types-Pillow==10.2.0.20240520
     args: []
     id: mypy
     exclude: ^(test|examples)/.*
