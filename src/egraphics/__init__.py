@@ -18,7 +18,6 @@ __all__ = [
     "read_color_from_render_target",
     "read_depth_from_render_target",
     "reset_state",
-    "set_read_render_target",
     "Shader",
     "ShaderAttribute",
     "ShaderUniform",
@@ -31,6 +30,7 @@ __all__ = [
     "TextureType",
     "TextureWrap",
     "UniformMap",
+    "WindowRenderTargetMixin",
 ]
 
 # egraphics
@@ -41,10 +41,10 @@ from ._g_buffer import GBufferTarget
 from ._g_buffer_view import GBufferView
 from ._g_buffer_view_map import GBufferViewMap
 from ._g_buffer_view_map import IndexGBufferView
+from ._render_target import WindowRenderTargetMixin
 from ._render_target import clear_render_target
 from ._render_target import read_color_from_render_target
 from ._render_target import read_depth_from_render_target
-from ._render_target import set_read_render_target
 from ._shader import BlendFactor
 from ._shader import BlendFunction
 from ._shader import DepthTest

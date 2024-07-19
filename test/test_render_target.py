@@ -2,8 +2,10 @@
 from egraphics import clear_render_target
 from egraphics import read_color_from_render_target
 from egraphics import read_depth_from_render_target
-from egraphics import set_read_render_target
+from egraphics import reset_state
 import egraphics._render_target
+from egraphics._render_target import set_draw_render_target
+from egraphics._render_target import set_read_render_target
 
 # egeometry
 from egeometry import IRectangle
@@ -12,25 +14,34 @@ from egeometry import IRectangle
 from emath import FVector3
 from emath import IVector2
 
-# eplatform
-from eplatform import Platform
-
 # pyopengl
+from OpenGL.GL import GL_DRAW_FRAMEBUFFER_BINDING
 from OpenGL.GL import GL_READ_FRAMEBUFFER_BINDING
 from OpenGL.GL import glGetIntegerv
 
 
 def test_default_state():
+    assert egraphics._render_target._draw_render_target is None
     assert egraphics._render_target._read_render_target is None
 
 
 def test_reset_state():
+    egraphics._render_target._draw_render_target = 1
     egraphics._render_target._read_render_target = 2
 
-    with Platform():
-        pass
+    reset_state()
 
+    assert egraphics._render_target._draw_render_target is None
     assert egraphics._render_target._read_render_target is None
+
+
+def test_set_draw_window(platform, window):
+    set_draw_render_target(window)
+    assert egraphics._render_target._draw_render_target is window
+    assert glGetIntegerv(GL_DRAW_FRAMEBUFFER_BINDING) == 0
+
+    set_draw_render_target(window)
+    assert glGetIntegerv(GL_DRAW_FRAMEBUFFER_BINDING) == 0
 
 
 def test_set_read_window(platform, window):

@@ -7,6 +7,7 @@ __all__ = [
     "set_read_render_target",
     "clear_render_target",
     "RenderTarget",
+    "WindowRenderTargetMixin",
 ]
 
 
@@ -28,6 +29,8 @@ from emath import FVector4Array
 from emath import IVector2
 
 # python
+import sys
+from typing import Any
 from typing import Protocol
 
 
@@ -39,6 +42,20 @@ class RenderTarget(Protocol):
     @property
     def size(self) -> IVector2:
         ...
+
+
+class WindowRenderTargetMixin:
+    size: IVector2
+
+    def refresh(self, *args: Any, **kwargs: Any) -> Any:
+        if sys.platform == "darwin":
+            # on macos the window must be bound to the draw framebuffer before swapping
+            set_draw_render_target(self)
+        return super().refresh(*args, **kwargs)  # type: ignore
+
+    @property
+    def _gl_framebuffer(self) -> int:
+        return 0
 
 
 _draw_render_target: RenderTarget | None = None
@@ -57,7 +74,7 @@ def set_draw_render_target(render_target: RenderTarget) -> None:
     global _draw_render_target
     if _draw_render_target is render_target:
         return
-    set_draw_framebuffer(0, render_target.size)
+    set_draw_framebuffer(render_target._gl_framebuffer, render_target.size)
     _draw_render_target = render_target
 
 

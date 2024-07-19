@@ -1,5 +1,6 @@
 # egraphics
 from egraphics import clear_render_target
+from egraphics._render_target import WindowRenderTargetMixin
 from egraphics._state import get_gl_version
 from egraphics._state import reset_state
 
@@ -8,6 +9,7 @@ from emath import FVector3
 
 # eplatform
 from eplatform import Platform
+from eplatform import Window
 from eplatform import get_window
 
 # pytest
@@ -16,6 +18,10 @@ import pytest
 # python
 import gc
 from math import isclose
+
+
+class TestWindow(Window, WindowRenderTargetMixin):
+    pass
 
 
 @pytest.fixture(autouse=True)
@@ -27,7 +33,7 @@ def _reset_state():
 
 @pytest.fixture
 def platform(_reset_state):
-    with Platform():
+    with Platform(window_cls=TestWindow):
         yield
     gc.collect()
 
