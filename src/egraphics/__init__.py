@@ -16,6 +16,7 @@ __all__ = [
     "PrimitiveMode",
     "read_color_from_render_target",
     "read_depth_from_render_target",
+    "RenderTarget",
     "reset_state",
     "Shader",
     "ShaderAttribute",
@@ -38,6 +39,7 @@ from ._g_buffer import GBufferNature
 from ._g_buffer_view import GBufferView
 from ._g_buffer_view_map import GBufferViewMap
 from ._g_buffer_view_map import IndexGBufferView
+from ._render_target import RenderTarget
 from ._render_target import WindowRenderTargetMixin
 from ._render_target import clear_render_target
 from ._render_target import read_color_from_render_target
