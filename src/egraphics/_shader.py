@@ -170,17 +170,15 @@ from ._egraphics import set_active_gl_program_uniform_unsigned_int_4
 from ._egraphics import set_gl_execution_state
 from ._egraphics import use_gl_program
 from ._g_buffer_view import GBufferView
+from ._render_target import RenderTarget
+from ._render_target import set_draw_render_target
+from ._state import register_reset_state_callback
 from ._texture import Texture
 
 # emath
 import emath
 from emath import FVector4
 from emath import I32Array
-
-# eplatform
-from eplatform import Platform
-from eplatform import RenderTarget
-from eplatform import set_draw_render_target
 
 # python
 from collections.abc import Buffer
@@ -461,7 +459,7 @@ class Shader:
                 )
 
 
-@Platform.register_deactivate_callback
+@register_reset_state_callback
 def _reset_shader_state() -> None:
     Shader._active = None
 

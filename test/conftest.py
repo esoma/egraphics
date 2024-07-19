@@ -1,17 +1,13 @@
 # egraphics
 from egraphics import clear_render_target
-from egraphics._g_buffer import _reset_g_buffer_target_state
-from egraphics._render_target import _reset_state_render_target_state
-from egraphics._shader import _reset_shader_state
-from egraphics._texture import _reset_texture_state
-from egraphics._texture import _reset_texture_target_state
+from egraphics._state import get_gl_version
+from egraphics._state import reset_state
 
 # emath
 from emath import FVector3
 
 # eplatform
 from eplatform import Platform
-from eplatform import get_gl_version
 from eplatform import get_window
 
 # pytest
@@ -25,11 +21,7 @@ from math import isclose
 @pytest.fixture(autouse=True)
 def _reset_state():
     yield
-    _reset_g_buffer_target_state()
-    _reset_state_render_target_state()
-    _reset_shader_state()
-    _reset_texture_target_state()
-    _reset_texture_state()
+    reset_state()
     gc.collect()
 
 

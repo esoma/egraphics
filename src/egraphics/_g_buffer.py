@@ -27,9 +27,7 @@ from ._egraphics import delete_gl_buffer
 from ._egraphics import release_gl_copy_read_buffer_memory_view
 from ._egraphics import set_gl_buffer_target
 from ._egraphics import set_gl_buffer_target_data
-
-# eplatform
-from eplatform import Platform
+from ._state import register_reset_state_callback
 
 # python
 from collections.abc import Buffer
@@ -100,7 +98,7 @@ GBufferTarget.ARRAY = GBufferTarget(GL_ARRAY_BUFFER)
 GBufferTarget.COPY_READ = GBufferTarget(GL_COPY_READ_BUFFER)
 
 
-@Platform.register_deactivate_callback
+@register_reset_state_callback
 def _reset_g_buffer_target_state() -> None:
     for target in GBufferTarget._targets:
         target.g_buffer = None

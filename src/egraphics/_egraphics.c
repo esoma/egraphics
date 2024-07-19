@@ -336,6 +336,43 @@ error:
 }
 
 static PyObject *
+set_draw_framebuffer(PyObject *module, PyObject **args, Py_ssize_t nargs)
+{
+    PyObject *ex = 0;
+    struct EMathApi *emath_api = 0;
+
+    CHECK_UNEXPECTED_ARG_COUNT_ERROR(2);
+
+    GLuint gl_framebuffer = PyLong_AsLong(args[0]);
+    CHECK_UNEXPECTED_PYTHON_ERROR();
+
+    PyObject *py_size = args[1];
+    CHECK_UNEXPECTED_PYTHON_ERROR();
+
+    emath_api = EMathApi_Get();
+    CHECK_UNEXPECTED_PYTHON_ERROR();
+
+    const int *size = emath_api->IVector2_GetValuePointer(py_size);
+    CHECK_UNEXPECTED_PYTHON_ERROR();
+
+    EMathApi_Release();
+    emath_api = 0;
+
+    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, gl_framebuffer);
+    CHECK_GL_ERROR();
+
+    glViewport(0, 0, size[0], size[1]);
+    CHECK_GL_ERROR();
+
+    Py_RETURN_NONE;
+error:
+    ex = PyErr_GetRaisedException();
+    if (emath_api){ EMathApi_Release(); }
+    PyErr_SetRaisedException(ex);
+    return 0;
+}
+
+static PyObject *
 set_read_framebuffer(PyObject *module, PyObject *unused)
 {
     glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
@@ -1309,6 +1346,17 @@ error:
     return 0;
 }
 
+static PyObject *
+get_gl_version(PyObject *module, PyObject *unused)
+{
+    const GLubyte *gl_version = glGetString(GL_VERSION);
+    CHECK_GL_ERROR();
+
+    return PyUnicode_FromString(gl_version);
+error:
+    return 0;
+}
+
 static PyMethodDef module_PyMethodDef[] = {
     {"reset_module_state", reset_module_state, METH_NOARGS, 0},
     {"activate_gl_vertex_array", activate_gl_vertex_array, METH_O, 0},
@@ -1323,6 +1371,7 @@ static PyMethodDef module_PyMethodDef[] = {
     {"create_gl_copy_read_buffer_memory_view", create_gl_buffer_memory_view, METH_O, 0},
     {"release_gl_copy_read_buffer_memory_view", release_gl_copy_read_buffer_memory_view, METH_NOARGS, 0},
     {"configure_gl_vertex_array_location", (PyCFunction)configure_gl_vertex_array_location, METH_FASTCALL, 0},
+    {"set_draw_framebuffer", (PyCFunction)set_draw_framebuffer, METH_FASTCALL, 0},
     {"set_read_framebuffer", set_read_framebuffer, METH_NOARGS, 0},
     {"read_color_from_framebuffer", read_color_from_framebuffer, METH_O, 0},
     {"read_depth_from_framebuffer", read_depth_from_framebuffer, METH_O, 0},
@@ -1374,6 +1423,7 @@ static PyMethodDef module_PyMethodDef[] = {
     {"execute_gl_program_index_buffer", (PyCFunction)execute_gl_program_index_buffer, METH_FASTCALL, 0},
     {"execute_gl_program_indices", (PyCFunction)execute_gl_program_indices, METH_FASTCALL, 0},
     {"set_gl_execution_state", (PyCFunction)set_gl_execution_state, METH_FASTCALL, 0},
+    {"get_gl_version", (PyCFunction)get_gl_version, METH_NOARGS, 0},
     {0},
 };
 

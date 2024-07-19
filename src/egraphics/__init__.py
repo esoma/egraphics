@@ -17,6 +17,7 @@ __all__ = [
     "PrimitiveMode",
     "read_color_from_render_target",
     "read_depth_from_render_target",
+    "reset_state",
     "set_read_render_target",
     "Shader",
     "ShaderAttribute",
@@ -53,6 +54,7 @@ from ._shader import Shader
 from ._shader import ShaderAttribute
 from ._shader import ShaderUniform
 from ._shader import UniformMap
+from ._state import reset_state
 from ._texture import MipmapSelection
 from ._texture import Texture
 from ._texture import TextureComponents

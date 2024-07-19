@@ -3,8 +3,10 @@ from __future__ import annotations
 __all__ = [
     "read_color_from_render_target",
     "read_depth_from_render_target",
+    "set_draw_render_target",
     "set_read_render_target",
     "clear_render_target",
+    "RenderTarget",
 ]
 
 
@@ -12,7 +14,9 @@ __all__ = [
 from ._egraphics import clear_framebuffer
 from ._egraphics import read_color_from_framebuffer
 from ._egraphics import read_depth_from_framebuffer
+from ._egraphics import set_draw_framebuffer
 from ._egraphics import set_read_framebuffer
+from ._state import register_reset_state_callback
 
 # egeometry
 from egeometry import IRectangle
@@ -21,19 +25,40 @@ from egeometry import IRectangle
 from emath import FArray
 from emath import FVector3
 from emath import FVector4Array
+from emath import IVector2
 
-# eplatform
-from eplatform import Platform
-from eplatform import RenderTarget
-from eplatform import set_draw_render_target
+# python
+from typing import Protocol
 
+
+class RenderTarget(Protocol):
+    @property
+    def _gl_framebuffer(self) -> int:
+        ...
+
+    @property
+    def size(self) -> IVector2:
+        ...
+
+
+_draw_render_target: RenderTarget | None = None
 _read_render_target: RenderTarget | None = None
 
 
-@Platform.register_deactivate_callback
+@register_reset_state_callback
 def _reset_state_render_target_state() -> None:
+    global _draw_render_target
     global _read_render_target
+    _draw_render_target = None
     _read_render_target = None
+
+
+def set_draw_render_target(render_target: RenderTarget) -> None:
+    global _draw_render_target
+    if _draw_render_target is render_target:
+        return
+    set_draw_framebuffer(0, render_target.size)
+    _draw_render_target = render_target
 
 
 def set_read_render_target(render_target: RenderTarget) -> None:

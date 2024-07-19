@@ -161,6 +161,7 @@ __all__ = [
     "create_gl_copy_read_buffer_memory_view",
     "release_gl_copy_read_buffer_memory_view",
     "configure_gl_vertex_array_location",
+    "set_draw_framebuffer",
     "set_read_framebuffer",
     "read_color_from_framebuffer",
     "read_depth_from_framebuffer",
@@ -212,6 +213,7 @@ __all__ = [
     "execute_gl_program_index_buffer",
     "execute_gl_program_indices",
     "set_gl_execution_state",
+    "get_gl_version",
 ]
 
 # egeometry
@@ -222,6 +224,7 @@ from emath import FArray
 from emath import FVector3
 from emath import FVector4
 from emath import FVector4Array
+from emath import IVector2
 from emath import UVector2
 
 # python
@@ -422,6 +425,7 @@ def configure_gl_vertex_array_location(
     instancing_divistor: int | None,
     /,
 ) -> None: ...
+def set_draw_framebuffer(gl_framebuffer: int, size: IVector2) -> None: ...
 def set_read_framebuffer() -> None: ...
 def read_color_from_framebuffer(rect: IRectangle, /) -> FVector4Array: ...
 def read_depth_from_framebuffer(rect: IRectangle, /) -> FArray: ...
@@ -539,3 +543,4 @@ def set_gl_execution_state(
     cull_face: GlCull | None,
     /,
 ) -> None: ...
+def get_gl_version() -> str: ...
