@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-__all__ = ["GBufferViewMap"]
+__all__ = ["GBufferViewMap", "IndexGBufferView"]
 
 # egraphics
 from ._egraphics import GL_BYTE
