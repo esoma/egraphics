@@ -7,10 +7,10 @@ from egraphics import MipmapSelection
 from egraphics import Texture
 from egraphics import TextureComponents
 from egraphics import TextureFilter
-from egraphics import TextureTarget
 from egraphics import TextureType
 from egraphics import TextureWrap
 from egraphics._texture import _FIRST_BINDABLE_TEXTURE_UNIT
+from egraphics._texture import _TextureTarget
 
 # emath
 from emath import FVector4
@@ -345,7 +345,7 @@ class TextureTest:
         texture_3 = self.create_texture(
             size, TextureComponents.R, ctypes.c_int8, memoryview(b"\x00" * self.data_multiplier)
         )
-        del TextureTarget.TEXTURE_2D._unit_texture[texture_3._unit]
+        del _TextureTarget.TEXTURE_2D._unit_texture[texture_3._unit]
 
         with texture_1.bind_unit() as unit_1:
             pass

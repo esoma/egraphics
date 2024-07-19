@@ -25,7 +25,6 @@ __all__ = [
     "TextureComponents",
     "TextureDataType",
     "TextureFilter",
-    "TextureTarget",
     "TextureType",
     "TextureWrap",
     "UniformMap",
@@ -58,7 +57,6 @@ from ._texture import Texture
 from ._texture import TextureComponents
 from ._texture import TextureDataType
 from ._texture import TextureFilter
-from ._texture import TextureTarget
 from ._texture import TextureType
 from ._texture import TextureWrap
 from ._texture_2d import Texture2d

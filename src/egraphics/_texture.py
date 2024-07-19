@@ -6,7 +6,6 @@ __all__ = [
     "TextureComponents",
     "TextureDataType",
     "TextureFilter",
-    "TextureTarget",
     "TextureType",
     "TextureWrap",
 ]
@@ -73,9 +72,9 @@ _DEFAULT_TEXTURE_UNIT: Final[int] = 0
 _FIRST_BINDABLE_TEXTURE_UNIT: Final[int] = 1
 
 
-class TextureTarget:
+class _TextureTarget:
     _texture_unit: ClassVar[int] = -1
-    _targets: ClassVar[list[TextureTarget]] = []
+    _targets: ClassVar[list[_TextureTarget]] = []
 
     TEXTURE_2D: ClassVar[Self]
 
@@ -119,13 +118,13 @@ class TextureTarget:
         self._bound = False
 
 
-TextureTarget.TEXTURE_2D = TextureTarget(GL_TEXTURE_2D)
+_TextureTarget.TEXTURE_2D = _TextureTarget(GL_TEXTURE_2D)
 
 
 @register_reset_state_callback
 def _reset_texture_target_state() -> None:
-    TextureTarget._texture_unit = -1
-    for target in TextureTarget._targets:
+    _TextureTarget._texture_unit = -1
+    for target in _TextureTarget._targets:
         target._unit_texture = {}
         target._bound = False
 
@@ -133,11 +132,11 @@ def _reset_texture_target_state() -> None:
 class _TextureType(NamedTuple):
     size_length: int
     wrap_length: int
-    target: TextureTarget
+    target: _TextureTarget
 
 
 class TextureType(Enum):
-    TWO_DIMENSIONS = _TextureType(2, 2, TextureTarget.TEXTURE_2D)
+    TWO_DIMENSIONS = _TextureType(2, 2, _TextureTarget.TEXTURE_2D)
 
 
 class TextureComponents(Enum):
