@@ -11,6 +11,8 @@ from egraphics import TextureType
 from egraphics import TextureWrap
 from egraphics._texture import _FIRST_BINDABLE_TEXTURE_UNIT
 from egraphics._texture import _TextureTarget
+from egraphics._texture import bind_texture
+from egraphics._texture import bind_texture_unit
 
 # emath
 from emath import FVector4
@@ -238,21 +240,21 @@ class TextureTest:
         texture_2 = self.create_texture(
             size, TextureComponents.R, ctypes.c_int8, memoryview(b"\x00" * self.data_multiplier)
         )
-        with texture_1.bind_unit() as unit_1:
+        with bind_texture_unit(texture_1) as unit_1:
             active_texture = glGetIntegerv(GL_ACTIVE_TEXTURE)
             assert active_texture != GL_TEXTURE0 + unit_1
             glActiveTexture(GL_TEXTURE0 + unit_1)
             assert glGetIntegerv(GL_TEXTURE_BINDING_2D) == texture_1._gl_texture
             glActiveTexture(active_texture)
 
-            with texture_2.bind_unit() as unit_2:
+            with bind_texture_unit(texture_2) as unit_2:
                 assert glGetIntegerv(GL_ACTIVE_TEXTURE) == GL_TEXTURE0 + unit_2
                 assert glGetIntegerv(GL_TEXTURE_BINDING_2D) == texture_2._gl_texture
                 glActiveTexture(GL_TEXTURE0 + unit_1)
                 assert glGetIntegerv(GL_TEXTURE_BINDING_2D) == texture_1._gl_texture
                 glActiveTexture(GL_TEXTURE0 + unit_2)
 
-                with texture_1.bind_unit() as unit_1_2:
+                with bind_texture_unit(texture_1) as unit_1_2:
                     assert unit_1 == unit_1_2
                     assert glGetIntegerv(GL_ACTIVE_TEXTURE) == GL_TEXTURE0 + unit_2
                     assert glGetIntegerv(GL_TEXTURE_BINDING_2D) == texture_2._gl_texture
@@ -291,7 +293,7 @@ class TextureTest:
         texture = self.create_texture(
             size, TextureComponents.R, ctypes.c_int8, memoryview(b"\x00" * self.data_multiplier)
         )
-        with texture.bind_unit() as unit:
+        with bind_texture_unit(texture) as unit:
             gl_texture = texture._gl_texture
             del texture
             glActiveTexture(GL_TEXTURE0 + unit)
@@ -304,11 +306,11 @@ class TextureTest:
         texture_2 = self.create_texture(
             size, TextureComponents.R, ctypes.c_int8, memoryview(b"\x00" * self.data_multiplier)
         )
-        with texture_1.bind():
+        with bind_texture(texture_1):
             assert glGetIntegerv(GL_TEXTURE_BINDING_2D) == texture_1._gl_texture
 
             with pytest.raises(RuntimeError) as excinfo:
-                with texture_2.bind():
+                with bind_texture(texture_2):
                     pass
             assert str(excinfo.value) == "texture already bound to target"
             del excinfo
@@ -317,7 +319,7 @@ class TextureTest:
 
         assert glGetIntegerv(GL_TEXTURE_BINDING_2D) == texture_1._gl_texture
 
-        with texture_2.bind():
+        with bind_texture(texture_2):
             assert glGetIntegerv(GL_TEXTURE_BINDING_2D) == texture_2._gl_texture
 
         del texture_1
@@ -330,7 +332,7 @@ class TextureTest:
         texture = self.create_texture(
             size, TextureComponents.R, ctypes.c_int8, memoryview(b"\x00" * self.data_multiplier)
         )
-        with texture.bind():
+        with bind_texture(texture):
             gl_texture = texture._gl_texture
             del texture
             assert glGetIntegerv(GL_TEXTURE_BINDING_2D) == gl_texture
@@ -347,16 +349,16 @@ class TextureTest:
         )
         del _TextureTarget.TEXTURE_2D._unit_texture[texture_3._unit]
 
-        with texture_1.bind_unit() as unit_1:
+        with bind_texture_unit(texture_1) as unit_1:
             pass
-        with texture_2.bind_unit() as unit_2:
+        with bind_texture_unit(texture_2) as unit_2:
             pass
 
-        with texture_1.bind():
+        with bind_texture(texture_1):
             assert glGetIntegerv(GL_ACTIVE_TEXTURE) == GL_TEXTURE0 + unit_1
             assert glGetIntegerv(GL_TEXTURE_BINDING_2D) == texture_1._gl_texture
 
-            with texture_3.bind_unit() as unit_3:
+            with bind_texture_unit(texture_3) as unit_3:
                 assert glGetIntegerv(GL_ACTIVE_TEXTURE) == GL_TEXTURE0 + unit_1
                 assert glGetIntegerv(GL_TEXTURE_BINDING_2D) == texture_1._gl_texture
 
@@ -399,12 +401,12 @@ class TextureTest:
             assert texture_2._unit == unit_2
             assert texture_3._unit == unit_1
 
-            with texture_2.bind_unit():
+            with bind_texture_unit(texture_2):
                 assert texture_1._unit is None
                 assert texture_2._unit == unit_2
                 assert texture_3._unit == unit_1
 
-            with texture_1.bind_unit():
+            with bind_texture_unit(texture_1):
                 assert texture_1._unit == unit_1
                 assert texture_2._unit == unit_2
                 assert texture_3._unit is None
@@ -426,9 +428,9 @@ class TextureTest:
                 ctypes.c_int8,
                 memoryview(b"\x00" * self.data_multiplier),
             )
-            with texture_1.bind_unit():
+            with bind_texture_unit(texture_1):
                 with pytest.raises(RuntimeError) as excinfo:
-                    with texture_2.bind_unit():
+                    with bind_texture_unit(texture_2):
                         pass
                 assert str(excinfo.value) == "no texture unit available"
                 del excinfo

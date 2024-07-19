@@ -174,6 +174,7 @@ from ._render_target import RenderTarget
 from ._render_target import set_draw_render_target
 from ._state import register_reset_state_callback
 from ._texture import Texture
+from ._texture import bind_texture_unit
 
 # emath
 import emath
@@ -332,16 +333,18 @@ class Shader:
                             f"expected sequence of {Texture} for {uniform.name} "
                             f"(got {value!r})"
                         )
+                # fmt: off
                 value = I32Array(
-                    *(exit_stack.enter_context(v.bind_unit()) for v in value)  # type: ignore
+                    *(exit_stack.enter_context(bind_texture_unit(v)) for v in value) # type: ignore
                 )
+                # fmt: on
                 input_value = value.pointer
             else:
                 if not isinstance(value, Texture):
                     raise ValueError(
                         f"expected {Texture} for {uniform.name} " f"(got {type(value)})"
                     )
-                input_value = c_int32(exit_stack.enter_context(value.bind_unit()))
+                input_value = c_int32(exit_stack.enter_context(bind_texture_unit(value)))
         else:
             if uniform.size > 1:
                 array_type = _PY_TYPE_TO_ARRAY[uniform.data_type]

@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 __all__ = [
+    "bind_texture_unit",
+    "bind_unit",
     "MipmapSelection",
     "Texture",
     "TextureComponents",
@@ -269,7 +271,7 @@ class Texture:
             raise ValueError("too much or not enough data")
         # generate the texture and copy the data to it
         self._gl_texture = create_gl_texture()
-        with self.bind():
+        with bind_texture(self):
             gl_target = self._type.value.target._gl_target
             assert type == TextureType.TWO_DIMENSIONS
             set_gl_texture_target_2d_data(gl_target, components.value, size, gl_data_type, buffer)
@@ -356,12 +358,6 @@ class Texture:
         self._unbind_unit()
         self._type.value.target._unset_texture()
 
-    def bind_unit(self) -> _TextureUnitBind:
-        return _TextureUnitBind(self)
-
-    def bind(self) -> _TextureBind:
-        return _TextureBind(self)
-
     @property
     def anisotropy(self) -> float:
         return self._anisotropy
@@ -397,6 +393,14 @@ class Texture:
     @property
     def wrap_color(self) -> FVector4:
         return self._wrap_color
+
+
+def bind_texture_unit(texture: Texture) -> _TextureUnitBind:
+    return _TextureUnitBind(texture)
+
+
+def bind_texture(texture: Texture) -> _TextureBind:
+    return _TextureBind(texture)
 
 
 @register_reset_state_callback
