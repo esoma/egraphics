@@ -45,12 +45,10 @@ class RenderTarget(Protocol):
 
 
 class WindowRenderTargetMixin:
-    size: IVector2
-
     def refresh(self, *args: Any, **kwargs: Any) -> Any:
         if sys.platform == "darwin":
             # on macos the window must be bound to the draw framebuffer before swapping
-            set_draw_render_target(self)
+            set_draw_render_target(self)  # type: ignore
         return super().refresh(*args, **kwargs)  # type: ignore
 
     @property
