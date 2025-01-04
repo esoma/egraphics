@@ -17,31 +17,56 @@ from emath import IVector2
 # pyopengl
 from OpenGL.GL import GL_DRAW_FRAMEBUFFER_BINDING
 from OpenGL.GL import GL_READ_FRAMEBUFFER_BINDING
+from OpenGL.GL import GL_VIEWPORT
 from OpenGL.GL import glGetIntegerv
 
 
 def test_default_state():
     assert egraphics._render_target._draw_render_target is None
+    assert egraphics._render_target._draw_render_target_size is None
     assert egraphics._render_target._read_render_target is None
 
 
 def test_reset_state():
     egraphics._render_target._draw_render_target = 1
+    egraphics._render_target._draw_render_target = 3
     egraphics._render_target._read_render_target = 2
 
     reset_state()
 
     assert egraphics._render_target._draw_render_target is None
+    assert egraphics._render_target._draw_render_target_size is None
     assert egraphics._render_target._read_render_target is None
 
 
 def test_set_draw_window(platform, window):
     set_draw_render_target(window)
     assert egraphics._render_target._draw_render_target is window
+    assert egraphics._render_target._draw_render_target_size == window.size
     assert glGetIntegerv(GL_DRAW_FRAMEBUFFER_BINDING) == 0
+    assert glGetIntegerv(GL_VIEWPORT)[0] == 0
+    assert glGetIntegerv(GL_VIEWPORT)[1] == 0
+    assert glGetIntegerv(GL_VIEWPORT)[2] == window.size.x
+    assert glGetIntegerv(GL_VIEWPORT)[3] == window.size.y
 
     set_draw_render_target(window)
+    assert egraphics._render_target._draw_render_target is window
+    assert egraphics._render_target._draw_render_target_size == window.size
     assert glGetIntegerv(GL_DRAW_FRAMEBUFFER_BINDING) == 0
+    assert glGetIntegerv(GL_VIEWPORT)[0] == 0
+    assert glGetIntegerv(GL_VIEWPORT)[1] == 0
+    assert glGetIntegerv(GL_VIEWPORT)[2] == window.size.x
+    assert glGetIntegerv(GL_VIEWPORT)[3] == window.size.y
+
+    window.size = IVector2(201, 102)
+    set_draw_render_target(window)
+    assert egraphics._render_target._draw_render_target is window
+    assert egraphics._render_target._draw_render_target_size == window.size
+    assert glGetIntegerv(GL_DRAW_FRAMEBUFFER_BINDING) == 0
+    assert glGetIntegerv(GL_VIEWPORT)[0] == 0
+    assert glGetIntegerv(GL_VIEWPORT)[1] == 0
+    assert glGetIntegerv(GL_VIEWPORT)[2] == window.size.x
+    assert glGetIntegerv(GL_VIEWPORT)[3] == window.size.y
 
 
 def test_set_read_window(platform, window):

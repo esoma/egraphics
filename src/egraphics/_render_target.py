@@ -57,23 +57,28 @@ class WindowRenderTargetMixin:
 
 
 _draw_render_target: RenderTarget | None = None
+_draw_render_target_size: IVector2 | None = None
 _read_render_target: RenderTarget | None = None
 
 
 @register_reset_state_callback
 def _reset_state_render_target_state() -> None:
     global _draw_render_target
+    global _draw_render_target_size
     global _read_render_target
     _draw_render_target = None
+    _draw_render_target_size = None
     _read_render_target = None
 
 
 def set_draw_render_target(render_target: RenderTarget) -> None:
     global _draw_render_target
-    if _draw_render_target is render_target:
+    global _draw_render_target_size
+    if _draw_render_target is render_target and render_target.size == _draw_render_target_size:
         return
     set_draw_framebuffer(render_target._gl_framebuffer, render_target.size)
     _draw_render_target = render_target
+    _draw_render_target_size = render_target.size
 
 
 def set_read_render_target(render_target: RenderTarget) -> None:
