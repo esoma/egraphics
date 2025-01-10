@@ -263,18 +263,23 @@ error:
 }
 
 static PyObject *
-create_gl_buffer_memory_view(PyObject *module, PyObject *py_length)
+create_gl_buffer_memory_view(PyObject *module, PyObject **args, Py_ssize_t nargs)
 {
-    Py_ssize_t length = PyLong_AsSsize_t(py_length);
+    CHECK_UNEXPECTED_ARG_COUNT_ERROR(2);
+
+    GLenum target = PyLong_AsLong(args[0]);
     CHECK_UNEXPECTED_PYTHON_ERROR();
 
-    void *memory = glMapBuffer(GL_COPY_READ_BUFFER, GL_READ_WRITE);
+    Py_ssize_t length = PyLong_AsSsize_t(args[1]);
+    CHECK_UNEXPECTED_PYTHON_ERROR();
+
+    void *memory = glMapBuffer(target, GL_READ_WRITE);
     CHECK_GL_ERROR();
 
     PyObject *memory_view = PyMemoryView_FromMemory(memory, length, PyBUF_WRITE);
     if (!memory_view)
     {
-        glUnmapBuffer(GL_COPY_READ_BUFFER);
+        glUnmapBuffer(target);
         CHECK_GL_ERROR();
         goto error;
     }
@@ -285,9 +290,12 @@ error:
 }
 
 static PyObject *
-release_gl_copy_read_buffer_memory_view(PyObject *module, PyObject *unused)
+release_gl_buffer_memory_view(PyObject *module, PyObject *py_target)
 {
-    glUnmapBuffer(GL_COPY_READ_BUFFER);
+    GLenum target = PyLong_AsLong(py_target);
+    CHECK_UNEXPECTED_PYTHON_ERROR();
+
+    glUnmapBuffer(target);
     CHECK_GL_ERROR();
     Py_RETURN_NONE;
 error:
@@ -1368,8 +1376,8 @@ static PyMethodDef module_PyMethodDef[] = {
     {"delete_gl_texture", delete_gl_texture, METH_O, 0},
     {"set_gl_buffer_target", (PyCFunction)set_gl_buffer_target, METH_FASTCALL, 0},
     {"set_gl_buffer_target_data", (PyCFunction)set_gl_buffer_target_data, METH_FASTCALL, 0},
-    {"create_gl_copy_read_buffer_memory_view", create_gl_buffer_memory_view, METH_O, 0},
-    {"release_gl_copy_read_buffer_memory_view", release_gl_copy_read_buffer_memory_view, METH_NOARGS, 0},
+    {"create_gl_buffer_memory_view", (PyCFunction)create_gl_buffer_memory_view, METH_FASTCALL, 0},
+    {"release_gl_buffer_memory_view", release_gl_buffer_memory_view, METH_O, 0},
     {"configure_gl_vertex_array_location", (PyCFunction)configure_gl_vertex_array_location, METH_FASTCALL, 0},
     {"set_draw_framebuffer", (PyCFunction)set_draw_framebuffer, METH_FASTCALL, 0},
     {"set_read_framebuffer", set_read_framebuffer, METH_NOARGS, 0},

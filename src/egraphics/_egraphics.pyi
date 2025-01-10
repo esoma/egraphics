@@ -158,8 +158,8 @@ __all__ = [
     "delete_gl_vertex_array",
     "delete_gl_texture",
     "set_gl_buffer_target_data",
-    "create_gl_copy_read_buffer_memory_view",
-    "release_gl_copy_read_buffer_memory_view",
+    "create_gl_buffer_memory_view",
+    "release_gl_buffer_memory_view",
     "configure_gl_vertex_array_location",
     "set_draw_framebuffer",
     "set_read_framebuffer",
@@ -414,8 +414,8 @@ def delete_gl_texture(gl_texture: GlTexture, /) -> None: ...
 def set_gl_buffer_target_data(
     target: GlBufferTarget, data: Buffer | int, usage: GlBufferUsage, /
 ) -> int: ...
-def create_gl_copy_read_buffer_memory_view(length: int) -> memoryview: ...
-def release_gl_copy_read_buffer_memory_view() -> None: ...
+def create_gl_buffer_memory_view(target: GlBufferTarget, length: int) -> memoryview: ...
+def release_gl_buffer_memory_view(target: GlBufferTarget) -> None: ...
 def configure_gl_vertex_array_location(
     location: int,
     size: int,

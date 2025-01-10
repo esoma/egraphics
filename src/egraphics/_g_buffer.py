@@ -22,9 +22,9 @@ from ._egraphics import GL_STREAM_DRAW
 from ._egraphics import GL_STREAM_READ
 from ._egraphics import GlBuffer
 from ._egraphics import create_gl_buffer
-from ._egraphics import create_gl_copy_read_buffer_memory_view
+from ._egraphics import create_gl_buffer_memory_view
 from ._egraphics import delete_gl_buffer
-from ._egraphics import release_gl_copy_read_buffer_memory_view
+from ._egraphics import release_gl_buffer_memory_view
 from ._egraphics import set_gl_buffer_target
 from ._egraphics import set_gl_buffer_target_data
 from ._state import register_reset_state_callback
@@ -151,7 +151,7 @@ class GBuffer:
             return self._buffer
 
         GBufferTarget.COPY_READ.g_buffer = self
-        self._buffer = create_gl_copy_read_buffer_memory_view(self._length)
+        self._buffer = create_gl_buffer_memory_view(GL_COPY_READ_BUFFER, self._length)
         self._buffer_refs += 1
         return self._buffer
 
@@ -163,7 +163,7 @@ class GBuffer:
 
         if self._length != 0:
             GBufferTarget.COPY_READ.g_buffer = self
-            release_gl_copy_read_buffer_memory_view()
+            release_gl_buffer_memory_view(GL_COPY_READ_BUFFER)
 
         self._buffer = None
 
