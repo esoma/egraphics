@@ -403,6 +403,11 @@ def bind_texture(texture: Texture) -> _TextureBind:
     return _TextureBind(texture)
 
 
+def get_gl_texture(texture: Texture) -> GlTexture:
+    assert texture._gl_texture is not None
+    return texture._gl_texture
+
+
 @register_reset_state_callback
 def _reset_texture_state() -> None:
     Texture._max_unit = None

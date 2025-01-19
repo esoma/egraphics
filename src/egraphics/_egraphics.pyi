@@ -6,15 +6,17 @@ __all__ = [
     "GlBufferUsage",
     "GlCull",
     "GlFunc",
+    "GlFramebuffer",
     "GlPrimitive",
     "GlProgram",
-    "GlVertexArray",
+    "GlRenderbuffer",
     "GlType",
     "GlTexture",
     "GlTextureComponents",
     "GlTextureFilter",
     "GlTextureTarget",
     "GlTextureWrap",
+    "GlVertexArray",
     "GL_ARRAY_BUFFER",
     "GL_COPY_READ_BUFFER",
     "GL_ELEMENT_ARRAY_BUFFER",
@@ -154,9 +156,12 @@ __all__ = [
     "create_gl_buffer",
     "create_gl_vertex_array",
     "create_gl_texture",
+    "create_gl_framebuffer",
     "delete_gl_buffer",
     "delete_gl_vertex_array",
     "delete_gl_texture",
+    "delete_gl_framebuffer",
+    "delete_gl_renderbuffer",
     "set_gl_buffer_target_data",
     "create_gl_buffer_memory_view",
     "release_gl_buffer_memory_view",
@@ -238,15 +243,17 @@ GlBufferTarget = NewType("GlBufferTarget", int)
 GlBufferUsage = NewType("GlBufferUsage", int)
 GlCull = NewType("GlCull", int)
 GlFunc = NewType("GlFunc", int)
+GlFramebuffer = NewType("GlFramebuffer", int)
 GlPrimitive = NewType("GlPrimitive", int)
 GlProgram = NewType("GlProgram", int)
-GlVertexArray = NewType("GlVertexArray", int)
+GlRenderbuffer = NewType("GlRenderbuffer", int)
 GlType = NewType("GlType", int)
 GlTexture = NewType("GlTexture", int)
 GlTextureComponents = NewType("GlTextureComponents", int)
 GlTextureFilter = NewType("GlTextureFilter", int)
 GlTextureTarget = NewType("GlTextureTarget", int)
 GlTextureWrap = NewType("GlTextureWrap", int)
+GlVertexArray = NewType("GlVertexArray", int)
 
 GL_ARRAY_BUFFER: GlBufferTarget
 GL_COPY_READ_BUFFER: GlBufferTarget
@@ -408,9 +415,12 @@ def set_gl_buffer_target(target: GlBufferTarget, gl_buffer: GlBuffer | None, /) 
 def create_gl_buffer() -> GlBuffer: ...
 def create_gl_vertex_array() -> GlVertexArray: ...
 def create_gl_texture() -> GlTexture: ...
+def create_gl_framebuffer() -> GlFramebuffer: ...
 def delete_gl_buffer(gl_buffer: GlBuffer, /) -> None: ...
 def delete_gl_vertex_array(gl_vertex_array: GlVertexArray, /) -> None: ...
 def delete_gl_texture(gl_texture: GlTexture, /) -> None: ...
+def delete_gl_framebuffer(gl_framebuffer: GlFramebuffer, /) -> None: ...
+def delete_gl_renderbuffer(gl_renderbuffer: GlRenderbuffer, /) -> None: ...
 def set_gl_buffer_target_data(
     target: GlBufferTarget, data: Buffer | int, usage: GlBufferUsage, /
 ) -> int: ...
@@ -425,11 +435,13 @@ def configure_gl_vertex_array_location(
     instancing_divistor: int | None,
     /,
 ) -> None: ...
-def set_draw_framebuffer(gl_framebuffer: int, size: IVector2) -> None: ...
-def set_read_framebuffer() -> None: ...
+def set_draw_framebuffer(gl_framebuffer: GlFramebuffer, size: IVector2) -> None: ...
+def set_read_framebuffer(gl_framebuffer: GlFramebuffer) -> None: ...
 def read_color_from_framebuffer(rect: IRectangle, /) -> FVector4Array: ...
 def read_depth_from_framebuffer(rect: IRectangle, /) -> FArray: ...
 def clear_framebuffer(color: FVector3 | None, depth: float | None, /) -> None: ...
+def attach_texture_to_gl_read_framebuffer(gl_texture: GlTexture, /) -> None: ...
+def attach_depth_renderbuffer_to_gl_read_framebuffer(size: IVector2, /) -> GlRenderbuffer: ...
 def set_active_gl_texture_unit(unit: int, /) -> None: ...
 def set_gl_texture_target(target: GlTextureTarget, gl_texture: GlTexture | None, /) -> None: ...
 def set_gl_texture_target_2d_data(

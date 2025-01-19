@@ -28,6 +28,7 @@ __all__ = [
     "TextureComponents",
     "TextureDataType",
     "TextureFilter",
+    "TextureRenderTarget",
     "TextureType",
     "TextureWrap",
     "UniformMap",
@@ -44,6 +45,7 @@ from ._g_buffer_view_map import IndexGBufferView
 from ._image import Image
 from ._image import ImageInvalidError
 from ._render_target import RenderTarget
+from ._render_target import TextureRenderTarget
 from ._render_target import WindowRenderTargetMixin
 from ._render_target import clear_render_target
 from ._render_target import read_color_from_render_target

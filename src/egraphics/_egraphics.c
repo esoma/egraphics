@@ -179,6 +179,19 @@ error:
 }
 
 static PyObject *
+create_gl_framebuffer(PyObject *module, PyObject *unused)
+{
+    GLuint gl_framebuffer = 0;
+
+    glGenFramebuffers(1, &gl_framebuffer);
+    CHECK_GL_ERROR();
+
+    return PyLong_FromUnsignedLong(gl_framebuffer);
+error:
+    return 0;
+}
+
+static PyObject *
 delete_gl_buffer(PyObject *module, PyObject *py_gl_buffer)
 {
     GLuint gl_buffer = PyLong_AsUnsignedLong(py_gl_buffer);
@@ -216,6 +229,33 @@ delete_gl_texture(PyObject *module, PyObject *py_gl_texture)
 error:
     return 0;
 }
+
+static PyObject *
+delete_gl_framebuffer(PyObject *module, PyObject *py_gl_framebuffer)
+{
+    GLuint gl_framebuffer = PyLong_AsUnsignedLong(py_gl_framebuffer);
+    CHECK_UNEXPECTED_PYTHON_ERROR();
+
+    glDeleteFramebuffers(1, &gl_framebuffer);
+
+    Py_RETURN_NONE;
+error:
+    return 0;
+}
+
+static PyObject *
+delete_gl_renderbuffer(PyObject *module, PyObject *gl_gl_render_buffer)
+{
+    GLuint gl_render_buffer = PyLong_AsUnsignedLong(gl_gl_render_buffer);
+    CHECK_UNEXPECTED_PYTHON_ERROR();
+
+    glDeleteRenderbuffers(1, &gl_render_buffer);
+
+    Py_RETURN_NONE;
+error:
+    return 0;
+}
+
 
 static PyObject *
 set_gl_buffer_target_data(PyObject *module, PyObject **args, Py_ssize_t nargs)
@@ -381,9 +421,12 @@ error:
 }
 
 static PyObject *
-set_read_framebuffer(PyObject *module, PyObject *unused)
+set_read_framebuffer(PyObject *module, PyObject *py_gl_framebuffer)
 {
-    glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
+    GLuint gl_framebuffer = PyLong_AsLong(py_gl_framebuffer);
+    CHECK_UNEXPECTED_PYTHON_ERROR();
+
+    glBindFramebuffer(GL_READ_FRAMEBUFFER, gl_framebuffer);
     CHECK_GL_ERROR();
 
     Py_RETURN_NONE;
@@ -502,6 +545,7 @@ clear_framebuffer(PyObject *module, PyObject **args, Py_ssize_t nargs)
         CHECK_UNEXPECTED_PYTHON_ERROR();
 
         EMathApi_Release();
+        emath_api = 0;
 
         if (memcmp(state->clear_color, color, sizeof(float) * 3) != 0)
         {
@@ -531,6 +575,65 @@ clear_framebuffer(PyObject *module, PyObject **args, Py_ssize_t nargs)
     }
     Py_RETURN_NONE;
 error:
+    ex = PyErr_GetRaisedException();
+    if (emath_api){ EMathApi_Release(); }
+    PyErr_SetRaisedException(ex);
+    return 0;
+}
+
+static PyObject *
+attach_texture_to_gl_read_framebuffer(PyObject *module, PyObject *py_gl_texture)
+{
+    GLuint gl_texture = PyLong_AsLong(py_gl_texture);
+    CHECK_UNEXPECTED_PYTHON_ERROR();
+
+    glFramebufferTexture(GL_READ_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, gl_texture, 0);
+    CHECK_GL_ERROR();
+
+    Py_RETURN_NONE;
+error:
+    return 0;
+}
+
+static PyObject *
+attach_depth_renderbuffer_to_gl_read_framebuffer(PyObject *module, PyObject *py_size)
+{
+    PyObject *ex = 0;
+    struct EMathApi *emath_api = 0;
+    GLuint gl_render_buffer = 0;
+
+    emath_api = EMathApi_Get();
+    CHECK_UNEXPECTED_PYTHON_ERROR();
+
+    const int *size = emath_api->IVector2_GetValuePointer(py_size);
+    CHECK_UNEXPECTED_PYTHON_ERROR();
+
+    EMathApi_Release();
+    emath_api = 0;
+
+    glGenRenderbuffers(1, &gl_render_buffer);
+    CHECK_GL_ERROR();
+
+    glBindRenderbuffer(GL_RENDERBUFFER, gl_render_buffer);
+    CHECK_GL_ERROR();
+
+    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, size[0], size[1]);
+    CHECK_GL_ERROR();
+
+    glFramebufferRenderbuffer(
+        GL_READ_FRAMEBUFFER,
+        GL_DEPTH_ATTACHMENT,
+        GL_RENDERBUFFER,
+        gl_render_buffer
+    );
+    CHECK_GL_ERROR();
+
+    PyObject *py_gl_render_buffer = PyLong_FromUnsignedLong(gl_render_buffer);
+    CHECK_UNEXPECTED_PYTHON_ERROR();
+
+    return py_gl_render_buffer;
+error:
+    if (gl_render_buffer){ glDeleteRenderbuffers(1, &gl_render_buffer); }
     ex = PyErr_GetRaisedException();
     if (emath_api){ EMathApi_Release(); }
     PyErr_SetRaisedException(ex);
@@ -600,6 +703,7 @@ set_gl_texture_target_2d_data(PyObject *module, PyObject **args, Py_ssize_t narg
         CHECK_UNEXPECTED_PYTHON_ERROR();
 
         EMathApi_Release();
+        emath_api = 0;
 
         width = size[0];
         height = size[1];
@@ -703,6 +807,7 @@ set_gl_texture_target_parameters(PyObject *module, PyObject **args, Py_ssize_t n
         CHECK_UNEXPECTED_PYTHON_ERROR();
 
         EMathApi_Release();
+        emath_api = 0;
 
         glTexParameterfv(target, GL_TEXTURE_BORDER_COLOR, wrap_color);
         CHECK_GL_ERROR();
@@ -1371,19 +1476,24 @@ static PyMethodDef module_PyMethodDef[] = {
     {"create_gl_buffer", create_gl_buffer, METH_NOARGS, 0},
     {"create_gl_vertex_array", create_gl_vertex_array, METH_NOARGS, 0},
     {"create_gl_texture", create_gl_texture, METH_NOARGS, 0},
+    {"create_gl_framebuffer", create_gl_framebuffer, METH_NOARGS, 0},
     {"delete_gl_buffer", delete_gl_buffer, METH_O, 0},
     {"delete_gl_vertex_array", delete_gl_vertex_array, METH_O, 0},
     {"delete_gl_texture", delete_gl_texture, METH_O, 0},
+    {"delete_gl_framebuffer", delete_gl_framebuffer, METH_O, 0},
+    {"delete_gl_renderbuffer", delete_gl_renderbuffer, METH_O, 0},
     {"set_gl_buffer_target", (PyCFunction)set_gl_buffer_target, METH_FASTCALL, 0},
     {"set_gl_buffer_target_data", (PyCFunction)set_gl_buffer_target_data, METH_FASTCALL, 0},
     {"create_gl_buffer_memory_view", (PyCFunction)create_gl_buffer_memory_view, METH_FASTCALL, 0},
     {"release_gl_buffer_memory_view", release_gl_buffer_memory_view, METH_O, 0},
     {"configure_gl_vertex_array_location", (PyCFunction)configure_gl_vertex_array_location, METH_FASTCALL, 0},
     {"set_draw_framebuffer", (PyCFunction)set_draw_framebuffer, METH_FASTCALL, 0},
-    {"set_read_framebuffer", set_read_framebuffer, METH_NOARGS, 0},
+    {"set_read_framebuffer", set_read_framebuffer, METH_O, 0},
     {"read_color_from_framebuffer", read_color_from_framebuffer, METH_O, 0},
     {"read_depth_from_framebuffer", read_depth_from_framebuffer, METH_O, 0},
     {"clear_framebuffer", (PyCFunction)clear_framebuffer, METH_FASTCALL, 0},
+    {"attach_texture_to_gl_read_framebuffer", attach_texture_to_gl_read_framebuffer, METH_O, 0},
+    {"attach_depth_renderbuffer_to_gl_read_framebuffer", attach_depth_renderbuffer_to_gl_read_framebuffer, METH_O, 0},
     {"set_active_gl_texture_unit", set_active_gl_texture_unit, METH_O, 0},
     {"set_gl_texture_target", (PyCFunction)set_gl_texture_target, METH_FASTCALL, 0},
     {"set_gl_texture_target_2d_data", (PyCFunction)set_gl_texture_target_2d_data, METH_FASTCALL, 0},
@@ -1520,15 +1630,17 @@ PyInit__egraphics()
     ADD_ALIAS("GlBufferUsage", PyLong_Type);
     ADD_ALIAS("GlCull", PyLong_Type);
     ADD_ALIAS("GlFunc", PyLong_Type);
+    ADD_ALIAS("GlFramebuffer", PyLong_Type);
     ADD_ALIAS("GlPrimitive", PyLong_Type);
     ADD_ALIAS("GlProgram", PyLong_Type);
-    ADD_ALIAS("GlVertexArray", PyLong_Type);
+    ADD_ALIAS("GlRenderbuffer", PyLong_Type);
     ADD_ALIAS("GlType", PyLong_Type);
     ADD_ALIAS("GlTexture", PyLong_Type);
     ADD_ALIAS("GlTextureComponents", PyLong_Type);
     ADD_ALIAS("GlTextureFilter", PyLong_Type);
     ADD_ALIAS("GlTextureTarget", PyLong_Type);
     ADD_ALIAS("GlTextureWrap", PyLong_Type);
+    ADD_ALIAS("GlVertexArray", PyLong_Type);
 
 #define ADD_CONSTANT(n)\
     {\
