@@ -685,6 +685,9 @@ set_gl_texture_target_2d_data(PyObject *module, PyObject **args, Py_ssize_t narg
 
     CHECK_UNEXPECTED_ARG_COUNT_ERROR(5);
 
+    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+    CHECK_GL_ERROR();
+
     GLenum target = PyLong_AsLong(args[0]);
     CHECK_UNEXPECTED_PYTHON_ERROR();
 
