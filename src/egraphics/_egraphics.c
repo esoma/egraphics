@@ -364,7 +364,25 @@ configure_gl_vertex_array_location(PyObject *module, PyObject **args, Py_ssize_t
 
     PyObject *py_instancing_divisor = args[5];
 
-    glVertexAttribPointer(location, count, type, GL_FALSE, stride, offset);
+    switch (type)
+    {
+        case GL_BYTE:
+        case GL_UNSIGNED_BYTE:
+        case GL_SHORT:
+        case GL_UNSIGNED_SHORT:
+        case GL_INT:
+        case GL_UNSIGNED_INT:
+        {
+            glVertexAttribIPointer(location, count, type, stride, offset);
+            break;
+        }
+        default:
+        {
+            glVertexAttribPointer(location, count, type, GL_FALSE, stride, offset);
+            break;
+        }
+
+    }
     CHECK_GL_ERROR();
 
     glEnableVertexAttribArray(location);
