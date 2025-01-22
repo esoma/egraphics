@@ -191,6 +191,7 @@ def test_basic(render_target, primitive_mode, color, index_array_type):
         vertex=b"""
         #version 140
         in vec2 xy;
+        in int gl_VertexID;
         void main()
         {
             gl_Position = vec4(xy, 0, 1.0);

@@ -144,6 +144,22 @@ def test_delete(platform):
     assert not glIsProgram(gl_program)
 
 
+def test_gl_attributes_and_uniforms(platform):
+    shader = Shader(
+        vertex=f"""#version 140
+
+    void main()
+    {{
+        gl_Position = vec4(gl_VertexID, 0, gl_DepthRange.near, 1);
+    }}
+    """.encode(
+            "utf-8"
+        )
+    )
+    assert len(shader.attributes) == 0
+    assert len(shader.uniforms) == 0
+
+
 @pytest.mark.parametrize("location", [None, 1])
 @pytest.mark.parametrize(
     "glsl_type, python_type",

@@ -275,6 +275,7 @@ class Shader:
                 location,
             )
             for name, size, type, location in get_gl_program_attributes(self._gl_program)
+            if not name.startswith("gl_")
         )
 
         self._uniforms = tuple(
@@ -285,6 +286,7 @@ class Shader:
                 location,
             )
             for name, size, type, location in get_gl_program_uniforms(self._gl_program)
+            if not name.startswith("gl_")
         )
 
         self._inputs: dict[str, ShaderAttribute | ShaderUniform] = {
