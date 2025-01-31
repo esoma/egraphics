@@ -92,7 +92,6 @@ def test_mask(render_target, red, green, blue, alpha):
     colors = read_color_from_render_target(
         render_target, IRectangle(IVector2(0), render_target.size)
     )
-
     assert all(
         c.r == pytest.approx(expected_color[0], abs=0.01)
         and c.g == pytest.approx(expected_color[1], abs=0.01)

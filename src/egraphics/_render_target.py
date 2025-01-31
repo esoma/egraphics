@@ -64,6 +64,7 @@ class TextureRenderTarget:
         self._size = IVector2(*colors.size)
         self.__gl_framebuffer = create_gl_framebuffer()
         set_read_render_target(self)
+        self._colors = colors
         attach_texture_to_gl_read_framebuffer(get_gl_texture(colors))
         if depth:
             self._gl_renderbuffers.add(

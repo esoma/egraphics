@@ -4,13 +4,18 @@ from . import resources
 
 # egraphics
 from egraphics import clear_render_target
+from egraphics._debug import debug_callback
+from egraphics._render_target import TextureRenderTarget
 from egraphics._render_target import WindowRenderTargetMixin
 from egraphics._state import get_gl_version
 from egraphics._state import reset_state
+from egraphics._texture_2d import Texture2d
+from egraphics._texture_2d import TextureComponents
 
 # emath
 from emath import FVector3
 from emath import IVector2
+from emath import UVector2
 
 # eplatform
 from eplatform import EventLoop
@@ -23,6 +28,7 @@ import pytest
 
 # python
 import asyncio
+from ctypes import c_uint8
 import gc
 from math import isclose
 from pathlib import Path
@@ -41,7 +47,7 @@ def _reset_state():
 
 @pytest.fixture(scope="session")
 def platform():
-    with Platform(window_cls=TestWindow):
+    with Platform(window_cls=TestWindow), debug_callback(print):
         yield
     gc.collect()
 
@@ -105,16 +111,28 @@ def is_kinda_close():
     return _
 
 
-@pytest.fixture
-def render_target(window, capture_event):
-    if window.size != IVector2(10, 10):
+@pytest.fixture(params=["window", "texture"])
+def render_target(platform, capture_event, request):
+    if request.param == "window":
+        render_target = request.getfixturevalue("window")
+        if render_target.size != IVector2(10, 10):
 
-        def _():
-            window.resize(IVector2(10, 10))
+            def _():
+                render_target.resize(IVector2(10, 10))
 
-        capture_event(_, window.resized)
-    clear_render_target(window, depth=1, color=FVector3(0))
-    return window
+            capture_event(_, render_target.resized)
+        clear_render_target(render_target, depth=1, color=FVector3(0))
+    else:
+        render_target = TextureRenderTarget(
+            Texture2d(
+                UVector2(10),
+                TextureComponents.RGBA,
+                c_uint8,
+                b"\x00" * (10 * 10 * 4),
+            ),
+            depth=True,
+        )
+    return render_target
 
 
 @pytest.fixture

@@ -151,6 +151,7 @@ __all__ = [
     "GL_TRIANGLES",
     "GL_TRIANGLE_STRIP",
     "GL_TRIANGLE_FAN",
+    "gl_debug",
     "activate_gl_vertex_array",
     "set_gl_buffer_target",
     "create_gl_buffer",
@@ -234,6 +235,7 @@ from emath import UVector2
 
 # python
 from collections.abc import Buffer
+from typing import Callable
 from typing import NewType
 
 GlBlendFactor = NewType("GlBlendFactor", int)
@@ -410,7 +412,8 @@ GL_TRIANGLES: GlPrimitive
 GL_TRIANGLE_STRIP: GlPrimitive
 GL_TRIANGLE_FAN: GlPrimitive
 
-def activate_gl_vertex_array(gl_vertex_array: GlVertexArray | None) -> None: ...
+def debug_gl(callback: Callable[[int, int, int, int, str], None], /) -> None: ...
+def activate_gl_vertex_array(gl_vertex_array: GlVertexArray | None, /) -> None: ...
 def set_gl_buffer_target(target: GlBufferTarget, gl_buffer: GlBuffer | None, /) -> None: ...
 def create_gl_buffer() -> GlBuffer: ...
 def create_gl_vertex_array() -> GlVertexArray: ...

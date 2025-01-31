@@ -98,6 +98,48 @@ error:
     return 0;
 }
 
+static void
+debug_callback_(
+    GLenum source,
+    GLenum type,
+    GLuint id,
+    GLenum severity,
+    GLsizei length,
+    const GLchar *message,
+    const void *py_callback
+)
+{
+    PyObject* result = PyObject_CallFunction(
+        (PyObject *)py_callback,
+        "iiIis",
+        source, type, id, severity, message
+    );
+    if (!result)
+    {
+        PyObject *py_err = PyErr_GetRaisedException();
+        PyErr_WriteUnraisable(py_err);
+        Py_DECREF(py_err);
+    }
+    Py_DECREF(result);
+}
+
+static PyObject *
+debug_gl(PyObject *module, PyObject *py_callback)
+{
+    Py_INCREF(py_callback);
+    glEnable(GL_DEBUG_OUTPUT);
+    CHECK_GL_ERROR();
+    glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
+    CHECK_GL_ERROR();
+    glDebugMessageCallback(debug_callback_, py_callback);
+    CHECK_GL_ERROR();
+
+    Py_RETURN_NONE;
+error:
+    Py_DECREF(py_callback);
+    return 0;
+}
+
 static PyObject *
 activate_gl_vertex_array(PyObject *module, PyObject *py_gl_vertex_array)
 {
@@ -572,6 +614,20 @@ clear_framebuffer(PyObject *module, PyObject **args, Py_ssize_t nargs)
             memcpy(state->clear_color, color, sizeof(float) * 3);
         }
         clear_mask |= GL_COLOR_BUFFER_BIT;
+        if (
+            state->color_mask_r != true ||
+            state->color_mask_g != true ||
+            state->color_mask_b != true ||
+            state->color_mask_a != true
+        )
+        {
+            glColorMask(true, true, true, true);
+            CHECK_GL_ERROR();
+            state->color_mask_r = true;
+            state->color_mask_g = true;
+            state->color_mask_b = true;
+            state->color_mask_a = true;
+        }
     }
 
     if (py_depth != Py_None)
@@ -1374,6 +1430,7 @@ set_gl_execution_state(PyObject *module, PyObject **args, Py_ssize_t nargs)
     )
     {
         glColorMask(color_mask_r, color_mask_g, color_mask_b, color_mask_a);
+        CHECK_GL_ERROR();
         state->color_mask_r = color_mask_r;
         state->color_mask_g = color_mask_g;
         state->color_mask_b = color_mask_b;
@@ -1499,6 +1556,7 @@ error:
 
 static PyMethodDef module_PyMethodDef[] = {
     {"reset_module_state", reset_module_state, METH_NOARGS, 0},
+    {"debug_gl", debug_gl, METH_O, 0},
     {"activate_gl_vertex_array", activate_gl_vertex_array, METH_O, 0},
     {"create_gl_buffer", create_gl_buffer, METH_NOARGS, 0},
     {"create_gl_vertex_array", create_gl_vertex_array, METH_NOARGS, 0},
