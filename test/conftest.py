@@ -10,8 +10,10 @@ from egraphics._state import reset_state
 
 # emath
 from emath import FVector3
+from emath import IVector2
 
 # eplatform
+from eplatform import EventLoop
 from eplatform import Platform
 from eplatform import Window
 from eplatform import get_window
@@ -20,6 +22,7 @@ from eplatform import get_window
 import pytest
 
 # python
+import asyncio
 import gc
 from math import isclose
 from pathlib import Path
@@ -36,11 +39,30 @@ def _reset_state():
     gc.collect()
 
 
-@pytest.fixture
-def platform(_reset_state):
+@pytest.fixture(scope="session")
+def platform():
     with Platform(window_cls=TestWindow):
         yield
     gc.collect()
+
+
+@pytest.fixture
+def capture_event():
+    def _(f, e):
+        event = None
+
+        async def test():
+            nonlocal event
+            f()
+            event = await asyncio.wait_for(e, timeout=1)
+
+        loop = EventLoop()
+        asyncio.set_event_loop(loop)
+        loop.run_until_complete(test())
+
+        return event
+
+    return _
 
 
 @pytest.fixture
@@ -84,8 +106,13 @@ def is_kinda_close():
 
 
 @pytest.fixture
-def render_target(window):
-    window.size = (10, 10)
+def render_target(window, capture_event):
+    if window.size != IVector2(10, 10):
+
+        def _():
+            window.resize(IVector2(10, 10))
+
+        capture_event(_, window.resized)
     clear_render_target(window, depth=1, color=FVector3(0))
     return window
 

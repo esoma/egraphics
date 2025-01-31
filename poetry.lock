@@ -130,19 +130,24 @@ files = [
 
 [[package]]
 name = "eplatform"
-version = "0.3.0"
+version = "0.14.1"
 description = "Operating System Library"
 optional = false
 python-versions = "<4.0,>=3.12"
 files = [
-    {file = "eplatform-0.3.0-py3-none-any.whl", hash = "sha256:b7b3fdb7a722b9e0ae0f3990bdceb37c247eaa8b6e6db8528ca9c941bb39a553"},
-    {file = "eplatform-0.3.0.tar.gz", hash = "sha256:1fbd9258a3fcfb7ac360e4094b93fa5fcaac835add52bc6fb55d957256ece0f5"},
+    {file = "eplatform-0.14.1-cp312-cp312-macosx_13_0_x86_64.whl", hash = "sha256:cb248ab5475cf08711a47179730a495c97c476117e4977e6cff0244a62beb0fb"},
+    {file = "eplatform-0.14.1-cp312-cp312-macosx_14_0_arm64.whl", hash = "sha256:721eee19b68d04a6c27b6d2e5bda9ef789c0a3dc636b1cd5f37b3058fbb47d62"},
+    {file = "eplatform-0.14.1-cp312-cp312-manylinux_2_17_x86_64.manylinux_2_5_x86_64.manylinux1_x86_64.manylinux2014_x86_64.whl", hash = "sha256:b92b276101829799e845ccda87bf5679e9dc4ad5fa0932a8db57aefc4a79c68b"},
+    {file = "eplatform-0.14.1-cp312-cp312-musllinux_1_2_x86_64.whl", hash = "sha256:4fe35fb8678e59f6398bbc2c5c84ff5ee7acf971c86f7edbb18ea25d6e19439a"},
+    {file = "eplatform-0.14.1-cp312-cp312-win32.whl", hash = "sha256:9aae3d4d70f9d0c358d708543738a7ddc239193d6371997e93a9c33cfef5ab5b"},
+    {file = "eplatform-0.14.1-cp312-cp312-win_amd64.whl", hash = "sha256:3626a89cc4fd6ca1c0c332d2d7b16cfb6c369771a70a8f9771f5d226fce5a906"},
+    {file = "eplatform-0.14.1.tar.gz", hash = "sha256:2b8888d91eae73c9710b0fd6b420f452120f9f48a609997f6ba24157b3385c20"},
 ]
 
 [package.dependencies]
-eevent = ">=0.1.0,<0.2.0"
-emath = ">=0.1.13,<0.2.0"
-pysdl2 = ">=0.9.16,<0.10.0"
+eevent = ">=0,<1"
+egeometry = ">=0,<1"
+emath = ">=0,<1"
 
 [[package]]
 name = "iniconfig"
@@ -290,35 +295,6 @@ files = [
 ]
 
 [[package]]
-name = "pysdl2"
-version = "0.9.17"
-description = "Python SDL2 bindings"
-optional = false
-python-versions = "*"
-files = [
-    {file = "PySDL2-0.9.17-py3-none-any.whl", hash = "sha256:fe923dbf5c7b27bbc1eb2bf58abfa793f8f13fd7ae8b27b1bc2de49920bcbd41"},
-    {file = "pysdl2-0.9.17.tar.gz", hash = "sha256:48c6ef01a4eb123db5f7e46e1a1b565675755b07e615f3fe20a623c94735b52b"},
-]
-
-[[package]]
-name = "pysdl2-dll"
-version = "2.30.10"
-description = "Pre-built SDL2 binaries for PySDL2"
-optional = false
-python-versions = "*"
-files = [
-    {file = "pysdl2-dll-2.30.10.tar.gz", hash = "sha256:900c8301c6a04d4d3f726aa12f3734f35d42ff827ff873aaaadb4430336ea6c0"},
-    {file = "pysdl2_dll-2.30.10-py2.py3-none-macosx_10_11_universal2.whl", hash = "sha256:1a97b50a7f601d9f0ab007c44bb4324e61aecb288383e3940b065b77d60dbfb1"},
-    {file = "pysdl2_dll-2.30.10-py2.py3-none-macosx_10_11_x86_64.whl", hash = "sha256:0fbf259cf73e51b268bd9e121943e61e17b2e65485117841fcb31f89e91ecb06"},
-    {file = "pysdl2_dll-2.30.10-py2.py3-none-manylinux2014_i686.whl", hash = "sha256:2ba837fb1150218cced4a2b6c95c60b25f5012736df879cba3b77d03315eec9d"},
-    {file = "pysdl2_dll-2.30.10-py2.py3-none-manylinux2014_x86_64.whl", hash = "sha256:5ab505d17272afad29e8965dfdcb3b6551f29a3fc69a3552b730bdf855b33177"},
-    {file = "pysdl2_dll-2.30.10-py2.py3-none-manylinux_2_28_aarch64.whl", hash = "sha256:b406678e6b49732489f2c6dba217404caa1569a8cab13548f55ed8e4ed91df56"},
-    {file = "pysdl2_dll-2.30.10-py2.py3-none-manylinux_2_28_x86_64.whl", hash = "sha256:1020248bc9794780016d60984df7a4ec6ca768754f8c62120f5a1600e4eb2d5a"},
-    {file = "pysdl2_dll-2.30.10-py2.py3-none-win32.whl", hash = "sha256:70a448157d4280465d55f1adb431833108d2f846ceca3bfa07573801c2503bbb"},
-    {file = "pysdl2_dll-2.30.10-py2.py3-none-win_amd64.whl", hash = "sha256:e2e44af09ff5513cf6ec3a3cde945edf752dd83fcc7221fb0531cacb1fa2741b"},
-]
-
-[[package]]
 name = "pytest"
 version = "7.4.3"
 description = "pytest: simple powerful testing with Python"
@@ -359,4 +335,4 @@ testing = ["fields", "hunter", "process-tests", "pytest-xdist", "six", "virtuale
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.12"
-content-hash = "f8dc78ed6c4aea847155db4efdb578ac651fc6c59cb28d8ec1741adfe25e5189"
+content-hash = "77d40784365bc31f1fb1a752a65acc3c38c5baa48571273f153f016518305c3e"

@@ -584,6 +584,12 @@ clear_framebuffer(PyObject *module, PyObject **args, Py_ssize_t nargs)
             CHECK_GL_ERROR();
         }
         clear_mask |= GL_DEPTH_BUFFER_BIT;
+        if (state->depth_mask != GL_TRUE)
+        {
+            glDepthMask(GL_TRUE);
+            CHECK_GL_ERROR();
+            state->depth_mask = GL_TRUE;
+        }
     }
 
     if (clear_mask != 0)

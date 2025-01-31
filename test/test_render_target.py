@@ -82,7 +82,7 @@ def test_set_draw_texture(platform, resource_dir, depth):
     assert glGetIntegerv(GL_VIEWPORT)[3] == render_target.size.y
 
 
-def test_set_draw_window(platform, window):
+def test_set_draw_window(platform, window, capture_event):
     set_draw_render_target(window)
     assert egraphics._render_target._draw_render_target is window
     assert egraphics._render_target._draw_render_target_size == window.size
@@ -101,7 +101,11 @@ def test_set_draw_window(platform, window):
     assert glGetIntegerv(GL_VIEWPORT)[2] == window.size.x
     assert glGetIntegerv(GL_VIEWPORT)[3] == window.size.y
 
-    window.size = IVector2(201, 102)
+    def _():
+        window.resize(IVector2(201, 102))
+
+    capture_event(_, window.resized)
+
     set_draw_render_target(window)
     assert egraphics._render_target._draw_render_target is window
     assert egraphics._render_target._draw_render_target_size == window.size

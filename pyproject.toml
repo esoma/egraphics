@@ -25,8 +25,7 @@ pillow = "^10.4"
 [tool.poetry.group.dev.dependencies]
 pytest = "7.4.3"
 pytest-cov = "4.1.0"
-pysdl2-dll = "^2.30.2"
-eplatform = "^0.3.0"
+eplatform = "^0"
 pyopengl = "^3.1.7"
 
 [build-system]
