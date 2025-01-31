@@ -126,9 +126,13 @@ debug_callback_(
 static PyObject *
 debug_gl(PyObject *module, PyObject *py_callback)
 {
-    Py_INCREF(py_callback);
     glEnable(GL_DEBUG_OUTPUT);
-    CHECK_GL_ERROR();
+    if (glGetError() != GL_NO_ERROR)
+    {
+        Py_RETURN_NONE;
+    }
+
+    Py_INCREF(py_callback);
     glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
     CHECK_GL_ERROR();
     glDebugMessageCallback(debug_callback_, py_callback);
