@@ -2,7 +2,7 @@
 import os
 
 if hasattr(os, "add_dll_directory"):
-    os.add_dll_directory("vendor/SDL")
+    os.add_dll_directory(os.getcwd() + "/vendor/SDL")
 
 # egraphics
 from . import resources
