@@ -98,7 +98,7 @@ error:
     return 0;
 }
 
-static void
+static void GLAPIENTRY
 debug_callback_(
     GLenum source,
     GLenum type,
