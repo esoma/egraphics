@@ -671,7 +671,7 @@ attach_texture_to_gl_read_framebuffer(PyObject *module, PyObject *py_gl_texture)
     GLuint gl_texture = PyLong_AsLong(py_gl_texture);
     CHECK_UNEXPECTED_PYTHON_ERROR();
 
-    glFramebufferTexture(GL_READ_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, gl_texture, 0);
+    glFramebufferTexture2D(GL_READ_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,  GL_TEXTURE_2D, gl_texture, 0);
     CHECK_GL_ERROR();
 
     Py_RETURN_NONE;
