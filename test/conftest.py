@@ -1,4 +1,10 @@
-# doorlord
+# python
+import os
+
+if hasattr(os, "add_dll_directory"):
+    for path in os.environ.get("PATH", "").split(os.pathsep):
+        os.add_dll_directory(path)
+
 # egraphics
 from . import resources
 
