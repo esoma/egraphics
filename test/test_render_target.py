@@ -141,7 +141,12 @@ def test_set_read_texture(platform, resource_dir, depth):
     assert glGetIntegerv(GL_READ_FRAMEBUFFER_BINDING) == render_target._gl_framebuffer
 
 
-def test_clear_window(window, is_kinda_close):
+def test_clear_window(window, is_kinda_close, capture_event):
+    def _():
+        window.resize(IVector2(10, 10))
+
+    capture_event(_, window.resized)
+
     rect = IRectangle(IVector2(0, 0), window.size)
 
     clear_render_target(window, color=FVector3(0.3, 0.5, 0.7), depth=1)
