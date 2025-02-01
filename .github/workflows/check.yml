@@ -36,17 +36,18 @@ jobs:
       with:
         version: 1.8.5
 
+    - name: Install ninja
+      uses: seanmiddleditch/gha-setup-ninja@v5
+
+    - name: Setup MSVC
+      if: runner.os == 'Windows'
+      uses: ilammy/msvc-dev-cmd@v1
+      with:
+        arch: ${{ matrix.arch }}
+
     - name: Initialize Submodules
       run: |
         git submodule update --init --recursive
-
-    - uses: libsdl-org/setup-sdl@try-node16
-      id: sdl
-      with:
-        install-linux-dependencies: true
-        version: 3-latest
-        add-to-environment: true
-        token: ${{ secrets.GITHUB_TOKEN }}
 
     - name: Prepare Linux Environment
       if: runner.os == 'Linux'
@@ -58,6 +59,12 @@ jobs:
       if: runner.os == 'Windows'
       uses: ssciwr/setup-mesa-dist-win@v2
 
+    - name: Build SDL
+      working-directory: vendor/SDL
+      run: |
+        cmake . -GNinja -DCMAKE_BUILD_TYPE=Release -DSDL_TESTS=0 -DSDL_TESTS_LIBRARY=0
+        cmake --build . --config Release
+
     - name: Install
       run: |
         poetry install
@@ -67,6 +74,7 @@ jobs:
     - name: Test
       if: runner.os != 'Linux'
       run: |
+        export DYLD_LIBRARY_PATH=$PWD/vendor/SDL:$DYLD_LIBRARY_PATH
         poetry run pytest --cov=egraphics --cov-report=xml -vvx
       env:
         LIBGL_ALWAYS_SOFTWARE: "true"
@@ -74,6 +82,7 @@ jobs:
     - name: Test with Xvfb
       if: runner.os == 'Linux'
       run: |
+        export LD_LIBRARY_PATH=$PWD/vendor/SDL:$LD_LIBRARY_PATH
         xvfb-run -a poetry run pytest --cov=egraphics --cov-report=xml -vvx
       env:
         LIBGL_ALWAYS_SOFTWARE: "true"

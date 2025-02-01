@@ -2,11 +2,7 @@
 import os
 
 if hasattr(os, "add_dll_directory"):
-    for path in os.environ.get("PATH", "").split(os.pathsep):
-        try:
-            os.add_dll_directory(path)
-        except FileNotFoundError:
-            pass
+    os.add_dll_directory("vendor/SDL")
 
 # egraphics
 from . import resources
