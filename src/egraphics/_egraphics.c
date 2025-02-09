@@ -58,7 +58,8 @@ typedef struct ModuleState
     float blend_color[4];
     bool cull_face_enabled;
     GLenum cull_face;
-
+    bool scissor_enabled;
+    int scissor[4];
 } ModuleState;
 
 static PyObject *
@@ -91,6 +92,11 @@ reset_module_state(PyObject *module, PyObject *unused)
     state->blend_color[3] = 3;
     state->cull_face_enabled = false;
     state->cull_face = GL_BACK;
+    state->scissor_enabled = false;
+    state->scissor[0] = -1;
+    state->scissor[1] = -1;
+    state->scissor[2] = -1;
+    state->scissor[3] = -1;
 
     state->texture_filter_anisotropic_supported = GLEW_EXT_texture_filter_anisotropic;
     Py_RETURN_NONE;
@@ -1354,7 +1360,7 @@ set_gl_execution_state(PyObject *module, PyObject **args, Py_ssize_t nargs)
     PyObject *ex = 0;
     struct EMathApi *emath_api = 0;
 
-    CHECK_UNEXPECTED_ARG_COUNT_ERROR(13);
+    CHECK_UNEXPECTED_ARG_COUNT_ERROR(15);
 
     bool depth_write = (args[0] == Py_True);
 
@@ -1392,6 +1398,9 @@ set_gl_execution_state(PyObject *module, PyObject **args, Py_ssize_t nargs)
     PyObject *py_blend_color = args[11];
 
     PyObject *py_cull_face = args[12];
+
+    PyObject *py_scissor_position = args[13];
+    PyObject *py_scissor_size = args[14];
 
     ModuleState *state = (ModuleState *)PyModule_GetState(module);
     CHECK_UNEXPECTED_PYTHON_ERROR();
@@ -1535,6 +1544,51 @@ set_gl_execution_state(PyObject *module, PyObject **args, Py_ssize_t nargs)
             glCullFace(cull_face);
             CHECK_GL_ERROR();
             state->cull_face = cull_face;
+        }
+    }
+
+    if (py_scissor_position == Py_None || py_scissor_size == Py_None)
+    {
+        if (state->scissor_enabled)
+        {
+            glDisable(GL_SCISSOR_TEST);
+            CHECK_GL_ERROR();
+            state->scissor_enabled = false;
+        }
+    }
+    else
+    {
+        if (!state->scissor_enabled)
+        {
+            glEnable(GL_SCISSOR_TEST);
+            CHECK_GL_ERROR();
+            state->scissor_enabled = true;
+        }
+
+        if (!emath_api)
+        {
+            emath_api = EMathApi_Get();
+            CHECK_UNEXPECTED_PYTHON_ERROR();
+        }
+
+        const int* scissor_position = emath_api->IVector2_GetValuePointer(py_scissor_position);
+        CHECK_UNEXPECTED_PYTHON_ERROR();
+        const int* scissor_size = emath_api->IVector2_GetValuePointer(py_scissor_size);
+        CHECK_UNEXPECTED_PYTHON_ERROR();
+
+        if (
+            scissor_position[0] != state->scissor[0] ||
+            scissor_position[1] != state->scissor[1] ||
+            scissor_size[0] != state->scissor[2] ||
+            scissor_size[1] != state->scissor[3]
+        )
+        {
+            glScissor(scissor_position[0], scissor_position[1], scissor_size[0], scissor_size[1]);
+            CHECK_GL_ERROR();
+            state->scissor[0] = scissor_position[0];
+            state->scissor[1] = scissor_position[1];
+            state->scissor[2] = scissor_size[2];
+            state->scissor[3] = scissor_size[3];
         }
     }
 

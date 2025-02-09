@@ -176,10 +176,14 @@ from ._state import register_reset_state_callback
 from ._texture import Texture
 from ._texture import bind_texture_unit
 
+# egeometry
+from egeometry import IBoundingBox2d
+
 # emath
 import emath
 from emath import FVector4
 from emath import I32Array
+from emath import IVector2
 
 # python
 from collections.abc import Buffer
@@ -406,6 +410,7 @@ class Shader:
         depth_write: bool = False,
         face_cull: FaceCull = FaceCull.NONE,
         instances: int = 1,
+        scissor: IBoundingBox2d | None = None,
     ) -> None:
         for uniform_name in uniforms:
             try:
@@ -437,6 +442,12 @@ class Shader:
             blend_function.value,
             blend_color,
             face_cull.value,
+            None
+            if scissor is None
+            else IVector2(
+                scissor.position.x, render_target.size.y - scissor.position.y - scissor.size.y
+            ),
+            None if scissor is None else scissor.size,
         )
 
         set_draw_render_target(render_target)

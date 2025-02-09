@@ -227,6 +227,7 @@ from egeometry import IRectangle
 
 # emath
 from emath import FArray
+from emath import FVector2
 from emath import FVector3
 from emath import FVector4
 from emath import FVector4Array
@@ -556,6 +557,8 @@ def set_gl_execution_state(
     blend_function: GlBlendFunction,
     blend_color: FVector4 | None,
     cull_face: GlCull | None,
+    scissor_position: IVector2 | None,
+    scissor_size: IVector2 | None,
     /,
 ) -> None: ...
 def get_gl_version() -> str: ...
