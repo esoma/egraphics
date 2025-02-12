@@ -658,6 +658,13 @@ clear_framebuffer(PyObject *module, PyObject **args, Py_ssize_t nargs)
         }
     }
 
+    if (state->scissor_enabled)
+    {
+        glDisable(GL_SCISSOR_TEST);
+        CHECK_GL_ERROR();
+        state->scissor_enabled = false;
+    }
+
     if (clear_mask != 0)
     {
         glClear(clear_mask);
