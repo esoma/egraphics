@@ -51,7 +51,7 @@ def test_reset_state():
 def test_texture_render_target(platform, resource_dir, depth):
     with open(resource_dir / "gamut.gif", "rb") as f:
         colors = Image(f).to_texture()
-    render_target = TextureRenderTarget(colors, depth=depth)
+    render_target = TextureRenderTarget([colors], depth=depth)
     assert render_target.size == IVector2(*colors.size)
     set_read_render_target(render_target)
     assert glCheckFramebufferStatus(GL_READ_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE
@@ -61,7 +61,7 @@ def test_texture_render_target(platform, resource_dir, depth):
 def test_set_draw_texture(platform, resource_dir, depth):
     with open(resource_dir / "gamut.gif", "rb") as f:
         colors = Image(f).to_texture()
-    render_target = TextureRenderTarget(colors, depth=depth)
+    render_target = TextureRenderTarget([colors], depth=depth)
 
     set_draw_render_target(render_target)
     assert egraphics._render_target._draw_render_target is render_target
@@ -130,7 +130,7 @@ def test_set_read_window(platform, window):
 def test_set_read_texture(platform, resource_dir, depth):
     with open(resource_dir / "gamut.gif", "rb") as f:
         colors = Image(f).to_texture()
-    render_target = TextureRenderTarget(colors, depth=depth)
+    render_target = TextureRenderTarget([colors], depth=depth)
 
     set_read_render_target(render_target)
     assert egraphics._render_target._read_render_target is render_target
@@ -174,8 +174,10 @@ def test_clear_window(window, is_kinda_close, capture_event):
 @pytest.mark.parametrize("depth", [False, True])
 def test_clear_render_target(platform, is_kinda_close, resource_dir, depth):
     with open(resource_dir / "gamut.gif", "rb") as f:
-        colors = Image(f).to_texture()
-    render_target = TextureRenderTarget(colors, depth=depth)
+        colors_1 = Image(f).to_texture()
+    with open(resource_dir / "gamut.gif", "rb") as f:
+        colors_2 = Image(f).to_texture()
+    render_target = TextureRenderTarget([colors_1, colors_2], depth=depth)
 
     rect = IRectangle(IVector2(0, 0), render_target.size)
 
@@ -183,6 +185,10 @@ def test_clear_render_target(platform, is_kinda_close, resource_dir, depth):
     assert all(
         is_kinda_close(p.rgb, FVector3(0.3, 0.5, 0.7))
         for p in read_color_from_render_target(render_target, rect)
+    )
+    assert all(
+        is_kinda_close(p.rgb, FVector3(0.3, 0.5, 0.7))
+        for p in read_color_from_render_target(render_target, rect, index=1)
     )
     if depth:
         assert all(
@@ -194,6 +200,10 @@ def test_clear_render_target(platform, is_kinda_close, resource_dir, depth):
         is_kinda_close(p.rgb, FVector3(0.2, 0.4, 0.6))
         for p in read_color_from_render_target(render_target, rect)
     )
+    assert all(
+        is_kinda_close(p.rgb, FVector3(0.2, 0.4, 0.6))
+        for p in read_color_from_render_target(render_target, rect, index=1)
+    )
     if depth:
         assert all(
             is_kinda_close(p, 1) for p in read_depth_from_render_target(render_target, rect)
@@ -203,6 +213,10 @@ def test_clear_render_target(platform, is_kinda_close, resource_dir, depth):
     assert all(
         is_kinda_close(p.rgb, FVector3(0.2, 0.4, 0.6))
         for p in read_color_from_render_target(render_target, rect)
+    )
+    assert all(
+        is_kinda_close(p.rgb, FVector3(0.2, 0.4, 0.6))
+        for p in read_color_from_render_target(render_target, rect, index=1)
     )
     if depth:
         assert all(

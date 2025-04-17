@@ -25,9 +25,10 @@ from ._egraphics import read_color_from_framebuffer
 from ._egraphics import read_depth_from_framebuffer
 from ._egraphics import set_draw_framebuffer
 from ._egraphics import set_read_framebuffer
+from ._egraphics import set_texture_locations_on_gl_draw_framebuffer
 from ._state import register_reset_state_callback
-from ._texture import Texture
 from ._texture import get_gl_texture
+from ._texture_2d import Texture2d
 
 # egeometry
 from egeometry import IRectangle
@@ -42,6 +43,7 @@ from emath import IVector2
 import sys
 from typing import Any
 from typing import Protocol
+from typing import Sequence
 
 
 class RenderTarget(Protocol):
@@ -59,17 +61,35 @@ class TextureRenderTarget:
     _gl_renderbuffers: set[GlRenderbuffer]
     _size: IVector2
 
-    def __init__(self, colors: Texture, *, depth: bool = False):
+    def __init__(self, textures: Sequence[Texture2d | None], *, depth: bool = False):
+        self._textures = tuple(textures)
+        sizes = {t.size for t in self._textures if t is not None}
+        if len(sizes) > 1:
+            raise ValueError("all textures must be the same size")
+        if len(sizes) == 0:
+            raise ValueError("at least one texture must be supplied")
+        size = list(sizes)[0]
+
         self._gl_renderbuffers = set()
-        self._size = IVector2(*colors.size)
+        self._size = IVector2(*size)
         self.__gl_framebuffer = create_gl_framebuffer()
+
         set_read_render_target(self)
-        self._colors = colors
-        attach_texture_to_gl_read_framebuffer(get_gl_texture(colors))
+
+        for i, texture in enumerate(self._textures):
+            if texture is None:
+                continue
+            attach_texture_to_gl_read_framebuffer(get_gl_texture(texture), i)
+
         if depth:
             self._gl_renderbuffers.add(
                 attach_depth_renderbuffer_to_gl_read_framebuffer(self._size)
             )
+
+        set_draw_render_target(self)
+        set_texture_locations_on_gl_draw_framebuffer(
+            [None if texture is None else i for i, texture in enumerate(self._textures)]
+        )
 
     def __del__(self) -> None:
         if self.__gl_framebuffer is not None:
@@ -134,9 +154,11 @@ def set_read_render_target(render_target: RenderTarget) -> None:
     _read_render_target = render_target
 
 
-def read_color_from_render_target(render_target: RenderTarget, rect: IRectangle) -> FVector4Array:
+def read_color_from_render_target(
+    render_target: RenderTarget, rect: IRectangle, index: int = 0
+) -> FVector4Array:
     set_read_render_target(render_target)
-    return read_color_from_framebuffer(rect)
+    return read_color_from_framebuffer(rect, index)
 
 
 def read_depth_from_render_target(render_target: RenderTarget, rect: IRectangle) -> FArray:

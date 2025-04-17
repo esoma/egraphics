@@ -129,12 +129,14 @@ def render_target(platform, capture_event, request):
         clear_render_target(render_target, depth=1, color=FVector3(0))
     else:
         render_target = TextureRenderTarget(
-            Texture2d(
-                UVector2(10),
-                TextureComponents.RGBA,
-                c_uint8,
-                b"\x00" * (10 * 10 * 4),
-            ),
+            [
+                Texture2d(
+                    UVector2(10),
+                    TextureComponents.RGBA,
+                    c_uint8,
+                    b"\x00" * (10 * 10 * 4),
+                )
+            ],
             depth=True,
         )
     return render_target

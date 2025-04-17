@@ -505,15 +505,22 @@ error:
 }
 
 static PyObject *
-read_color_from_framebuffer(PyObject *module, PyObject *rect)
+read_color_from_framebuffer(PyObject *module, PyObject **args, Py_ssize_t nargs)
 {
+    GLint original_texture_0_name = -1;
     PyObject *ex = 0;
     struct EMathApi *emath_api = 0;
 
-    PyObject *py_position = PyObject_GetAttrString(rect, "position");
+    CHECK_UNEXPECTED_ARG_COUNT_ERROR(2);
+
+    PyObject *py_rect = args[0];
+    long index = PyLong_AsLong(args[1]);
     CHECK_UNEXPECTED_PYTHON_ERROR();
 
-    PyObject *py_size = PyObject_GetAttrString(rect, "size");
+    PyObject *py_position = PyObject_GetAttrString(py_rect, "position");
+    CHECK_UNEXPECTED_PYTHON_ERROR();
+
+    PyObject *py_size = PyObject_GetAttrString(py_rect, "size");
     CHECK_UNEXPECTED_PYTHON_ERROR();
 
     emath_api = EMathApi_Get();
@@ -533,8 +540,48 @@ read_color_from_framebuffer(PyObject *module, PyObject *rect)
         goto error;
     }
 
+    GLint texture_name;
+    if (index != 0)
+    {
+        glGetFramebufferAttachmentParameteriv(
+            GL_READ_FRAMEBUFFER,
+            GL_COLOR_ATTACHMENT0,
+            GL_FRAMEBUFFER_ATTACHMENT_OBJECT_NAME,
+            &original_texture_0_name
+        );
+        CHECK_GL_ERROR();
+        glGetFramebufferAttachmentParameteriv(
+            GL_READ_FRAMEBUFFER,
+            GL_COLOR_ATTACHMENT0 + index,
+            GL_FRAMEBUFFER_ATTACHMENT_OBJECT_NAME,
+            &texture_name
+        );
+        CHECK_GL_ERROR();
+        glFramebufferTexture2D(
+            GL_READ_FRAMEBUFFER,
+            GL_COLOR_ATTACHMENT0,
+            GL_TEXTURE_2D,
+            texture_name,
+            0
+        );
+        CHECK_GL_ERROR();
+    }
+
     glReadPixels(position[0], position[1], size[0], size[1], GL_RGBA, GL_FLOAT, data);
     CHECK_GL_ERROR();
+
+    if (index != 0)
+    {
+        glFramebufferTexture2D(
+            GL_READ_FRAMEBUFFER,
+            GL_COLOR_ATTACHMENT0,
+            GL_TEXTURE_2D,
+            original_texture_0_name,
+            0
+        );
+        CHECK_GL_ERROR();
+        original_texture_0_name = -1;
+    }
 
     PyObject *array = emath_api->FVector4Array_Create(count, data);
     free(data);
@@ -543,6 +590,16 @@ read_color_from_framebuffer(PyObject *module, PyObject *rect)
 error:
     ex = PyErr_GetRaisedException();
     if (emath_api){ EMathApi_Release(); }
+    if (original_texture_0_name != -1)
+    {
+        glFramebufferTexture2D(
+            GL_READ_FRAMEBUFFER,
+            GL_COLOR_ATTACHMENT0,
+            GL_TEXTURE_2D,
+            original_texture_0_name,
+            0
+        );
+    }
     PyErr_SetRaisedException(ex);
     return 0;
 }
@@ -600,6 +657,7 @@ clear_framebuffer(PyObject *module, PyObject **args, Py_ssize_t nargs)
 
     PyObject *py_color = args[0];
     PyObject *py_depth = args[1];
+    CHECK_UNEXPECTED_PYTHON_ERROR();
 
     GLbitfield clear_mask = 0;
 
@@ -679,12 +737,17 @@ error:
 }
 
 static PyObject *
-attach_texture_to_gl_read_framebuffer(PyObject *module, PyObject *py_gl_texture)
+attach_texture_to_gl_read_framebuffer(PyObject *module, PyObject **args, Py_ssize_t nargs)
 {
-    GLuint gl_texture = PyLong_AsLong(py_gl_texture);
+    CHECK_UNEXPECTED_ARG_COUNT_ERROR(2);
+
+    GLuint gl_texture = PyLong_AsLong(args[0]);
     CHECK_UNEXPECTED_PYTHON_ERROR();
 
-    glFramebufferTexture2D(GL_READ_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,  GL_TEXTURE_2D, gl_texture, 0);
+    long index = PyLong_AsLong(args[1]);
+    CHECK_UNEXPECTED_PYTHON_ERROR();
+
+    glFramebufferTexture2D(GL_READ_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + index, GL_TEXTURE_2D, gl_texture, 0);
     CHECK_GL_ERROR();
 
     Py_RETURN_NONE;
@@ -734,6 +797,37 @@ error:
     ex = PyErr_GetRaisedException();
     if (emath_api){ EMathApi_Release(); }
     PyErr_SetRaisedException(ex);
+    return 0;
+}
+
+static PyObject *
+set_texture_locations_on_gl_draw_framebuffer(PyObject *module, PyObject *py_texture_indices)
+{
+    Py_ssize_t n_indices = PyList_GET_SIZE(py_texture_indices);
+
+    GLenum *gl_buffers = malloc(sizeof(GLenum) * n_indices);
+
+    for (Py_ssize_t i = 0; i < n_indices; i++)
+    {
+        PyObject *index = PyList_GET_ITEM(py_texture_indices, i);
+        if (index == Py_None)
+        {
+            gl_buffers[i] = GL_NONE;
+        }
+        else
+        {
+            gl_buffers[i] = GL_COLOR_ATTACHMENT0 + i;
+        }
+    }
+
+    glDrawBuffers(n_indices, gl_buffers);
+    free(gl_buffers);
+    gl_buffers = 0;
+    CHECK_GL_ERROR();
+
+    Py_RETURN_NONE;
+error:
+    if (gl_buffers != 0){ free(gl_buffers); }
     return 0;
 }
 
@@ -1642,11 +1736,12 @@ static PyMethodDef module_PyMethodDef[] = {
     {"configure_gl_vertex_array_location", (PyCFunction)configure_gl_vertex_array_location, METH_FASTCALL, 0},
     {"set_draw_framebuffer", (PyCFunction)set_draw_framebuffer, METH_FASTCALL, 0},
     {"set_read_framebuffer", set_read_framebuffer, METH_O, 0},
-    {"read_color_from_framebuffer", read_color_from_framebuffer, METH_O, 0},
+    {"read_color_from_framebuffer", (PyCFunction)read_color_from_framebuffer, METH_FASTCALL, 0},
     {"read_depth_from_framebuffer", read_depth_from_framebuffer, METH_O, 0},
     {"clear_framebuffer", (PyCFunction)clear_framebuffer, METH_FASTCALL, 0},
-    {"attach_texture_to_gl_read_framebuffer", attach_texture_to_gl_read_framebuffer, METH_O, 0},
+    {"attach_texture_to_gl_read_framebuffer", attach_texture_to_gl_read_framebuffer, METH_FASTCALL, 0},
     {"attach_depth_renderbuffer_to_gl_read_framebuffer", attach_depth_renderbuffer_to_gl_read_framebuffer, METH_O, 0},
+    {"set_texture_locations_on_gl_draw_framebuffer", (PyCFunction)set_texture_locations_on_gl_draw_framebuffer, METH_O, 0},
     {"set_active_gl_texture_unit", set_active_gl_texture_unit, METH_O, 0},
     {"set_gl_texture_target", (PyCFunction)set_gl_texture_target, METH_FASTCALL, 0},
     {"set_gl_texture_target_2d_data", (PyCFunction)set_gl_texture_target_2d_data, METH_FASTCALL, 0},
