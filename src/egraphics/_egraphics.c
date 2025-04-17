@@ -1298,7 +1298,7 @@ SET_ACTIVE_GL_PROGRAM_UNIFORM(unsigned_int_4, GLuint, 4ui);
 static PyObject *
 execute_gl_program_index_buffer(PyObject *module, PyObject **args, Py_ssize_t nargs)
 {
-    CHECK_UNEXPECTED_ARG_COUNT_ERROR(4);
+    CHECK_UNEXPECTED_ARG_COUNT_ERROR(5);
 
     GLenum mode = PyLong_AsLong(args[0]);
     CHECK_UNEXPECTED_PYTHON_ERROR();
@@ -1306,20 +1306,23 @@ execute_gl_program_index_buffer(PyObject *module, PyObject **args, Py_ssize_t na
     GLsizei count = PyLong_AsSize_t(args[1]);
     CHECK_UNEXPECTED_PYTHON_ERROR();
 
-    GLenum type = PyLong_AsLong(args[2]);
+    GLsizei offset = PyLong_AsSize_t(args[2]);
     CHECK_UNEXPECTED_PYTHON_ERROR();
 
-    GLsizei instances = PyLong_AsSize_t(args[3]);
+    GLenum type = PyLong_AsLong(args[3]);
+    CHECK_UNEXPECTED_PYTHON_ERROR();
+
+    GLsizei instances = PyLong_AsSize_t(args[4]);
     CHECK_UNEXPECTED_PYTHON_ERROR();
 
     if (instances > 1)
     {
-        glDrawElementsInstanced(mode, count, type, 0, instances);
+        glDrawElementsInstanced(mode, count, type, (void *)offset, instances);
         CHECK_GL_ERROR();
     }
     else
     {
-        glDrawElements(mode, count, type, 0);
+        glDrawElements(mode, count, type, (void *)offset);
         CHECK_GL_ERROR();
     }
 

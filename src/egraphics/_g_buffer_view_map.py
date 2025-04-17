@@ -55,10 +55,6 @@ class GBufferViewMap:
                     "view buffer with a stride different from its type cannot be used "
                     "for indexing"
                 )
-            if indices.offset != 0:
-                raise ValueError(
-                    "view buffer with an offset other than 0 cannot be used for " "indexing"
-                )
             if indices.instancing_divisor is not None:
                 raise ValueError("view buffer with instancing_divisor cannot be used for indexing")
             if indices.data_type not in _INDEX_BUFFER_TYPES:

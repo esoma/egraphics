@@ -1,4 +1,5 @@
 # egraphics
+from egraphics import GBuffer
 from egraphics import GBufferView
 from egraphics import GBufferViewMap
 from egraphics import PrimitiveMode
@@ -23,6 +24,7 @@ from emath import U32Array
 import pytest
 
 # python
+import ctypes
 from pathlib import Path
 
 DIR = Path(__file__).parent
@@ -171,12 +173,18 @@ def test_missing_attribute(render_target):
         FVector4(0, 0, 1, 1),
     ],
 )
-@pytest.mark.parametrize("index_array_type", [None, U8Array, U16Array, U32Array])
+@pytest.mark.parametrize(
+    "index_array_type", [None, U8Array, U16Array, U32Array, "length", "offset"]
+)
 def test_basic(render_target, primitive_mode, color, index_array_type):
     clear_render_target(render_target, color=FVector3(0, 0, 0), depth=True)
 
     if index_array_type is None:
         indices = (0, 4)
+    elif index_array_type == "length":
+        indices = GBufferView(GBuffer(U8Array(0, 1, 2, 3, 4)), ctypes.c_uint8, length=4)
+    elif index_array_type == "offset":
+        indices = GBufferView(GBuffer(U8Array(4, 0, 1, 2, 3)), ctypes.c_uint8, offset=1)
     else:
         indices = GBufferView.from_array(
             index_array_type(
@@ -191,18 +199,25 @@ def test_basic(render_target, primitive_mode, color, index_array_type):
         vertex=b"""
         #version 140
         in vec2 xy;
+        out vec4 color_mult;
         void main()
         {
+            color_mult = vec4(1);
+            if (gl_VertexID == 4)
+            {
+                color_mult = vec4(.5);
+            }
             gl_Position = vec4(xy, 0, 1.0);
         }
         """,
         fragment=b"""
         #version 140
         uniform vec4 color;
+        in vec4 color_mult;
         out vec4 FragColor;
         void main()
         {
-            FragColor = color;
+            FragColor = color * color_mult;
         }
         """,
     )
@@ -217,6 +232,7 @@ def test_basic(render_target, primitive_mode, color, index_array_type):
                         FVector2(-0.9, 0.9),
                         FVector2(0.9, 0.9),
                         FVector2(0.9, -0.9),
+                        FVector2(1, 1),
                     )
                 )
             },
@@ -228,4 +244,7 @@ def test_basic(render_target, primitive_mode, color, index_array_type):
     colors = read_color_from_render_target(
         render_target, IRectangle(IVector2(0, 0), render_target.size)
     )
+
     assert color in colors
+    assert FVector4(0, 0, 0, 1) in colors
+    assert len(set(colors)) == 2

@@ -465,6 +465,7 @@ class Shader:
                 execute_gl_program_index_buffer(
                     primitive_mode.value,
                     len(buffer_view_map.indices),
+                    buffer_view_map.indices.offset,
                     index_gl_type,
                     instances,
                 )
