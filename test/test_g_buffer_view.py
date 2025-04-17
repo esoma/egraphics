@@ -85,6 +85,7 @@ def test_init_defaults(platform, data_type):
     assert view.g_buffer is buffer
     assert view.data_type is data_type
     assert view.stride == _get_size_of_bvt(data_type)
+    assert view.length == len(buffer)
     assert view.offset == 0
     assert view.instancing_divisor is None
     assert len(view) == 0
@@ -156,6 +157,7 @@ def test_from_array(
     assert bytes(view.g_buffer) == bytes(array)
     assert view.data_type is data_type
     assert view.stride == _get_size_of_bvt(data_type)
+    assert view.length == len(view.g_buffer)
     assert view.offset == 0
     assert view.instancing_divisor == instancing_divisor
     assert list(view) == list(array)
@@ -169,36 +171,54 @@ def test_empty_buffer(platform, data_type) -> None:
 
 
 @pytest.mark.parametrize("stride", [-100, -1, 0])
-def test_non_positive_stride(platform, stride: int) -> None:
+def test_non_positive_stride(platform, stride) -> None:
     with pytest.raises(ValueError) as excinfo:
         GBufferView(GBuffer(), ctypes.c_float, stride=stride)
     assert str(excinfo.value) == "stride must be greater than 0"
 
 
 @pytest.mark.parametrize("offset", [-100, -1])
-def test_negative_offset(platform, offset: int) -> None:
+def test_negative_offset(platform, offset) -> None:
     with pytest.raises(ValueError) as excinfo:
         GBufferView(GBuffer(), ctypes.c_float, offset=offset)
     assert str(excinfo.value) == "offset must be 0 or greater"
 
 
+@pytest.mark.parametrize("length", [-100, -1])
+def test_negative_length(platform, length) -> None:
+    with pytest.raises(ValueError) as excinfo:
+        GBufferView(GBuffer(), ctypes.c_float, length=length)
+    assert str(excinfo.value) == "length must be 0 or greater"
+
+
+@pytest.mark.parametrize("length, offset", [(0, 1), (1, 0)])
+def test_length_offset_overflow(platform, length, offset) -> None:
+    with pytest.raises(ValueError) as excinfo:
+        GBufferView(GBuffer(), ctypes.c_float, length=length, offset=offset)
+    assert str(excinfo.value) == "length/offset goes beyond buffer size"
+
+
 @pytest.mark.parametrize("instancing_divisor", [-100, -1, 0])
-def test_non_positive_instancing_divisor(platform, instancing_divisor: int) -> None:
+def test_non_positive_instancing_divisor(platform, instancing_divisor) -> None:
     with pytest.raises(ValueError) as excinfo:
         GBufferView(GBuffer(), ctypes.c_float, instancing_divisor=instancing_divisor)
     assert str(excinfo.value) == "instancing divisor must be greater than 0"
 
 
 @pytest.mark.parametrize("data_type", VIEW_DATA_TYPES)
-@pytest.mark.parametrize("add_stride", [None, 1, 2, 4])
+@pytest.mark.parametrize("add_stride", [0, 1, 2, 4])
+@pytest.mark.parametrize("item_length", [None, 4])
 @pytest.mark.parametrize("offset", [0, 1, 2, 4])
 @pytest.mark.parametrize("instancing_divisor", [None, 1, 2])
-def test_read(platform, data_type, add_stride, offset, instancing_divisor):
-    data = bytes(range(200))
-    stride = _get_size_of_bvt(data_type)
-    if add_stride is not None:
-        stride += add_stride
-    expected_length = (len(data) - offset) // stride
+def test_read(platform, data_type, add_stride, item_length, offset, instancing_divisor):
+    data = bytes(range(255)) * 10
+    stride = _get_size_of_bvt(data_type) + add_stride
+    if item_length is None:
+        length = None
+        expected_length = (len(data) - offset + add_stride) // stride
+    else:
+        length = item_length
+        expected_length = (length + add_stride) // stride
     expected_python_data = []
     for i in range(expected_length):
         data_start = offset + (stride * i)
@@ -212,6 +232,7 @@ def test_read(platform, data_type, add_stride, offset, instancing_divisor):
     view = GBufferView(
         GBuffer(data),
         data_type,
+        length=length,
         stride=stride,
         offset=offset,
         instancing_divisor=instancing_divisor,

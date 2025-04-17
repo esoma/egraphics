@@ -158,6 +158,7 @@ class GBufferView(Generic[_BVT]):
         g_buffer: GBuffer,
         data_type: type[_BVT],
         *,
+        length: int | None = None,
         stride: int | None = None,
         offset: int = 0,
         instancing_divisor: int | None = None,
@@ -175,13 +176,23 @@ class GBufferView(Generic[_BVT]):
             raise ValueError("offset must be 0 or greater")
         self._offset = offset
 
+        if length is None:
+            length = len(g_buffer) - self._offset
+        if length < 0:
+            raise ValueError("length must be 0 or greater")
+        self._length = length
+
+        if self._offset + length > len(g_buffer):
+            raise ValueError("length/offset goes beyond buffer size")
+
         if instancing_divisor is not None:
             if instancing_divisor < 1:
                 raise ValueError("instancing divisor must be greater than 0")
         self._instancing_divisor = instancing_divisor
 
     def __len__(self) -> int:
-        return (len(self._g_buffer) - self._offset) // self._stride
+        stride_diff = self._stride - _get_size_of_bvt(self._data_type)
+        return (self._length + stride_diff) // self._stride
 
     def __iter__(self) -> Generator[_BVT, None, None]:
         if len(self._g_buffer) == 0:
@@ -209,6 +220,10 @@ class GBufferView(Generic[_BVT]):
     @property
     def data_type_size(self) -> int:
         return _get_size_of_bvt(self._data_type)
+
+    @property
+    def length(self) -> int:
+        return self._length
 
     @property
     def stride(self) -> int:
