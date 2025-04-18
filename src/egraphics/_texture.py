@@ -16,6 +16,7 @@ __all__ = [
 from ._egraphics import GL_BYTE
 from ._egraphics import GL_CLAMP_TO_BORDER
 from ._egraphics import GL_CLAMP_TO_EDGE
+from ._egraphics import GL_DEPTH_COMPONENT
 from ._egraphics import GL_FLOAT
 from ._egraphics import GL_INT
 from ._egraphics import GL_LINEAR
@@ -146,6 +147,7 @@ class TextureComponents(Enum):
     RG = GL_RG
     RGB = GL_RGB
     RGBA = GL_RGBA
+    D = GL_DEPTH_COMPONENT
 
 
 class TextureWrap(Enum):
@@ -191,6 +193,7 @@ _TEXTURE_COMPONENTS_COUNT: Final[Mapping[TextureComponents, int]] = {
     TextureComponents.RG: 2,
     TextureComponents.RGB: 3,
     TextureComponents.RGBA: 4,
+    TextureComponents.D: 1,
 }
 
 

@@ -40,6 +40,7 @@ TEXTURE_COMPONENTS_COUNT = {
     TextureComponents.RG: 2,
     TextureComponents.RGB: 3,
     TextureComponents.RGBA: 4,
+    TextureComponents.D: 1,
 }
 
 

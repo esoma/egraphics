@@ -33,6 +33,7 @@ __all__ = [
     "GL_RG",
     "GL_RGB",
     "GL_RGBA",
+    "GL_DEPTH_COMPONENT",
     "GL_CLAMP_TO_EDGE",
     "GL_CLAMP_TO_BORDER",
     "GL_REPEAT",
@@ -355,6 +356,7 @@ GL_RED: GlTextureComponents
 GL_RG: GlTextureComponents
 GL_RGB: GlTextureComponents
 GL_RGBA: GlTextureComponents
+GL_DEPTH_COMPONENT: GlTextureComponents
 
 GL_CLAMP_TO_EDGE: GlTextureWrap
 GL_CLAMP_TO_BORDER: GlTextureWrap
