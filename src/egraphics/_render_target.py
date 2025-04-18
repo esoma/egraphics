@@ -15,8 +15,9 @@ __all__ = [
 # egraphics
 from ._egraphics import GlFramebuffer
 from ._egraphics import GlRenderbuffer
+from ._egraphics import attach_color_texture_to_gl_read_framebuffer
 from ._egraphics import attach_depth_renderbuffer_to_gl_read_framebuffer
-from ._egraphics import attach_texture_to_gl_read_framebuffer
+from ._egraphics import attach_depth_texture_to_gl_read_framebuffer
 from ._egraphics import clear_framebuffer
 from ._egraphics import create_gl_framebuffer
 from ._egraphics import delete_gl_framebuffer
@@ -61,8 +62,10 @@ class TextureRenderTarget:
     _gl_renderbuffers: set[GlRenderbuffer]
     _size: IVector2
 
-    def __init__(self, textures: Sequence[Texture2d | None], *, depth: bool = False):
+    def __init__(self, textures: Sequence[Texture2d | None], *, depth: bool | Texture2d = False):
         self._textures = tuple(textures)
+        self._depth = depth
+
         sizes = {t.size for t in self._textures if t is not None}
         if len(sizes) > 1:
             raise ValueError("all textures must be the same size")
@@ -79,9 +82,11 @@ class TextureRenderTarget:
         for i, texture in enumerate(self._textures):
             if texture is None:
                 continue
-            attach_texture_to_gl_read_framebuffer(get_gl_texture(texture), i)
+            attach_color_texture_to_gl_read_framebuffer(get_gl_texture(texture), i)
 
-        if depth:
+        if isinstance(depth, Texture2d):
+            attach_depth_texture_to_gl_read_framebuffer(get_gl_texture(depth))
+        elif depth:
             self._gl_renderbuffers.add(
                 attach_depth_renderbuffer_to_gl_read_framebuffer(self._size)
             )

@@ -737,7 +737,7 @@ error:
 }
 
 static PyObject *
-attach_texture_to_gl_read_framebuffer(PyObject *module, PyObject **args, Py_ssize_t nargs)
+attach_color_texture_to_gl_read_framebuffer(PyObject *module, PyObject **args, Py_ssize_t nargs)
 {
     CHECK_UNEXPECTED_ARG_COUNT_ERROR(2);
 
@@ -748,6 +748,22 @@ attach_texture_to_gl_read_framebuffer(PyObject *module, PyObject **args, Py_ssiz
     CHECK_UNEXPECTED_PYTHON_ERROR();
 
     glFramebufferTexture2D(GL_READ_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + index, GL_TEXTURE_2D, gl_texture, 0);
+    CHECK_GL_ERROR();
+
+    Py_RETURN_NONE;
+error:
+    return 0;
+}
+
+static PyObject *
+attach_depth_texture_to_gl_read_framebuffer(PyObject *module, PyObject **args, Py_ssize_t nargs)
+{
+    CHECK_UNEXPECTED_ARG_COUNT_ERROR(1);
+
+    GLuint gl_texture = PyLong_AsLong(args[0]);
+    CHECK_UNEXPECTED_PYTHON_ERROR();
+
+    glFramebufferTexture2D(GL_READ_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, gl_texture, 0);
     CHECK_GL_ERROR();
 
     Py_RETURN_NONE;
@@ -1739,7 +1755,8 @@ static PyMethodDef module_PyMethodDef[] = {
     {"read_color_from_framebuffer", (PyCFunction)read_color_from_framebuffer, METH_FASTCALL, 0},
     {"read_depth_from_framebuffer", read_depth_from_framebuffer, METH_O, 0},
     {"clear_framebuffer", (PyCFunction)clear_framebuffer, METH_FASTCALL, 0},
-    {"attach_texture_to_gl_read_framebuffer", (PyCFunction)attach_texture_to_gl_read_framebuffer, METH_FASTCALL, 0},
+    {"attach_color_texture_to_gl_read_framebuffer", (PyCFunction)attach_color_texture_to_gl_read_framebuffer, METH_FASTCALL, 0},
+    {"attach_depth_texture_to_gl_read_framebuffer", (PyCFunction)attach_depth_texture_to_gl_read_framebuffer, METH_FASTCALL, 0},
     {"attach_depth_renderbuffer_to_gl_read_framebuffer", attach_depth_renderbuffer_to_gl_read_framebuffer, METH_O, 0},
     {"set_texture_locations_on_gl_draw_framebuffer", (PyCFunction)set_texture_locations_on_gl_draw_framebuffer, METH_O, 0},
     {"set_active_gl_texture_unit", set_active_gl_texture_unit, METH_O, 0},

@@ -33,6 +33,7 @@ import pytest
 
 # python
 import asyncio
+from ctypes import c_float
 from ctypes import c_uint8
 import gc
 from math import isclose
@@ -116,7 +117,7 @@ def is_kinda_close():
     return _
 
 
-@pytest.fixture(params=["window", "texture"])
+@pytest.fixture(params=["window", "texture", "texture_with_depth_texture"])
 def render_target(platform, capture_event, request):
     if request.param == "window":
         render_target = request.getfixturevalue("window")
@@ -127,7 +128,7 @@ def render_target(platform, capture_event, request):
 
             capture_event(_, render_target.resized)
         clear_render_target(render_target, depth=1, color=FVector3(0))
-    else:
+    elif request.param == "texture":
         render_target = TextureRenderTarget(
             [
                 Texture2d(
@@ -138,6 +139,18 @@ def render_target(platform, capture_event, request):
                 )
             ],
             depth=True,
+        )
+    elif request.param == "texture_with_depth_texture":
+        render_target = TextureRenderTarget(
+            [
+                Texture2d(
+                    UVector2(10),
+                    TextureComponents.RGBA,
+                    c_uint8,
+                    b"\x00" * (10 * 10 * 4),
+                )
+            ],
+            depth=Texture2d(UVector2(10), TextureComponents.D, c_float, b"\x00" * (4 * 10 * 10)),
         )
     return render_target
 
