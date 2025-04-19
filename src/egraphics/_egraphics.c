@@ -890,7 +890,7 @@ set_gl_texture_target_2d_data(PyObject *module, PyObject **args, Py_ssize_t narg
     PyObject *ex = 0;
     struct EMathApi *emath_api = 0;
 
-    CHECK_UNEXPECTED_ARG_COUNT_ERROR(5);
+    CHECK_UNEXPECTED_ARG_COUNT_ERROR(6);
 
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
     CHECK_GL_ERROR();
@@ -898,7 +898,7 @@ set_gl_texture_target_2d_data(PyObject *module, PyObject **args, Py_ssize_t narg
     GLenum target = PyLong_AsLong(args[0]);
     CHECK_UNEXPECTED_PYTHON_ERROR();
 
-    GLint format = PyLong_AsLong(args[1]);
+    GLint internal_format = PyLong_AsLong(args[1]);
     CHECK_UNEXPECTED_PYTHON_ERROR();
 
     GLsizei width = 0;
@@ -919,19 +919,22 @@ set_gl_texture_target_2d_data(PyObject *module, PyObject **args, Py_ssize_t narg
         height = size[1];
     }
 
-    GLenum type = PyLong_AsLong(args[3]);
+    GLint format = PyLong_AsLong(args[3]);
+    CHECK_UNEXPECTED_PYTHON_ERROR();
+
+    GLenum type = PyLong_AsLong(args[4]);
     CHECK_UNEXPECTED_PYTHON_ERROR();
 
     Py_buffer buffer;
     {
-        PyObject *py_data = args[4];
+        PyObject *py_data = args[5];
         if (PyObject_GetBuffer(py_data, &buffer, PyBUF_CONTIG_RO) == -1){ goto error; }
     }
 
     glTexImage2D(
         target,
         0,
-        format,
+        internal_format,
         width,
         height,
         0,
@@ -2016,6 +2019,42 @@ PyInit__egraphics()
     ADD_CONSTANT(GL_RGB);
     ADD_CONSTANT(GL_RGBA);
     ADD_CONSTANT(GL_DEPTH_COMPONENT);
+    ADD_CONSTANT(GL_RED_INTEGER);
+    ADD_CONSTANT(GL_RG_INTEGER);
+    ADD_CONSTANT(GL_RGB_INTEGER);
+    ADD_CONSTANT(GL_RGBA_INTEGER);
+
+    ADD_CONSTANT(GL_R8UI);
+    ADD_CONSTANT(GL_R8I);
+    ADD_CONSTANT(GL_R16UI);
+    ADD_CONSTANT(GL_R16I);
+    ADD_CONSTANT(GL_R32UI);
+    ADD_CONSTANT(GL_R32I);
+    ADD_CONSTANT(GL_R32F);
+
+    ADD_CONSTANT(GL_RG8UI);
+    ADD_CONSTANT(GL_RG8I);
+    ADD_CONSTANT(GL_RG16UI);
+    ADD_CONSTANT(GL_RG16I);
+    ADD_CONSTANT(GL_RG32UI);
+    ADD_CONSTANT(GL_RG32I);
+    ADD_CONSTANT(GL_RG32F);
+
+    ADD_CONSTANT(GL_RGB8UI);
+    ADD_CONSTANT(GL_RGB8I);
+    ADD_CONSTANT(GL_RGB16UI);
+    ADD_CONSTANT(GL_RGB16I);
+    ADD_CONSTANT(GL_RGB32UI);
+    ADD_CONSTANT(GL_RGB32I);
+    ADD_CONSTANT(GL_RGB32F);
+
+    ADD_CONSTANT(GL_RGBA8UI);
+    ADD_CONSTANT(GL_RGBA8I);
+    ADD_CONSTANT(GL_RGBA16UI);
+    ADD_CONSTANT(GL_RGBA16I);
+    ADD_CONSTANT(GL_RGBA32UI);
+    ADD_CONSTANT(GL_RGBA32I);
+    ADD_CONSTANT(GL_RGBA32F);
 
     ADD_CONSTANT(GL_CLAMP_TO_EDGE);
     ADD_CONSTANT(GL_CLAMP_TO_BORDER);

@@ -13,6 +13,7 @@ __all__ = [
 ]
 
 # egraphics
+from . import _egraphics
 from ._egraphics import GL_BYTE
 from ._egraphics import GL_CLAMP_TO_BORDER
 from ._egraphics import GL_CLAMP_TO_EDGE
@@ -38,6 +39,7 @@ from ._egraphics import GL_UNSIGNED_BYTE
 from ._egraphics import GL_UNSIGNED_INT
 from ._egraphics import GL_UNSIGNED_SHORT
 from ._egraphics import GlTexture
+from ._egraphics import GlTextureComponents
 from ._egraphics import GlTextureFilter
 from ._egraphics import GlTextureWrap
 from ._egraphics import GlType
@@ -69,6 +71,7 @@ from typing import Final
 from typing import Mapping
 from typing import NamedTuple
 from typing import Self
+from typing import get_args as get_typing_args
 from weakref import ref
 
 _DEFAULT_TEXTURE_UNIT: Final[int] = 0
@@ -143,11 +146,15 @@ class TextureType(Enum):
 
 
 class TextureComponents(Enum):
-    R = GL_RED
-    RG = GL_RG
-    RGB = GL_RGB
-    RGBA = GL_RGBA
-    D = GL_DEPTH_COMPONENT
+    R = 1
+    RG = 2
+    RGB = 3
+    RGBA = 4
+    D = 5
+    X = 6
+    XY = 7
+    XYZ = 8
+    XYZW = 9
 
 
 class TextureWrap(Enum):
@@ -194,6 +201,10 @@ _TEXTURE_COMPONENTS_COUNT: Final[Mapping[TextureComponents, int]] = {
     TextureComponents.RGB: 3,
     TextureComponents.RGBA: 4,
     TextureComponents.D: 1,
+    TextureComponents.X: 1,
+    TextureComponents.XY: 2,
+    TextureComponents.XYZ: 3,
+    TextureComponents.XYZW: 4,
 }
 
 
@@ -212,6 +223,75 @@ _TEXTURE_FILTER_TO_GL_MIN_FILTER: Final[
 _TEXTURE_FILTER_TO_GL_MAG_FILTER: Final[Mapping[TextureFilter, GlTextureFilter]] = {
     TextureFilter.NEAREST: GL_NEAREST,
     TextureFilter.LINEAR: GL_LINEAR,
+}
+
+
+_TEXTURE_COMPONENTS_AND_TYPE_TO_GL_INTERNAL_FORMAT: Final[
+    Mapping[tuple[TextureComponents, type[TextureDataType]], GlTextureComponents]
+] = {
+    **{
+        (c, dt): gtc
+        for dt in get_typing_args(TextureDataType)
+        for c, gtc in {
+            TextureComponents.R: GL_RED,
+            TextureComponents.RG: GL_RG,
+            TextureComponents.RGB: GL_RGB,
+            TextureComponents.RGBA: GL_RGBA,
+            TextureComponents.D: GL_DEPTH_COMPONENT,
+        }.items()
+    },
+    **{
+        (c, dt): getattr(_egraphics, f"GL_{gl_c}{gl_t}")  # type: ignore
+        for dt, gl_t in {
+            ctypes.c_uint8: "8UI",
+            ctypes.c_int8: "8I",
+            ctypes.c_uint16: "16UI",
+            ctypes.c_int16: "16I",
+            ctypes.c_uint32: "32UI",
+            ctypes.c_int32: "32I",
+            ctypes.c_float: "32F",
+        }.items()
+        for c, gl_c in {
+            TextureComponents.X: "R",
+            TextureComponents.XY: "RG",
+            TextureComponents.XYZ: "RGB",
+            TextureComponents.XYZW: "RGBA",
+        }.items()
+    },
+}
+
+_TEXTURE_COMPONENTS_TO_GL_FORMAT: Final[
+    Mapping[tuple[TextureComponents, type[TextureDataType]], GlTextureComponents]
+] = {
+    **{
+        (c, dt): gtc
+        for dt in get_typing_args(TextureDataType)
+        for c, gtc in {
+            TextureComponents.R: GL_RED,
+            TextureComponents.RG: GL_RG,
+            TextureComponents.RGB: GL_RGB,
+            TextureComponents.RGBA: GL_RGBA,
+            TextureComponents.D: GL_DEPTH_COMPONENT,
+        }.items()
+    },
+    **{
+        (c, dt): getattr(_egraphics, f"GL_{gl_c}{gl_t}")  # type: ignore
+        for dt, gl_t in {
+            ctypes.c_uint8: "_INTEGER",
+            ctypes.c_int8: "_INTEGER",
+            ctypes.c_uint16: "_INTEGER",
+            ctypes.c_int16: "_INTEGER",
+            ctypes.c_uint32: "_INTEGER",
+            ctypes.c_int32: "_INTEGER",
+            ctypes.c_float: "",
+        }.items()
+        for c, gl_c in {
+            TextureComponents.X: "RED",
+            TextureComponents.XY: "RG",
+            TextureComponents.XYZ: "RGB",
+            TextureComponents.XYZW: "RGBA",
+        }.items()
+    },
 }
 
 
@@ -277,7 +357,14 @@ class Texture:
         with bind_texture(self):
             gl_target = self._type.value.target._gl_target
             assert type == TextureType.TWO_DIMENSIONS
-            set_gl_texture_target_2d_data(gl_target, components.value, size, gl_data_type, buffer)
+            set_gl_texture_target_2d_data(
+                gl_target,
+                _TEXTURE_COMPONENTS_AND_TYPE_TO_GL_INTERNAL_FORMAT[(components, data_type)],
+                size,
+                _TEXTURE_COMPONENTS_TO_GL_FORMAT[(components, data_type)],
+                gl_data_type,
+                buffer,
+            )
             self._size = size
             # we only need to generate mipmaps if we're using a mipmap selection
             # that would actually check the mipmaps

@@ -34,6 +34,38 @@ __all__ = [
     "GL_RGB",
     "GL_RGBA",
     "GL_DEPTH_COMPONENT",
+    "GL_RED_INTEGER",
+    "GL_RG_INTEGER",
+    "GL_RGB_INTEGER",
+    "GL_RGBA_INTEGER",
+    "GL_R8UI",
+    "GL_R8I",
+    "GL_R16UI",
+    "GL_R16I",
+    "GL_R32UI",
+    "GL_R32I",
+    "GL_R32F",
+    "GL_RG8UI",
+    "GL_RG8I",
+    "GL_RG16UI",
+    "GL_RG16I",
+    "GL_RG32UI",
+    "GL_RG32I",
+    "GL_RG32F",
+    "GL_RGB8UI",
+    "GL_RGB8I",
+    "GL_RGB16UI",
+    "GL_RGB16I",
+    "GL_RGB32UI",
+    "GL_RGB32I",
+    "GL_RGB32F",
+    "GL_RGBA8UI",
+    "GL_RGBA8I",
+    "GL_RGBA16UI",
+    "GL_RGBA16I",
+    "GL_RGBA32UI",
+    "GL_RGBA32I",
+    "GL_RGBA32F",
     "GL_CLAMP_TO_EDGE",
     "GL_CLAMP_TO_BORDER",
     "GL_REPEAT",
@@ -360,6 +392,42 @@ GL_RG: GlTextureComponents
 GL_RGB: GlTextureComponents
 GL_RGBA: GlTextureComponents
 GL_DEPTH_COMPONENT: GlTextureComponents
+GL_RED_INTEGER: GlTextureComponents
+GL_RG_INTEGER: GlTextureComponents
+GL_RGB_INTEGER: GlTextureComponents
+GL_RGBA_INTEGER: GlTextureComponents
+
+GL_R8UI: GlTextureComponents
+GL_R8I: GlTextureComponents
+GL_R16UI: GlTextureComponents
+GL_R16I: GlTextureComponents
+GL_R32UI: GlTextureComponents
+GL_R32I: GlTextureComponents
+GL_R32F: GlTextureComponents
+
+GL_RG8UI: GlTextureComponents
+GL_RG8I: GlTextureComponents
+GL_RG16UI: GlTextureComponents
+GL_RG16I: GlTextureComponents
+GL_RG32UI: GlTextureComponents
+GL_RG32I: GlTextureComponents
+GL_RG32F: GlTextureComponents
+
+GL_RGB8UI: GlTextureComponents
+GL_RGB8I: GlTextureComponents
+GL_RGB16UI: GlTextureComponents
+GL_RGB16I: GlTextureComponents
+GL_RGB32UI: GlTextureComponents
+GL_RGB32I: GlTextureComponents
+GL_RGB32F: GlTextureComponents
+
+GL_RGBA8UI: GlTextureComponents
+GL_RGBA8I: GlTextureComponents
+GL_RGBA16UI: GlTextureComponents
+GL_RGBA16I: GlTextureComponents
+GL_RGBA32UI: GlTextureComponents
+GL_RGBA32I: GlTextureComponents
+GL_RGBA32F: GlTextureComponents
 
 GL_CLAMP_TO_EDGE: GlTextureWrap
 GL_CLAMP_TO_BORDER: GlTextureWrap
@@ -457,8 +525,9 @@ def set_active_gl_texture_unit(unit: int, /) -> None: ...
 def set_gl_texture_target(target: GlTextureTarget, gl_texture: GlTexture | None, /) -> None: ...
 def set_gl_texture_target_2d_data(
     target: GlTextureTarget,
-    format: GlTextureComponents,
+    internal_format: GlTextureComponents,
     size: UVector2,
+    format: GlTextureComponents,
     type: GlType,
     data: Buffer,
     /,
