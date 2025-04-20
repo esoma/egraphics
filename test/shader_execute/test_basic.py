@@ -286,7 +286,7 @@ def test_basic(render_target, primitive_mode, color, index_array_type):
             {"xy": GBufferView.from_array(positions)},
             indices,
         ),
-        {"color": color, "extra_vertex_id": ctypes.c_long(extra_vertex_id)},
+        {"color": color, "extra_vertex_id": ctypes.c_int(extra_vertex_id)},
     )
 
     colors = read_color_from_render_target(
