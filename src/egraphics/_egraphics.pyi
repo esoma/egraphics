@@ -184,6 +184,10 @@ __all__ = [
     "GL_TRIANGLES",
     "GL_TRIANGLE_STRIP",
     "GL_TRIANGLE_FAN",
+    "GL_LINE_STRIP_ADJACENCY",
+    "GL_LINES_ADJACENCY",
+    "GL_TRIANGLE_STRIP_ADJACENCY",
+    "GL_TRIANGLES_ADJACENCY",
     "gl_debug",
     "activate_gl_vertex_array",
     "set_gl_buffer_target",
@@ -485,6 +489,10 @@ GL_LINE_LOOP: GlPrimitive
 GL_TRIANGLES: GlPrimitive
 GL_TRIANGLE_STRIP: GlPrimitive
 GL_TRIANGLE_FAN: GlPrimitive
+GL_LINE_STRIP_ADJACENCY: GlPrimitive
+GL_LINES_ADJACENCY: GlPrimitive
+GL_TRIANGLE_STRIP_ADJACENCY: GlPrimitive
+GL_TRIANGLES_ADJACENCY: GlPrimitive
 
 def debug_gl(callback: Callable[[int, int, int, int, str], None], /) -> None: ...
 def activate_gl_vertex_array(gl_vertex_array: GlVertexArray | None, /) -> None: ...

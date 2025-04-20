@@ -72,8 +72,10 @@ from ._egraphics import GL_INT_VEC4
 from ._egraphics import GL_LEQUAL
 from ._egraphics import GL_LESS
 from ._egraphics import GL_LINES
+from ._egraphics import GL_LINES_ADJACENCY
 from ._egraphics import GL_LINE_LOOP
 from ._egraphics import GL_LINE_STRIP
+from ._egraphics import GL_LINE_STRIP_ADJACENCY
 from ._egraphics import GL_MAX
 from ._egraphics import GL_MIN
 from ._egraphics import GL_NEVER
@@ -106,8 +108,10 @@ from ._egraphics import GL_SAMPLER_CUBE_SHADOW
 from ._egraphics import GL_SRC_ALPHA
 from ._egraphics import GL_SRC_COLOR
 from ._egraphics import GL_TRIANGLES
+from ._egraphics import GL_TRIANGLES_ADJACENCY
 from ._egraphics import GL_TRIANGLE_FAN
 from ._egraphics import GL_TRIANGLE_STRIP
+from ._egraphics import GL_TRIANGLE_STRIP_ADJACENCY
 from ._egraphics import GL_UNSIGNED_BYTE
 from ._egraphics import GL_UNSIGNED_INT
 from ._egraphics import GL_UNSIGNED_INT_SAMPLER_1D
@@ -720,6 +724,10 @@ class PrimitiveMode(Enum):
     TRIANGLE = GL_TRIANGLES
     TRIANGLE_STRIP = GL_TRIANGLE_STRIP
     TRIANGLE_FAN = GL_TRIANGLE_FAN
+    LINE_STRIP_ADJACENCY = GL_LINE_STRIP_ADJACENCY
+    LINE_ADJACENCY = GL_LINES_ADJACENCY
+    TRIANGLE_STRIP_ADJACENCY = GL_TRIANGLE_STRIP_ADJACENCY
+    TRIANGLE_ADJACENCY = GL_TRIANGLES_ADJACENCY
 
 
 UniformValue = (

@@ -179,31 +179,89 @@ def test_missing_attribute(render_target):
 def test_basic(render_target, primitive_mode, color, index_array_type):
     clear_render_target(render_target, color=FVector3(0, 0, 0), depth=True)
 
-    if index_array_type is None:
-        indices = (0, 4)
-    elif index_array_type == "length":
-        indices = GBufferView(GBuffer(U8Array(0, 1, 2, 3, 4)), ctypes.c_uint8, length=4)
-    elif index_array_type == "offset":
-        indices = GBufferView(GBuffer(U8Array(4, 0, 1, 2, 3)), ctypes.c_uint8, offset=1)
-    else:
-        indices = GBufferView.from_array(
-            index_array_type(
-                0,
-                1,
-                2,
-                3,
+    if primitive_mode in {
+        PrimitiveMode.LINE_STRIP_ADJACENCY,
+        PrimitiveMode.LINE_ADJACENCY,
+        PrimitiveMode.TRIANGLE_STRIP_ADJACENCY,
+        PrimitiveMode.TRIANGLE_ADJACENCY,
+    }:
+        extra_vertex_id = 8
+        if primitive_mode in {
+            PrimitiveMode.TRIANGLE_STRIP_ADJACENCY,
+            PrimitiveMode.TRIANGLE_ADJACENCY,
+        }:
+            positions = FVector2Array(
+                FVector2(-0.9, -0.9),
+                FVector2(0.0, 0.0),
+                FVector2(-0.9, 0.9),
+                FVector2(0.0, 0.0),
+                FVector2(0.9, 0.9),
+                FVector2(0.0, 0.0),
+                FVector2(0.9, -0.9),
+                FVector2(0.0, 0.0),
+                FVector2(0.0, 0.0),
+                FVector2(1, 1),
             )
+        else:
+            positions = FVector2Array(
+                FVector2(0.0, 0.0),
+                FVector2(-0.9, -0.9),
+                FVector2(0.0, 0.0),
+                FVector2(-0.9, 0.9),
+                FVector2(0.0, 0.0),
+                FVector2(0.9, 0.9),
+                FVector2(0.0, 0.0),
+                FVector2(0.9, -0.9),
+                FVector2(0.0, 0.0),
+                FVector2(1, 1),
+            )
+        if index_array_type is None:
+            indices = (0, 8)
+        elif index_array_type == "length":
+            indices = GBufferView(
+                GBuffer(U8Array(0, 1, 2, 3, 4, 5, 6, 7, 8)), ctypes.c_uint8, length=8
+            )
+        elif index_array_type == "offset":
+            indices = GBufferView(
+                GBuffer(U8Array(4, 0, 1, 2, 3, 4, 5, 6, 7)), ctypes.c_uint8, offset=1
+            )
+        else:
+            indices = GBufferView.from_array(index_array_type(0, 1, 2, 3, 4, 5, 6, 7))
+    else:
+        extra_vertex_id = 4
+        positions = FVector2Array(
+            FVector2(-0.9, -0.9),
+            FVector2(-0.9, 0.9),
+            FVector2(0.9, 0.9),
+            FVector2(0.9, -0.9),
+            FVector2(1, 1),
         )
+        if index_array_type is None:
+            indices = (0, 4)
+        elif index_array_type == "length":
+            indices = GBufferView(GBuffer(U8Array(0, 1, 2, 3, 4)), ctypes.c_uint8, length=4)
+        elif index_array_type == "offset":
+            indices = GBufferView(GBuffer(U8Array(4, 0, 1, 2, 3)), ctypes.c_uint8, offset=1)
+        else:
+            indices = GBufferView.from_array(
+                index_array_type(
+                    0,
+                    1,
+                    2,
+                    3,
+                )
+            )
 
     shader = Shader(
         vertex=b"""
         #version 140
         in vec2 xy;
+        uniform int extra_vertex_id;
         out vec4 color_mult;
         void main()
         {
             color_mult = vec4(1);
-            if (gl_VertexID == 4)
+            if (gl_VertexID == extra_vertex_id)
             {
                 color_mult = vec4(.5);
             }
@@ -225,20 +283,10 @@ def test_basic(render_target, primitive_mode, color, index_array_type):
         render_target,
         primitive_mode,
         GBufferViewMap(
-            {
-                "xy": GBufferView.from_array(
-                    FVector2Array(
-                        FVector2(-0.9, -0.9),
-                        FVector2(-0.9, 0.9),
-                        FVector2(0.9, 0.9),
-                        FVector2(0.9, -0.9),
-                        FVector2(1, 1),
-                    )
-                )
-            },
+            {"xy": GBufferView.from_array(positions)},
             indices,
         ),
-        {"color": color},
+        {"color": color, "extra_vertex_id": ctypes.c_long(extra_vertex_id)},
     )
 
     colors = read_color_from_render_target(
