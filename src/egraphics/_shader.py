@@ -412,6 +412,7 @@ class Shader:
         color_write: tuple[bool, bool, bool, bool] = (True, True, True, True),
         depth_test: DepthTest = DepthTest.ALWAYS,
         depth_write: bool = False,
+        depth_clamp: bool = False,
         face_cull: FaceCull = FaceCull.NONE,
         instances: int = 1,
         scissor: IBoundingBox2d | None = None,
@@ -452,6 +453,7 @@ class Shader:
                 scissor.position.x, render_target.size.y - scissor.position.y - scissor.size.y
             ),
             None if scissor is None else scissor.size,
+            depth_clamp,
         )
 
         set_draw_render_target(render_target)

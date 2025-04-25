@@ -44,6 +44,7 @@ typedef struct ModuleState
     int texture_filter_anisotropic_supported;
     bool depth_test;
     bool depth_mask;
+    bool depth_clamp;
     GLenum depth_func;
     bool color_mask_r;
     bool color_mask_g;
@@ -75,6 +76,7 @@ reset_module_state(PyObject *module, PyObject *unused)
     state->clear_depth = -1;
     state->depth_test = false;
     state->depth_mask = true;
+    state->depth_clamp = false;
     state->depth_func = GL_LESS;
     state->color_mask_r = true;
     state->color_mask_g = true;
@@ -1483,7 +1485,7 @@ set_gl_execution_state(PyObject *module, PyObject **args, Py_ssize_t nargs)
     PyObject *ex = 0;
     struct EMathApi *emath_api = 0;
 
-    CHECK_UNEXPECTED_ARG_COUNT_ERROR(15);
+    CHECK_UNEXPECTED_ARG_COUNT_ERROR(16);
 
     bool depth_write = (args[0] == Py_True);
 
@@ -1525,6 +1527,8 @@ set_gl_execution_state(PyObject *module, PyObject **args, Py_ssize_t nargs)
     PyObject *py_scissor_position = args[13];
     PyObject *py_scissor_size = args[14];
 
+    bool depth_clamp = (args[15] == Py_True);
+
     ModuleState *state = (ModuleState *)PyModule_GetState(module);
     CHECK_UNEXPECTED_PYTHON_ERROR();
 
@@ -1556,6 +1560,20 @@ set_gl_execution_state(PyObject *module, PyObject **args, Py_ssize_t nargs)
             CHECK_GL_ERROR();
             state->depth_func = depth_func;
         }
+    }
+
+    if (state->depth_clamp != depth_clamp)
+    {
+        if (depth_clamp)
+        {
+            glEnable(GL_DEPTH_CLAMP);
+        }
+        else
+        {
+            glDisable(GL_DEPTH_CLAMP);
+        }
+        CHECK_GL_ERROR();
+        state->depth_clamp = depth_clamp;
     }
 
     if (

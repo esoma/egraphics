@@ -643,6 +643,7 @@ def set_gl_execution_state(
     cull_face: GlCull | None,
     scissor_position: IVector2 | None,
     scissor_size: IVector2 | None,
+    depth_clamp: bool,
     /,
 ) -> None: ...
 def get_gl_version() -> str: ...
