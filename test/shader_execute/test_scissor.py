@@ -22,12 +22,10 @@ import pytest
 
 # python
 from pathlib import Path
-import sys
 
 DIR = Path(__file__).parent
 
 
-@pytest.mark.xfail(sys.platform == "darwin", reason="not sure")
 @pytest.mark.parametrize("pixel", ["top-left", "top-right", "bottom-right", "bottom-left"])
 def test_basic(render_target, pixel):
     if pixel == "top-right":
@@ -87,7 +85,5 @@ def test_basic(render_target, pixel):
     colors = read_color_from_render_target(
         render_target, IRectangle(IVector2(0, 0), render_target.size)
     )
-    for c in colors:
-        print(c)
     assert colors[pixel_changed] == color
     assert all((c != color for c in (colors[:pixel_changed], colors[pixel_changed + 1 :])))
