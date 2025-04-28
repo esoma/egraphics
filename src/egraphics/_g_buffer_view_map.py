@@ -110,18 +110,11 @@ class _GlVertexArray:
                 GL_ELEMENT_ARRAY_BUFFER, get_g_buffer_gl_buffer(index_g_buffer_view.g_buffer)
             )
 
-        attributes = shader.attributes
-        attribute_names = {a.name for a in shader.attributes}
-
-        for name in mapping:
-            if name not in attribute_names:
-                raise ValueError(f'shader does not accept an attribute called "{name}"')
-
         for attribute in shader.attributes:
             try:
                 buffer_view = mapping[attribute.name]
             except KeyError:
-                raise ValueError(f"missing attribute: {attribute.name}")
+                continue
 
             GBufferTarget.ARRAY.g_buffer = buffer_view.g_buffer
             view_gl_type, count, locations = _BUFFER_VIEW_TYPE_TO_VERTEX_ATTRIB_POINTER[

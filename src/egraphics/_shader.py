@@ -405,19 +405,12 @@ class Shader:
         instances: int = 1,
         scissor: IBoundingBox2d | None = None,
     ) -> None:
-        for uniform_name in uniforms:
-            try:
-                input = self[uniform_name]
-            except KeyError:
-                raise ValueError(f'shader does not accept a uniform called "{uniform_name}"')
-            if not isinstance(input, ShaderUniform):
-                raise ValueError(f'shader does not accept a uniform called "{uniform_name}"')
         uniform_values: list[tuple[ShaderUniform, Any]] = []
         for uniform in self.uniforms:
             try:
                 value = uniforms[uniform.name]
             except KeyError:
-                raise ValueError(f"missing uniform: {uniform.name}")
+                continue
             uniform_values.append((uniform, value))
         if instances < 0:
             raise ValueError("instances must be 0 or more")
