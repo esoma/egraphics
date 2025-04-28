@@ -75,7 +75,7 @@ jobs:
       if: runner.os != 'Linux'
       run: |
         export DYLD_LIBRARY_PATH=$PWD/vendor/SDL:$DYLD_LIBRARY_PATH
-        poetry run pytest --cov=egraphics --cov-report=xml -vvx
+        poetry run pytest --cov=egraphics --cov-report=xml
       env:
         LIBGL_ALWAYS_SOFTWARE: "true"
 
@@ -83,7 +83,7 @@ jobs:
       if: runner.os == 'Linux'
       run: |
         export LD_LIBRARY_PATH=$PWD/vendor/SDL:$LD_LIBRARY_PATH
-        xvfb-run -a poetry run pytest --cov=egraphics --cov-report=xml -vvx
+        xvfb-run -a poetry run pytest --cov=egraphics --cov-report=xml
       env:
         LIBGL_ALWAYS_SOFTWARE: "true"
 
