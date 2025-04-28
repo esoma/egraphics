@@ -511,6 +511,7 @@ read_color_from_framebuffer(PyObject *module, PyObject **args, Py_ssize_t nargs)
 {
     GLint original_texture_0_name = -1;
     PyObject *ex = 0;
+    float *data = 0;
     struct EMathApi *emath_api = 0;
 
     CHECK_UNEXPECTED_ARG_COUNT_ERROR(2);
@@ -535,7 +536,7 @@ read_color_from_framebuffer(PyObject *module, PyObject **args, Py_ssize_t nargs)
     CHECK_UNEXPECTED_PYTHON_ERROR();
 
     size_t count = (size_t)size[0] * (size_t)size[1];
-    float *data = malloc(sizeof(float) * 4 * count);
+    data = malloc(sizeof(float) * 4 * count);
     if (!data)
     {
         PyErr_Format(PyExc_MemoryError, "out of memory");
@@ -587,6 +588,7 @@ read_color_from_framebuffer(PyObject *module, PyObject **args, Py_ssize_t nargs)
 
     PyObject *array = emath_api->FVector4Array_Create(count, data);
     free(data);
+    data = 0;
     EMathApi_Release();
     return array;
 error:
@@ -602,6 +604,7 @@ error:
             0
         );
     }
+    if (data){ free(data); }
     PyErr_SetRaisedException(ex);
     return 0;
 }
@@ -611,6 +614,7 @@ read_depth_from_framebuffer(PyObject *module, PyObject *rect)
 {
     PyObject *ex = 0;
     struct EMathApi *emath_api = 0;
+    float *data = 0;
 
     PyObject *py_position = PyObject_GetAttrString(rect, "position");
     CHECK_UNEXPECTED_PYTHON_ERROR();
@@ -628,7 +632,7 @@ read_depth_from_framebuffer(PyObject *module, PyObject *rect)
     CHECK_UNEXPECTED_PYTHON_ERROR();
 
     size_t count = (size_t)size[0] * (size_t)size[1];
-    float *data = malloc(sizeof(float) * count);
+    data = malloc(sizeof(float) * count);
     if (!data)
     {
         PyErr_Format(PyExc_MemoryError, "out of memory");
@@ -640,11 +644,13 @@ read_depth_from_framebuffer(PyObject *module, PyObject *rect)
 
     PyObject *array = emath_api->FArray_Create(count, data);
     free(data);
+    data = 0;
     EMathApi_Release();
     return array;
 error:
     ex = PyErr_GetRaisedException();
     if (emath_api){ EMathApi_Release(); }
+    if (!data){ free(data); }
     PyErr_SetRaisedException(ex);
     return 0;
 }
