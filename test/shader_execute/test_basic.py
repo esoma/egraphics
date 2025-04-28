@@ -40,6 +40,13 @@ def test_not_a_uniform(render_target):
             gl_Position = vec4(xy, 0, 1.0);
         }
         """,
+        fragment=b"""
+        #version 140
+        void main()
+        {
+            FragColor = vec4(1);
+        }
+        """,
     )
     shader.execute(
         render_target,
@@ -71,7 +78,14 @@ def test_missing_uniform(render_target):
         {
             gl_Position = vec4(xy, z, 1.0);
         }
-        """
+        """,
+        fragment=b"""
+        #version 140
+        void main()
+        {
+            FragColor = vec4(1);
+        }
+        """,
     )
     shader.execute(
         render_target,
@@ -100,6 +114,13 @@ def test_not_an_attribute(render_target):
         void main()
         {
             gl_Position = vec4(0, 0, 0, 1.0);
+        }
+        """,
+        fragment=b"""
+        #version 140
+        void main()
+        {
+            FragColor = vec4(1);
         }
         """,
     )
@@ -132,6 +153,13 @@ def test_missing_attribute(render_target):
         void main()
         {
             gl_Position = vec4(xy, z, 1.0);
+        }
+        """,
+        fragment=b"""
+        #version 140
+        void main()
+        {
+            FragColor = vec4(1);
         }
         """,
     )
