@@ -322,65 +322,53 @@ class Shader:
         assert uniform in self._uniforms
         input_value: Any = None
         cache_key: Any = value
+        set_size: int
         if uniform.data_type is Texture:
-            if uniform.size > 1:
+            if isinstance(value, Texture):
+                set_size = 1
+                input_value = c_int32(exit_stack.enter_context(bind_texture_unit(value)))
+            else:
                 try:
-                    length = len(value)  # type: ignore
+                    set_size = min(uniform.size, len(value))  # type: ignore
                 except TypeError:
                     raise ValueError(
-                        f"expected sequence of {Texture} for {uniform.name} "
+                        f"expected {Texture} or sequence of {Texture} for {uniform.name} "
                         f"(got {type(value)})"
                     )
-                if length != uniform.size:
-                    raise ValueError(
-                        f"expected sequence of length {uniform.size} "
-                        f"for {uniform.name} "
-                        f"(got sequence of length {length})"
-                    )
-                for v in value:  # type: ignore
-                    if not isinstance(v, Texture):
-                        raise ValueError(
-                            f"expected sequence of {Texture} for {uniform.name} "
-                            f"(got {value!r})"
+                try:
+                    value = I32Array(
+                        *(
+                            exit_stack.enter_context(bind_texture_unit(v))  # type: ignore
+                            for v in value  # type: ignore
                         )
-                # fmt: off
-                value = I32Array(
-                    *(exit_stack.enter_context(bind_texture_unit(v)) for v in value) # type: ignore
-                )
-                # fmt: on
-                input_value = value.pointer
-            else:
-                if not isinstance(value, Texture):
-                    raise ValueError(
-                        f"expected {Texture} for {uniform.name} " f"(got {type(value)})"
                     )
-                input_value = c_int32(exit_stack.enter_context(bind_texture_unit(value)))
+                except Exception as ex:
+                    if not all(isinstance(v, Texture) for v in value):  # type: ignore
+                        raise ValueError(
+                            f"expected {Texture} or sequence of {Texture} for {uniform.name} "
+                            f"(got {value})"
+                        )
+                    raise
+                input_value = value.pointer
         else:
-            if uniform.size > 1:
-                array_type = _PY_TYPE_TO_ARRAY[uniform.data_type]
-                if not isinstance(value, array_type):
-                    raise ValueError(
-                        f"expected {array_type} for {uniform.name} " f"(got {type(value)})"
-                    )
-                if len(value) != uniform.size:
-                    raise ValueError(
-                        f"expected array of length {uniform.size} "
-                        f"for {uniform.name} "
-                        f"(got array of length {len(value)})"
-                    )
-                input_value = value.pointer
-            else:
-                assert uniform.size == 1
-                if not isinstance(value, uniform._set_type):
-                    raise ValueError(
-                        f"expected {uniform._set_type} for {uniform.name} " f"(got {type(value)})"
-                    )
+            if isinstance(value, uniform._set_type):
+                set_size = 1
                 if uniform._set_type in _POD_UNIFORM_TYPES:
                     input_value = value
                     cache_key = value.value
                 else:
                     input_value = value.pointer
-        uniform._set(uniform.location, uniform.size, input_value, cache_key)
+            else:
+                array_type = _PY_TYPE_TO_ARRAY[uniform.data_type]
+                if not isinstance(value, array_type):
+                    raise ValueError(
+                        f"expected {uniform._set_type} or {array_type} for {uniform.name} "
+                        f"(got {type(value)})"
+                    )
+                input_value = value.pointer
+                set_size = min(uniform.size, len(value))
+        if set_size != 0:
+            uniform._set(uniform.location, set_size, input_value, cache_key)
 
     @property
     def attributes(self) -> tuple[ShaderAttribute, ...]:
