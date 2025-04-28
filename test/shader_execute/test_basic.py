@@ -42,6 +42,7 @@ def test_not_a_uniform(render_target):
         """,
         fragment=b"""
         #version 140
+        out vec4 FragColor;
         void main()
         {
             FragColor = vec4(1);
@@ -81,6 +82,7 @@ def test_missing_uniform(render_target):
         """,
         fragment=b"""
         #version 140
+        out vec4 FragColor;
         void main()
         {
             FragColor = vec4(1);
@@ -118,6 +120,7 @@ def test_not_an_attribute(render_target):
         """,
         fragment=b"""
         #version 140
+        out vec4 FragColor;
         void main()
         {
             FragColor = vec4(1);
@@ -157,6 +160,7 @@ def test_missing_attribute(render_target):
         """,
         fragment=b"""
         #version 140
+        out vec4 FragColor;
         void main()
         {
             FragColor = vec4(1);
