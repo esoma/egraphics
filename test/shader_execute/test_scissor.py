@@ -20,26 +20,36 @@ from emath import IVector2
 # pytest
 import pytest
 
-# python
-from pathlib import Path
-
-DIR = Path(__file__).parent
-
 
 @pytest.mark.parametrize("pixel", ["top-left", "top-right", "bottom-right", "bottom-left"])
 def test_basic(render_target, pixel):
     if pixel == "top-right":
-        scissor = IBoundingBox2d(render_target.size.xo - IVector2(1, 0), IVector2(1))
-        pixel_changed = (render_target.size.x * render_target.size.y) - 1
+        scissor = IBoundingBox2d(render_target.size.xo - IVector2(2, 0), IVector2(2))
+        pixels_changed = [
+            (render_target.size.x * render_target.size.y) - 1,
+            (render_target.size.x * render_target.size.y) - 2,
+            (render_target.size.x * render_target.size.y) - 1 - render_target.size.x,
+            (render_target.size.x * render_target.size.y) - 2 - render_target.size.x,
+        ]
     elif pixel == "top-left":
-        scissor = IBoundingBox2d(IVector2(0), IVector2(1))
-        pixel_changed = (render_target.size.x * render_target.size.y) - render_target.size.x
+        scissor = IBoundingBox2d(IVector2(0), IVector2(2))
+        pixels_changed = [
+            (render_target.size.x * render_target.size.y) - render_target.size.x,
+            (render_target.size.x * render_target.size.y) - render_target.size.x + 1,
+            (render_target.size.x * render_target.size.y) - render_target.size.x * 2,
+            (render_target.size.x * render_target.size.y) - render_target.size.x * 2 + 1,
+        ]
     elif pixel == "bottom-right":
-        scissor = IBoundingBox2d(render_target.size - IVector2(1), IVector2(1))
-        pixel_changed = render_target.size.x - 1
+        scissor = IBoundingBox2d(render_target.size - IVector2(2), IVector2(2))
+        pixels_changed = [
+            render_target.size.x - 1,
+            render_target.size.x - 2,
+            render_target.size.x * 2 - 1,
+            render_target.size.x * 2 - 2,
+        ]
     elif pixel == "bottom-left":
-        scissor = IBoundingBox2d(render_target.size.oy - IVector2(0, 1), IVector2(1))
-        pixel_changed = 0
+        scissor = IBoundingBox2d(render_target.size.oy - IVector2(0, 2), IVector2(2))
+        pixels_changed = [0, 1, render_target.size.x, render_target.size.x + 1]
 
     clear_render_target(render_target, color=FVector3(0, 0, 0), depth=True)
     color = FVector4(1, 1, 1, 1)
@@ -85,5 +95,8 @@ def test_basic(render_target, pixel):
     colors = read_color_from_render_target(
         render_target, IRectangle(IVector2(0, 0), render_target.size)
     )
-    assert colors[pixel_changed] == color
-    assert all((c != color for c in (colors[:pixel_changed], colors[pixel_changed + 1 :])))
+    for i, c in enumerate(colors):
+        if i in pixels_changed:
+            assert colors[i] == color
+        else:
+            assert colors[i] == FVector4(0, 0, 0, 1)
