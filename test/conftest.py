@@ -127,6 +127,7 @@ def render_target(platform, capture_event, request):
                 render_target.resize(IVector2(10, 10))
 
             capture_event(_, render_target.resized)
+        assert render_target.size == IVector2(10, 10)
         clear_render_target(render_target, depth=1, color=FVector3(0))
     elif request.param == "texture":
         render_target = TextureRenderTarget(
