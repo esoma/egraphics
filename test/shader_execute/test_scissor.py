@@ -90,3 +90,4 @@ def test_basic(render_target, pixel):
     print(set(colors))
     assert colors[pixel_changed] == color
     assert all((c != color for c in (colors[:pixel_changed], colors[pixel_changed + 1 :])))
+    assert False
