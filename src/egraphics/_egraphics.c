@@ -1696,8 +1696,10 @@ set_gl_execution_state(PyObject *module, PyObject **args, Py_ssize_t nargs)
 
     if (py_scissor_position == Py_None || py_scissor_size == Py_None)
     {
+        printf("NO SCISSOR C\n");
         if (state->scissor_enabled)
         {
+            printf("DISABLE SCISSOR C\n");
             glDisable(GL_SCISSOR_TEST);
             CHECK_GL_ERROR();
             state->scissor_enabled = false;
@@ -1705,8 +1707,10 @@ set_gl_execution_state(PyObject *module, PyObject **args, Py_ssize_t nargs)
     }
     else
     {
+        printf("SCISSOR C\n");
         if (!state->scissor_enabled)
         {
+            printf("ENABLE SCISSOR C\n");
             glEnable(GL_SCISSOR_TEST);
             CHECK_GL_ERROR();
             state->scissor_enabled = true;
@@ -1730,6 +1734,13 @@ set_gl_execution_state(PyObject *module, PyObject **args, Py_ssize_t nargs)
             scissor_size[1] != state->scissor[3]
         )
         {
+            printf(
+                "%i, %i | %i, %i\n",
+                scissor_position[0],
+                scissor_position[1],
+                scissor_size[0],
+                scissor_size[1]
+            );
             glScissor(scissor_position[0], scissor_position[1], scissor_size[0], scissor_size[1]);
             CHECK_GL_ERROR();
             state->scissor[0] = scissor_position[0];
