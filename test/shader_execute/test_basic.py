@@ -343,7 +343,7 @@ def test_attribute_arrays(render_target, weight_0):
 
     shader = Shader(
         vertex=b"""
-        #version 140
+        #version 150
         in vec2 xy[2];
         void main()
         {
@@ -351,7 +351,7 @@ def test_attribute_arrays(render_target, weight_0):
         }
         """,
         fragment=b"""
-        #version 140
+        #version 150
         out vec4 FragColor;
         void main()
         {
