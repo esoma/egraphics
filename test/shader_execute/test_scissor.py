@@ -29,16 +29,16 @@ DIR = Path(__file__).parent
 @pytest.mark.parametrize("pixel", ["top-left", "top-right", "bottom-right", "bottom-left"])
 def test_basic(render_target, pixel):
     if pixel == "top-right":
-        scissor = IBoundingBox2d(render_target.size.xo - IVector2(1, 0), IVector2(1))
+        scissor = IBoundingBox2d(render_target.size.xo - IVector2(2, 0), IVector2(2))
         pixel_changed = (render_target.size.x * render_target.size.y) - 1
     elif pixel == "top-left":
-        scissor = IBoundingBox2d(IVector2(0), IVector2(1))
+        scissor = IBoundingBox2d(IVector2(0), IVector2(2))
         pixel_changed = (render_target.size.x * render_target.size.y) - render_target.size.x
     elif pixel == "bottom-right":
-        scissor = IBoundingBox2d(render_target.size - IVector2(1), IVector2(1))
+        scissor = IBoundingBox2d(render_target.size - IVector2(2), IVector2(2))
         pixel_changed = render_target.size.x - 1
     elif pixel == "bottom-left":
-        scissor = IBoundingBox2d(render_target.size.oy - IVector2(0, 1), IVector2(1))
+        scissor = IBoundingBox2d(render_target.size.oy - IVector2(0, 2), IVector2(2))
         pixel_changed = 0
 
     clear_render_target(render_target, color=FVector3(0, 0, 0), depth=True)
@@ -79,7 +79,7 @@ def test_basic(render_target, pixel):
             (0, 4),
         ),
         {"color": color},
-        scissor=IBoundingBox2d(IVector2(0), render_target.size),
+        scissor=scissor,
     )
 
     colors = read_color_from_render_target(
