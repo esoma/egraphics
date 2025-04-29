@@ -34,6 +34,7 @@ import ctypes
 from typing import Any
 from typing import ClassVar
 from typing import Final
+from typing import Sequence
 from weakref import WeakKeyDictionary
 from weakref import ref
 
@@ -43,9 +44,11 @@ IndexGBufferView = (
 
 
 class GBufferViewMap:
+    _mapping: dict[str, GBufferView | tuple[GBufferView, ...]]
+
     def __init__(
         self,
-        mapping: Mapping[str, GBufferView],
+        mapping: Mapping[str, GBufferView | Sequence[GBufferView]],
         indices: tuple[int, int] | IndexGBufferView,
         /,
     ) -> None:
@@ -62,14 +65,16 @@ class GBufferViewMap:
                     f"view buffer with type {indices.data_type} cannot be used for indexing"
                 )
 
-        self._mapping = dict(mapping)
+        self._mapping = {
+            n: v if isinstance(v, GBufferView) else tuple(v) for n, v in mapping.items()
+        }
         self._shader_mapping: WeakKeyDictionary[Shader, _GlVertexArray] = WeakKeyDictionary()
         self._indices = indices
 
     def __len__(self) -> int:
         return len(self._mapping)
 
-    def __getitem__(self, key: str) -> GBufferView:
+    def __getitem__(self, key: str) -> GBufferView | Sequence[GBufferView]:
         return self._mapping[key]
 
     def _get_gl_vertex_array_for_shader(self, shader: Shader) -> _GlVertexArray:
@@ -99,7 +104,7 @@ class _GlVertexArray:
     def __init__(
         self,
         shader: Shader,
-        mapping: Mapping[str, GBufferView],
+        mapping: Mapping[str, GBufferView | tuple[GBufferView, ...]],
         index_g_buffer_view: IndexGBufferView | None,
     ) -> None:
         self._gl_vertex_array = create_gl_vertex_array()
@@ -112,25 +117,33 @@ class _GlVertexArray:
 
         for attribute in shader.attributes:
             try:
-                buffer_view = mapping[attribute.name]
+                buffer_views = mapping[attribute.name]
             except KeyError:
                 continue
+            if isinstance(buffer_views, GBufferView):
+                buffer_views = (buffer_views,)
 
-            GBufferTarget.ARRAY.g_buffer = buffer_view.g_buffer
-            view_gl_type, count, locations = _BUFFER_VIEW_TYPE_TO_VERTEX_ATTRIB_POINTER[
-                buffer_view.data_type
-            ]
-            for location_offset in range(locations):
-                location = attribute.location + location_offset
-                offset = buffer_view.offset + ((buffer_view.stride // locations) * location_offset)
-                configure_gl_vertex_array_location(
-                    location,
-                    count,
-                    view_gl_type,
-                    buffer_view.stride,
-                    offset,
-                    buffer_view.instancing_divisor,
-                )
+            for i, buffer_view in enumerate(buffer_views):
+                if i >= attribute.size:
+                    break
+                GBufferTarget.ARRAY.g_buffer = buffer_view.g_buffer
+                view_gl_type, count, locations = _BUFFER_VIEW_TYPE_TO_VERTEX_ATTRIB_POINTER[
+                    buffer_view.data_type
+                ]
+                i_location_offset = locations * i
+                for location_offset in range(locations):
+                    location = attribute.location + location_offset + i_location_offset
+                    offset = buffer_view.offset + (
+                        (buffer_view.stride // locations) * location_offset
+                    )
+                    configure_gl_vertex_array_location(
+                        location,
+                        count,
+                        view_gl_type,
+                        buffer_view.stride,
+                        offset,
+                        buffer_view.instancing_divisor,
+                    )
 
     def _activate(self) -> None:
         if self._active and self._active() is self:

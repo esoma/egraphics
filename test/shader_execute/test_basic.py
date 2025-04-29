@@ -320,3 +320,58 @@ def test_basic(render_target, primitive_mode, color, index_array_type):
     assert color in colors
     assert FVector4(0, 0, 0, 1) in colors
     assert len(set(colors)) == 2
+
+
+@pytest.mark.parametrize("weight_0", [0, 0.25, 0.5, 0.75, 1])
+def test_attribute_arrays(render_target, weight_0):
+    clear_render_target(render_target, color=FVector3(0, 0, 0), depth=True)
+
+    weight_1 = 1 - weight_0
+    positions_0 = FVector2Array(
+        FVector2(-weight_0, -weight_0),
+        FVector2(-weight_0, weight_0),
+        FVector2(weight_0, weight_0),
+        FVector2(weight_0, -weight_0),
+    )
+    positions_1 = FVector2Array(
+        FVector2(-weight_1, -weight_1),
+        FVector2(-weight_1, weight_1),
+        FVector2(weight_1, weight_1),
+        FVector2(weight_1, -weight_1),
+    )
+    indices = (0, 4)
+
+    shader = Shader(
+        vertex=b"""
+        #version 140
+        in vec2 xy[2];
+        void main()
+        {
+            gl_Position = vec4(xy[0] + xy[1], 0, 1.0);
+        }
+        """,
+        fragment=b"""
+        #version 140
+        out vec4 FragColor;
+        void main()
+        {
+            FragColor = vec4(1);
+        }
+        """,
+    )
+    shader.execute(
+        render_target,
+        PrimitiveMode.TRIANGLE_FAN,
+        GBufferViewMap(
+            {"xy": [GBufferView.from_array(positions_0), GBufferView.from_array(positions_1)]},
+            indices,
+        ),
+        {},
+    )
+
+    colors = read_color_from_render_target(
+        render_target, IRectangle(IVector2(0, 0), render_target.size)
+    )
+
+    assert FVector4(1, 1, 1, 1) in colors
+    assert len(set(colors)) == 1

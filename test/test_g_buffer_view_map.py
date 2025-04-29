@@ -17,19 +17,25 @@ def test_read_only(platform, indices) -> None:
 
     bv_1 = GBufferView(GBuffer(), ctypes.c_float)
     bv_2 = GBufferView(GBuffer(), ctypes.c_float)
+    bv_3 = GBufferView(GBuffer(), ctypes.c_float)
+    bv_4 = GBufferView(GBuffer(), ctypes.c_float)
     map = {
         "vbo_1": bv_1,
         "vbo_2": bv_2,
+        "vbo_3": [bv_3, bv_4],
     }
     bvm = GBufferViewMap(map, indices)
 
-    assert len(bvm) == 2
+    assert len(bvm) == 3
     assert bvm["vbo_1"] is bv_1
     assert bvm["vbo_2"] is bv_2
+    assert bvm["vbo_3"] == (bv_3, bv_4)
+    assert bvm["vbo_3"][0] is bv_3
+    assert bvm["vbo_3"][1] is bv_4
     assert indices == indices
 
     with pytest.raises(KeyError):
-        bvm["vbo_3"]
+        bvm["vbo_4"]
 
     with pytest.raises(TypeError):
         bvm["vbo_1"] = GBufferView(GBuffer(), ctypes.c_float)  # type: ignore
@@ -37,10 +43,12 @@ def test_read_only(platform, indices) -> None:
     with pytest.raises(AttributeError):
         bvm.indices = None
 
+    map["vbo_3"].clear()
     map.clear()
-    assert len(bvm) == 2
+    assert len(bvm) == 3
     assert bvm["vbo_1"] is bv_1
     assert bvm["vbo_2"] is bv_2
+    assert bvm["vbo_3"] == (bv_3, bv_4)
 
 
 def test_index_buffer_view_invalid_type(platform):
