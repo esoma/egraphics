@@ -79,7 +79,7 @@ def test_basic(render_target, pixel):
             (0, 4),
         ),
         {"color": color},
-        # scissor=scissor,
+        scissor=scissor,
     )
 
     colors = read_color_from_render_target(

@@ -144,8 +144,8 @@ def _reset_state_render_target_state() -> None:
 def set_draw_render_target(render_target: RenderTarget) -> None:
     global _draw_render_target
     global _draw_render_target_size
-    if _draw_render_target is render_target and render_target.size == _draw_render_target_size:
-        return
+    # if _draw_render_target is render_target and render_target.size == _draw_render_target_size:
+    #    return
     set_draw_framebuffer(render_target._gl_framebuffer, render_target.size)
     _draw_render_target = render_target
     _draw_render_target_size = render_target.size
