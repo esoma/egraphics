@@ -417,6 +417,14 @@ class Shader:
         elif instances == 0:
             return
 
+        if scissor is not None:
+            print("scissor")
+            print(
+                IVector2(
+                    scissor.position.x, render_target.size.y - scissor.position.y - scissor.size.y
+                )
+            )
+            print(scissor.size)
         set_gl_execution_state(
             depth_write,
             depth_test.value,

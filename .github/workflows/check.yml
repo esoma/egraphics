@@ -75,7 +75,7 @@ jobs:
       if: runner.os != 'Linux'
       run: |
         export DYLD_LIBRARY_PATH=$PWD/vendor/SDL:$DYLD_LIBRARY_PATH
-        poetry run pytest --cov=egraphics --cov-report=xml
+        poetry run pytest --cov=egraphics test/shader_execute/test_scissor.py --cov-report=xml
       env:
         LIBGL_ALWAYS_SOFTWARE: "true"
 

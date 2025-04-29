@@ -86,5 +86,6 @@ def test_basic(render_target, pixel):
         render_target, IRectangle(IVector2(0, 0), render_target.size)
     )
     print(list(colors))
+    print(set(colors))
     assert colors[pixel_changed] == color
     assert all((c != color for c in (colors[:pixel_changed], colors[pixel_changed + 1 :])))
