@@ -26,8 +26,7 @@ from pathlib import Path
 DIR = Path(__file__).parent
 
 
-# @pytest.mark.parametrize("pixel", ["top-left", "top-right", "bottom-right", "bottom-left"])
-@pytest.mark.parametrize("pixel", ["top-right"])
+@pytest.mark.parametrize("pixel", ["top-left", "top-right", "bottom-right", "bottom-left"])
 def test_basic(render_target, pixel):
     if pixel == "top-right":
         scissor = IBoundingBox2d(render_target.size.xo - IVector2(2, 0), IVector2(2))
@@ -39,13 +38,23 @@ def test_basic(render_target, pixel):
         ]
     elif pixel == "top-left":
         scissor = IBoundingBox2d(IVector2(0), IVector2(2))
-        pixels_changed = [(render_target.size.x * render_target.size.y) - render_target.size.x]
+        pixels_changed = [
+            (render_target.size.x * render_target.size.y) - render_target.size.x,
+            (render_target.size.x * render_target.size.y) - render_target.size.x + 1,
+            (render_target.size.x * render_target.size.y) - render_target.size.x * 2,
+            (render_target.size.x * render_target.size.y) - render_target.size.x * 2 + 1,
+        ]
     elif pixel == "bottom-right":
         scissor = IBoundingBox2d(render_target.size - IVector2(2), IVector2(2))
-        pixels_changed = [render_target.size.x - 1]
+        pixels_changed = [
+            render_target.size.x - 1,
+            render_target.size.x - 2,
+            render_target.size.x * 2 - 1,
+            render_target.size.x * 2 - 2,
+        ]
     elif pixel == "bottom-left":
         scissor = IBoundingBox2d(render_target.size.oy - IVector2(0, 2), IVector2(2))
-        pixels_changed = [0]
+        pixels_changed = [0, 1, render_target.size.x, render_target.size.x + 1]
 
     clear_render_target(render_target, color=FVector3(0, 0, 0), depth=True)
     color = FVector4(1, 1, 1, 1)
