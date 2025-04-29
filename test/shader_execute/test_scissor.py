@@ -79,7 +79,7 @@ def test_basic(render_target, pixel):
             (0, 4),
         ),
         {"color": color},
-        scissor=IBoundingBox2d(IVector(0), render_target.size),
+        scissor=IBoundingBox2d(IVector2(0), render_target.size),
     )
 
     colors = read_color_from_render_target(
