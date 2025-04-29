@@ -85,6 +85,7 @@ def test_basic(render_target, pixel):
     colors = read_color_from_render_target(
         render_target, IRectangle(IVector2(0, 0), render_target.size)
     )
+    print(colors)
     print(list(colors))
     print(set(colors))
     assert colors[pixel_changed] == color
