@@ -6,6 +6,7 @@ __all__ = [
     "clear_render_target",
     "DepthTest",
     "FaceCull",
+    "FaceRasterization",
     "GBuffer",
     "GBufferFrequency",
     "GBufferNature",
@@ -54,6 +55,7 @@ from ._shader import BlendFactor
 from ._shader import BlendFunction
 from ._shader import DepthTest
 from ._shader import FaceCull
+from ._shader import FaceRasterization
 from ._shader import PrimitiveMode
 from ._shader import Shader
 from ._shader import ShaderAttribute

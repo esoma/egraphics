@@ -5,6 +5,7 @@ __all__ = [
     "BlendFunction",
     "DepthTest",
     "FaceCull",
+    "FaceRasterization",
     "PrimitiveMode",
     "Shader",
     "ShaderAttribute",
@@ -35,6 +36,7 @@ from ._egraphics import GL_DOUBLE_VEC4
 from ._egraphics import GL_DST_ALPHA
 from ._egraphics import GL_DST_COLOR
 from ._egraphics import GL_EQUAL
+from ._egraphics import GL_FILL
 from ._egraphics import GL_FLOAT
 from ._egraphics import GL_FLOAT_MAT2
 from ._egraphics import GL_FLOAT_MAT2x3
@@ -71,6 +73,7 @@ from ._egraphics import GL_INT_VEC3
 from ._egraphics import GL_INT_VEC4
 from ._egraphics import GL_LEQUAL
 from ._egraphics import GL_LESS
+from ._egraphics import GL_LINE
 from ._egraphics import GL_LINES
 from ._egraphics import GL_LINES_ADJACENCY
 from ._egraphics import GL_LINE_LOOP
@@ -87,6 +90,7 @@ from ._egraphics import GL_ONE_MINUS_DST_ALPHA
 from ._egraphics import GL_ONE_MINUS_DST_COLOR
 from ._egraphics import GL_ONE_MINUS_SRC_ALPHA
 from ._egraphics import GL_ONE_MINUS_SRC_COLOR
+from ._egraphics import GL_POINT
 from ._egraphics import GL_POINTS
 from ._egraphics import GL_SAMPLER_1D
 from ._egraphics import GL_SAMPLER_1D_ARRAY
@@ -257,6 +261,12 @@ class FaceCull(Enum):
     BACK = GL_BACK
 
 
+class FaceRasterization(Enum):
+    POINT = GL_POINT
+    LINE = GL_LINE
+    FILL = GL_FILL
+
+
 class Shader:
     _active: ClassVar[ref[Shader] | None] = None
 
@@ -404,6 +414,7 @@ class Shader:
         face_cull: FaceCull = FaceCull.NONE,
         instances: int = 1,
         scissor: IBoundingBox2d | None = None,
+        face_rasterization: FaceRasterization = FaceRasterization.FILL,
     ) -> None:
         uniform_values: list[tuple[ShaderUniform, Any]] = []
         for uniform in self.uniforms:
@@ -435,6 +446,7 @@ class Shader:
             ),
             None if scissor is None else scissor.size,
             depth_clamp,
+            face_rasterization.value,
         )
 
         set_draw_render_target(render_target)

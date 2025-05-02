@@ -61,6 +61,7 @@ typedef struct ModuleState
     GLenum cull_face;
     bool scissor_enabled;
     int scissor[4];
+    GLenum polygon_rasterization_mode;
 } ModuleState;
 
 static PyObject *
@@ -99,6 +100,7 @@ reset_module_state(PyObject *module, PyObject *unused)
     state->scissor[1] = -1;
     state->scissor[2] = -1;
     state->scissor[3] = -1;
+    state->polygon_rasterization_mode = GL_FILL;
 
     state->texture_filter_anisotropic_supported = GLEW_EXT_texture_filter_anisotropic;
     Py_RETURN_NONE;
@@ -1491,7 +1493,7 @@ set_gl_execution_state(PyObject *module, PyObject **args, Py_ssize_t nargs)
     PyObject *ex = 0;
     struct EMathApi *emath_api = 0;
 
-    CHECK_UNEXPECTED_ARG_COUNT_ERROR(16);
+    CHECK_UNEXPECTED_ARG_COUNT_ERROR(17);
 
     bool depth_write = (args[0] == Py_True);
 
@@ -1534,6 +1536,8 @@ set_gl_execution_state(PyObject *module, PyObject **args, Py_ssize_t nargs)
     PyObject *py_scissor_size = args[14];
 
     bool depth_clamp = (args[15] == Py_True);
+
+    GLenum polygon_rasterization_mode = PyLong_AsLong(args[16]);
 
     ModuleState *state = (ModuleState *)PyModule_GetState(module);
     CHECK_UNEXPECTED_PYTHON_ERROR();
@@ -1737,6 +1741,13 @@ set_gl_execution_state(PyObject *module, PyObject **args, Py_ssize_t nargs)
             state->scissor[2] = scissor_size[2];
             state->scissor[3] = scissor_size[3];
         }
+    }
+
+    if (state->polygon_rasterization_mode != polygon_rasterization_mode)
+    {
+        glPolygonMode(GL_FRONT_AND_BACK, polygon_rasterization_mode);
+        CHECK_GL_ERROR();
+        state->polygon_rasterization_mode = polygon_rasterization_mode;
     }
 
     if (emath_api){ EMathApi_Release(); }
@@ -2140,6 +2151,10 @@ PyInit__egraphics()
     ADD_CONSTANT(GL_LINES_ADJACENCY);
     ADD_CONSTANT(GL_TRIANGLE_STRIP_ADJACENCY);
     ADD_CONSTANT(GL_TRIANGLES_ADJACENCY);
+
+    ADD_CONSTANT(GL_POINT);
+    ADD_CONSTANT(GL_LINE);
+    ADD_CONSTANT(GL_FILL);
 
     {
         PyObject *eplatform = PyImport_ImportModule("eplatform");

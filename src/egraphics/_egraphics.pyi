@@ -188,6 +188,9 @@ __all__ = [
     "GL_LINES_ADJACENCY",
     "GL_TRIANGLE_STRIP_ADJACENCY",
     "GL_TRIANGLES_ADJACENCY",
+    "GL_POINT",
+    "GL_LINE",
+    "GL_FILL",
     "gl_debug",
     "activate_gl_vertex_array",
     "set_gl_buffer_target",
@@ -287,6 +290,7 @@ GlBufferUsage = NewType("GlBufferUsage", int)
 GlCull = NewType("GlCull", int)
 GlFunc = NewType("GlFunc", int)
 GlFramebuffer = NewType("GlFramebuffer", int)
+GlPolygonRasterizationMode = NewType("GlPolygonRasterizationMode", int)
 GlPrimitive = NewType("GlPrimitive", int)
 GlProgram = NewType("GlProgram", int)
 GlRenderbuffer = NewType("GlRenderbuffer", int)
@@ -494,6 +498,10 @@ GL_LINES_ADJACENCY: GlPrimitive
 GL_TRIANGLE_STRIP_ADJACENCY: GlPrimitive
 GL_TRIANGLES_ADJACENCY: GlPrimitive
 
+GL_POINT: GlPolygonRasterizationMode
+GL_LINE: GlPolygonRasterizationMode
+GL_FILL: GlPolygonRasterizationMode
+
 def debug_gl(callback: Callable[[int, int, int, int, str], None], /) -> None: ...
 def activate_gl_vertex_array(gl_vertex_array: GlVertexArray | None, /) -> None: ...
 def set_gl_buffer_target(target: GlBufferTarget, gl_buffer: GlBuffer | None, /) -> None: ...
@@ -644,6 +652,7 @@ def set_gl_execution_state(
     scissor_position: IVector2 | None,
     scissor_size: IVector2 | None,
     depth_clamp: bool,
+    polygon_rasterization_mode: GlPolygonRasterizationMode,
     /,
 ) -> None: ...
 def get_gl_version() -> str: ...
