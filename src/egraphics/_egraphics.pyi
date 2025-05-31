@@ -653,6 +653,7 @@ def set_gl_execution_state(
     scissor_size: IVector2 | None,
     depth_clamp: bool,
     polygon_rasterization_mode: GlPolygonRasterizationMode,
+    point_size: float,
     /,
 ) -> None: ...
 def get_gl_version() -> str: ...

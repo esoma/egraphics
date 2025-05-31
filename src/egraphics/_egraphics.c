@@ -1,4 +1,3 @@
-
 #include "GL/glew.h"
 
 #define PY_SSIZE_T_CLEAN
@@ -62,6 +61,7 @@ typedef struct ModuleState
     bool scissor_enabled;
     int scissor[4];
     GLenum polygon_rasterization_mode;
+    float point_size;
 } ModuleState;
 
 static PyObject *
@@ -101,6 +101,7 @@ reset_module_state(PyObject *module, PyObject *unused)
     state->scissor[2] = -1;
     state->scissor[3] = -1;
     state->polygon_rasterization_mode = GL_FILL;
+    state->point_size = 1.0f;
 
     state->texture_filter_anisotropic_supported = GLEW_EXT_texture_filter_anisotropic;
     Py_RETURN_NONE;
@@ -1418,6 +1419,7 @@ SET_ACTIVE_GL_PROGRAM_UNIFORM(unsigned_int_2, GLuint, 2ui);
 SET_ACTIVE_GL_PROGRAM_UNIFORM(unsigned_int_3, GLuint, 3ui);
 SET_ACTIVE_GL_PROGRAM_UNIFORM(unsigned_int_4, GLuint, 4ui);
 
+
 static PyObject *
 execute_gl_program_index_buffer(PyObject *module, PyObject **args, Py_ssize_t nargs)
 {
@@ -1493,7 +1495,7 @@ set_gl_execution_state(PyObject *module, PyObject **args, Py_ssize_t nargs)
     PyObject *ex = 0;
     struct EMathApi *emath_api = 0;
 
-    CHECK_UNEXPECTED_ARG_COUNT_ERROR(17);
+    CHECK_UNEXPECTED_ARG_COUNT_ERROR(18);
 
     bool depth_write = (args[0] == Py_True);
 
@@ -1538,6 +1540,9 @@ set_gl_execution_state(PyObject *module, PyObject **args, Py_ssize_t nargs)
     bool depth_clamp = (args[15] == Py_True);
 
     GLenum polygon_rasterization_mode = PyLong_AsLong(args[16]);
+
+    float point_size = PyFloat_AsDouble(args[17]);
+    CHECK_UNEXPECTED_PYTHON_ERROR();
 
     ModuleState *state = (ModuleState *)PyModule_GetState(module);
     CHECK_UNEXPECTED_PYTHON_ERROR();
@@ -1748,6 +1753,13 @@ set_gl_execution_state(PyObject *module, PyObject **args, Py_ssize_t nargs)
         glPolygonMode(GL_FRONT_AND_BACK, polygon_rasterization_mode);
         CHECK_GL_ERROR();
         state->polygon_rasterization_mode = polygon_rasterization_mode;
+    }
+
+    if (state->point_size != point_size)
+    {
+        glPointSize(point_size);
+        CHECK_GL_ERROR();
+        state->point_size = point_size;
     }
 
     if (emath_api){ EMathApi_Release(); }
