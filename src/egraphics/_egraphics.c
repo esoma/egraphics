@@ -313,6 +313,50 @@ error:
     return 0;
 }
 
+static PyObject *
+write_gl_buffer_target_data(PyObject *module, PyObject **args, Py_ssize_t nargs)
+{
+    Py_buffer buffer;
+    buffer.obj = 0;
+
+    CHECK_UNEXPECTED_ARG_COUNT_ERROR(3);
+
+    GLenum target = PyLong_AsLong(args[0]);
+    CHECK_UNEXPECTED_PYTHON_ERROR();
+
+    if (PyObject_GetBuffer(args[1], &buffer, PyBUF_CONTIG_RO) == -1){ goto error; }
+
+    GLintptr offset = PyLong_AsLong(args[2]);
+    CHECK_UNEXPECTED_PYTHON_ERROR();
+
+    GLint buffer_size;
+    glGetBufferParameteriv(target, GL_BUFFER_SIZE, &buffer_size);
+    CHECK_GL_ERROR();
+
+    if (offset < 0 || offset + buffer.len > buffer_size)
+    {
+        PyErr_Format(
+            PyExc_ValueError,
+            "write would overrun buffer (offset: %zi, size: %zi, buffer size: %i)",
+            offset,
+            buffer.len,
+            buffer_size
+        );
+        goto error;
+    }
+
+    glBufferSubData(target, offset, buffer.len, buffer.buf);
+    PyBuffer_Release(&buffer);
+    CHECK_GL_ERROR();
+
+    Py_RETURN_NONE;
+error:
+    if (buffer.buf != 0)
+    {
+        PyBuffer_Release(&buffer);
+    }
+    return 0;
+}
 
 static PyObject *
 set_gl_buffer_target_data(PyObject *module, PyObject **args, Py_ssize_t nargs)
@@ -1797,6 +1841,7 @@ static PyMethodDef module_PyMethodDef[] = {
     {"delete_gl_renderbuffer", delete_gl_renderbuffer, METH_O, 0},
     {"set_gl_buffer_target", (PyCFunction)set_gl_buffer_target, METH_FASTCALL, 0},
     {"set_gl_buffer_target_data", (PyCFunction)set_gl_buffer_target_data, METH_FASTCALL, 0},
+    {"write_gl_buffer_target_data", (PyCFunction)write_gl_buffer_target_data, METH_FASTCALL, 0},
     {"create_gl_buffer_memory_view", (PyCFunction)create_gl_buffer_memory_view, METH_FASTCALL, 0},
     {"release_gl_buffer_memory_view", release_gl_buffer_memory_view, METH_O, 0},
     {"configure_gl_vertex_array_location", (PyCFunction)configure_gl_vertex_array_location, METH_FASTCALL, 0},

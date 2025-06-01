@@ -116,6 +116,25 @@ def test_buffer_protocol_0(platform):
     assert bytes(mv) == b""
 
 
+def test_write(platform):
+    g_buffer = GBuffer(b"\x00\x00\x00")
+    assert bytes(g_buffer) == b"\x00\x00\x00"
+    g_buffer.write(b"\x01")
+    assert bytes(g_buffer) == b"\x01\x00\x00"
+    g_buffer.write(b"\x02", offset=1)
+    assert bytes(g_buffer) == b"\x01\x02\x00"
+    g_buffer.write(b"\x03", offset=2)
+    assert bytes(g_buffer) == b"\x01\x02\x03"
+    with pytest.raises(ValueError) as excinfo:
+        g_buffer.write(b"\xFF", offset=3)
+    assert str(excinfo.value) == "write would overrun buffer (offset: 3, size: 1, buffer size: 3)"
+    with pytest.raises(ValueError) as excinfo:
+        g_buffer.write(b"\xFF", offset=-1)
+    assert str(excinfo.value) == "write would overrun buffer (offset: -1, size: 1, buffer size: 3)"
+    g_buffer.write(b"\x90\x91\x92")
+    assert bytes(g_buffer) == b"\x90\x91\x92"
+
+
 @pytest.mark.parametrize(
     "name, buffer_binding",
     [

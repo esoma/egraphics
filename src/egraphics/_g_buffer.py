@@ -27,6 +27,7 @@ from ._egraphics import delete_gl_buffer
 from ._egraphics import release_gl_buffer_memory_view
 from ._egraphics import set_gl_buffer_target
 from ._egraphics import set_gl_buffer_target_data
+from ._egraphics import write_gl_buffer_target_data
 from ._state import register_reset_state_callback
 
 # python
@@ -166,6 +167,10 @@ class GBuffer:
             release_gl_buffer_memory_view(GL_COPY_READ_BUFFER)
 
         self._buffer = None
+
+    def write(self, data: Buffer, *, offset: int = 0) -> None:
+        GBufferTarget.ARRAY.g_buffer = self
+        write_gl_buffer_target_data(GL_ARRAY_BUFFER, data, offset)
 
     @property
     def frequency(self) -> GBufferFrequency:
