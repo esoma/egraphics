@@ -2,11 +2,9 @@ from __future__ import annotations
 
 __all__ = ["get_gl_version", "register_reset_state_callback", "reset_state"]
 
-# egraphics
-from ._egraphics import get_gl_version as get_gl_version_string
-
-# python
 from typing import Callable
+
+from ._egraphics import get_gl_version as get_gl_version_string
 
 _reset_state_callbacks: list[Callable[[], None]] = []
 _gl_version: tuple[int, int] | None = None

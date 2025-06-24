@@ -1,11 +1,5 @@
-# egraphics
-from egraphics import GBuffer
-from egraphics._g_buffer import _reset_g_buffer_target_state
-
-# emath
+import pytest
 from emath import FVector3
-
-# pyopengl
 from OpenGL.GL import GL_ARRAY_BUFFER
 from OpenGL.GL import GL_ARRAY_BUFFER_BINDING
 from OpenGL.GL import GL_BUFFER_SIZE
@@ -24,8 +18,8 @@ from OpenGL.GL import glGetBufferParameteriv
 from OpenGL.GL import glGetIntegerv
 from OpenGL.GL import glIsBuffer
 
-# pytest
-import pytest
+from egraphics import GBuffer
+from egraphics._g_buffer import _reset_g_buffer_target_state
 
 
 def test_defaults(platform):
@@ -126,10 +120,10 @@ def test_write(platform):
     g_buffer.write(b"\x03", offset=2)
     assert bytes(g_buffer) == b"\x01\x02\x03"
     with pytest.raises(ValueError) as excinfo:
-        g_buffer.write(b"\xFF", offset=3)
+        g_buffer.write(b"\xff", offset=3)
     assert str(excinfo.value) == "write would overrun buffer (offset: 3, size: 1, buffer size: 3)"
     with pytest.raises(ValueError) as excinfo:
-        g_buffer.write(b"\xFF", offset=-1)
+        g_buffer.write(b"\xff", offset=-1)
     assert str(excinfo.value) == "write would overrun buffer (offset: -1, size: 1, buffer size: 3)"
     g_buffer.write(b"\x90\x91\x92")
     assert bytes(g_buffer) == b"\x90\x91\x92"
@@ -137,10 +131,7 @@ def test_write(platform):
 
 @pytest.mark.parametrize(
     "name, buffer_binding",
-    [
-        ("ARRAY", GL_ARRAY_BUFFER_BINDING),
-        ("COPY_READ", GL_COPY_READ_BUFFER_BINDING),
-    ],
+    [("ARRAY", GL_ARRAY_BUFFER_BINDING), ("COPY_READ", GL_COPY_READ_BUFFER_BINDING)],
 )
 def test_g_buffer_target_default_state(platform, name, buffer_binding):
     target = getattr(GBuffer.Target, name)
@@ -150,10 +141,7 @@ def test_g_buffer_target_default_state(platform, name, buffer_binding):
 
 @pytest.mark.parametrize(
     "name, buffer_binding",
-    [
-        ("ARRAY", GL_ARRAY_BUFFER_BINDING),
-        ("COPY_READ", GL_COPY_READ_BUFFER_BINDING),
-    ],
+    [("ARRAY", GL_ARRAY_BUFFER_BINDING), ("COPY_READ", GL_COPY_READ_BUFFER_BINDING)],
 )
 def test_g_buffer_target_set_g_buffer(platform, name, buffer_binding):
     g_buffer = GBuffer(0)

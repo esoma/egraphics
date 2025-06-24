@@ -1,26 +1,19 @@
-# egraphics
+from collections import Counter
+from pathlib import Path
+
+import pytest
+from egeometry import IRectangle
+from emath import FVector2
+from emath import FVector2Array
+from emath import FVector4
+from emath import IVector2
+
 from egraphics import GBufferView
 from egraphics import GBufferViewMap
 from egraphics import PrimitiveMode
 from egraphics import Shader
 from egraphics import clear_render_target
 from egraphics import read_color_from_render_target
-
-# egeometry
-from egeometry import IRectangle
-
-# emath
-from emath import FVector2
-from emath import FVector2Array
-from emath import FVector4
-from emath import IVector2
-
-# pytest
-import pytest
-
-# python
-from collections import Counter
-from pathlib import Path
 
 DIR = Path(__file__).parent
 
@@ -57,10 +50,7 @@ def test_point_size(render_target, point_size):
     shader.execute(
         render_target,
         PrimitiveMode.POINT,
-        GBufferViewMap(
-            {"xy": GBufferView.from_array(FVector2Array(FVector2(0, 0)))},
-            (0, 1),
-        ),
+        GBufferViewMap({"xy": GBufferView.from_array(FVector2Array(FVector2(0, 0)))}, (0, 1)),
         {},
         **kwargs,
     )

@@ -1,4 +1,11 @@
-# egraphics
+import pytest
+from egeometry import IRectangle
+from emath import FVector2
+from emath import FVector2Array
+from emath import FVector4
+from emath import IVector2
+from eplatform import Window
+
 from egraphics import BlendFactor
 from egraphics import BlendFunction
 from egraphics import GBufferView
@@ -7,21 +14,6 @@ from egraphics import PrimitiveMode
 from egraphics import Shader
 from egraphics import clear_render_target
 from egraphics import read_color_from_render_target
-
-# egeometry
-from egeometry import IRectangle
-
-# emath
-from emath import FVector2
-from emath import FVector2Array
-from emath import FVector4
-from emath import IVector2
-
-# eplatform
-from eplatform import Window
-
-# pytest
-import pytest
 
 VERTEX_SHADER = b"""
 #version 140
@@ -61,18 +53,13 @@ def draw_fullscreen_quad(
             {
                 "xy": GBufferView.from_array(
                     FVector2Array(
-                        FVector2(-1, -1),
-                        FVector2(-1, 1),
-                        FVector2(1, 1),
-                        FVector2(1, -1),
+                        FVector2(-1, -1), FVector2(-1, 1), FVector2(1, 1), FVector2(1, -1)
                     )
                 )
             },
             (0, 4),
         ),
-        {
-            "color": color,
-        },
+        {"color": color},
         blend_source=blend_source,
         blend_destination=blend_destination,
         blend_source_alpha=blend_source_alpha,
@@ -116,11 +103,7 @@ def calculate_factor(factor, source_color, destination_color, blend_color) -> FV
 
 @pytest.mark.parametrize("blend_source", BlendFactor)
 @pytest.mark.parametrize("blend_destination", BlendFactor)
-def test_source_destination_factors(
-    blend_source,
-    blend_destination,
-    render_target,
-) -> None:
+def test_source_destination_factors(blend_source, blend_destination, render_target) -> None:
     color = FVector4(0.45, 0.3, 0.8, 0.333)
     clear_color = FVector4(0.2, 0.5, 0.2, 1)
     blend_color = FVector4(0.8, 0.7, 0.6, 0.5)
@@ -159,11 +142,7 @@ def test_source_destination_factors(
 
 @pytest.mark.parametrize("blend_source", BlendFactor)
 @pytest.mark.parametrize("blend_destination", BlendFactor)
-def test_source_destination_alpha_factors(
-    render_target,
-    blend_source,
-    blend_destination,
-):
+def test_source_destination_alpha_factors(render_target, blend_source, blend_destination):
     color = FVector4(0.45, 0.3, 0.8, 0.333)
     clear_color = FVector4(0.2, 0.5, 0.2, 1)
     blend_color = FVector4(0.8, 0.7, 0.6, 0.5)

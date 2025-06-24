@@ -2,7 +2,6 @@ from __future__ import annotations
 
 __all__ = [
     "bind_texture_unit",
-    "bind_unit",
     "MipmapSelection",
     "Texture",
     "TextureComponents",
@@ -12,7 +11,25 @@ __all__ = [
     "TextureWrap",
 ]
 
-# egraphics
+import ctypes
+from collections.abc import Buffer
+from ctypes import sizeof as c_sizeof
+from enum import Enum
+from math import prod
+from typing import Any
+from typing import ClassVar
+from typing import Final
+from typing import Mapping
+from typing import NamedTuple
+from typing import Self
+from typing import get_args as get_typing_args
+from weakref import ref
+
+from emath import FVector4
+from emath import UVector2
+
+from egraphics._weak_fifo_set import WeakFifoSet
+
 from . import _egraphics
 from ._egraphics import GL_BYTE
 from ._egraphics import GL_CLAMP_TO_BORDER
@@ -51,28 +68,6 @@ from ._egraphics import set_gl_texture_target
 from ._egraphics import set_gl_texture_target_2d_data
 from ._egraphics import set_gl_texture_target_parameters
 from ._state import register_reset_state_callback
-
-# egraphics
-from egraphics._weak_fifo_set import WeakFifoSet
-
-# emath
-from emath import FVector4
-from emath import UVector2
-
-# python
-from collections.abc import Buffer
-import ctypes
-from ctypes import sizeof as c_sizeof
-from enum import Enum
-from math import prod
-from typing import Any
-from typing import ClassVar
-from typing import Final
-from typing import Mapping
-from typing import NamedTuple
-from typing import Self
-from typing import get_args as get_typing_args
-from weakref import ref
 
 _DEFAULT_TEXTURE_UNIT: Final[int] = 0
 _FIRST_BINDABLE_TEXTURE_UNIT: Final[int] = 1
@@ -379,10 +374,7 @@ class Texture:
             self._anisotropy = anisotropy
 
             gl_wrap_args: tuple[GlTextureWrap, GlTextureWrap | None, GlTextureWrap | None] = tuple(
-                (
-                    *(w.value for w in wrap),
-                    *(None for i in range(3 - len(wrap))),
-                )
+                (*(w.value for w in wrap), *(None for i in range(3 - len(wrap))))
             )  # type: ignore
             set_gl_texture_target_parameters(
                 gl_target, gl_min_filter, gl_mag_filter, *gl_wrap_args, wrap_color, anisotropy

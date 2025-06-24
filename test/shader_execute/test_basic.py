@@ -1,16 +1,8 @@
-# egraphics
-from egraphics import GBuffer
-from egraphics import GBufferView
-from egraphics import GBufferViewMap
-from egraphics import PrimitiveMode
-from egraphics import Shader
-from egraphics import clear_render_target
-from egraphics import read_color_from_render_target
+import ctypes
+from pathlib import Path
 
-# egeometry
+import pytest
 from egeometry import IRectangle
-
-# emath
 from emath import FVector2
 from emath import FVector2Array
 from emath import FVector4
@@ -19,12 +11,13 @@ from emath import U8Array
 from emath import U16Array
 from emath import U32Array
 
-# pytest
-import pytest
-
-# python
-import ctypes
-from pathlib import Path
+from egraphics import GBuffer
+from egraphics import GBufferView
+from egraphics import GBufferViewMap
+from egraphics import PrimitiveMode
+from egraphics import Shader
+from egraphics import clear_render_target
+from egraphics import read_color_from_render_target
 
 DIR = Path(__file__).parent
 
@@ -189,12 +182,7 @@ def test_missing_attribute(render_target):
 @pytest.mark.parametrize("primitive_mode", list(PrimitiveMode))
 @pytest.mark.parametrize(
     "color",
-    [
-        FVector4(1, 1, 1, 1),
-        FVector4(1, 0, 0, 1),
-        FVector4(0, 1, 0, 1),
-        FVector4(0, 0, 1, 1),
-    ],
+    [FVector4(1, 1, 1, 1), FVector4(1, 0, 0, 1), FVector4(0, 1, 0, 1), FVector4(0, 0, 1, 1)],
 )
 @pytest.mark.parametrize(
     "index_array_type", [None, U8Array, U16Array, U32Array, "length", "offset"]
@@ -266,14 +254,7 @@ def test_basic(render_target, primitive_mode, color, index_array_type):
         elif index_array_type == "offset":
             indices = GBufferView(GBuffer(U8Array(4, 0, 1, 2, 3)), ctypes.c_uint8, offset=1)
         else:
-            indices = GBufferView.from_array(
-                index_array_type(
-                    0,
-                    1,
-                    2,
-                    3,
-                )
-            )
+            indices = GBufferView.from_array(index_array_type(0, 1, 2, 3))
 
     shader = Shader(
         vertex=b"""
@@ -305,10 +286,7 @@ def test_basic(render_target, primitive_mode, color, index_array_type):
     shader.execute(
         render_target,
         primitive_mode,
-        GBufferViewMap(
-            {"xy": GBufferView.from_array(positions)},
-            indices,
-        ),
+        GBufferViewMap({"xy": GBufferView.from_array(positions)}, indices),
         {"color": color, "extra_vertex_id": ctypes.c_int(extra_vertex_id)},
     )
 

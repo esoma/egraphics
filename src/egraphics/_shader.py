@@ -14,7 +14,30 @@ __all__ = [
 ]
 
 
-# egraphics
+import ctypes
+from collections.abc import Buffer
+from collections.abc import Mapping
+from collections.abc import Set
+from contextlib import ExitStack
+from ctypes import addressof
+from ctypes import c_int32
+from enum import Enum
+from typing import TYPE_CHECKING
+from typing import Any
+from typing import ClassVar
+from typing import Final
+from typing import Generic
+from typing import Mapping
+from typing import Sequence
+from typing import TypeVar
+from weakref import ref
+
+import emath
+from egeometry import IBoundingBox2d
+from emath import FVector4
+from emath import I32Array
+from emath import IVector2
+
 from ._egraphics import GL_ALWAYS
 from ._egraphics import GL_BACK
 from ._egraphics import GL_BOOL
@@ -22,14 +45,8 @@ from ._egraphics import GL_CONSTANT_ALPHA
 from ._egraphics import GL_CONSTANT_COLOR
 from ._egraphics import GL_DOUBLE
 from ._egraphics import GL_DOUBLE_MAT2
-from ._egraphics import GL_DOUBLE_MAT2x3
-from ._egraphics import GL_DOUBLE_MAT2x4
 from ._egraphics import GL_DOUBLE_MAT3
-from ._egraphics import GL_DOUBLE_MAT3x2
-from ._egraphics import GL_DOUBLE_MAT3x4
 from ._egraphics import GL_DOUBLE_MAT4
-from ._egraphics import GL_DOUBLE_MAT4x2
-from ._egraphics import GL_DOUBLE_MAT4x3
 from ._egraphics import GL_DOUBLE_VEC2
 from ._egraphics import GL_DOUBLE_VEC3
 from ._egraphics import GL_DOUBLE_VEC4
@@ -39,14 +56,8 @@ from ._egraphics import GL_EQUAL
 from ._egraphics import GL_FILL
 from ._egraphics import GL_FLOAT
 from ._egraphics import GL_FLOAT_MAT2
-from ._egraphics import GL_FLOAT_MAT2x3
-from ._egraphics import GL_FLOAT_MAT2x4
 from ._egraphics import GL_FLOAT_MAT3
-from ._egraphics import GL_FLOAT_MAT3x2
-from ._egraphics import GL_FLOAT_MAT3x4
 from ._egraphics import GL_FLOAT_MAT4
-from ._egraphics import GL_FLOAT_MAT4x2
-from ._egraphics import GL_FLOAT_MAT4x3
 from ._egraphics import GL_FLOAT_VEC2
 from ._egraphics import GL_FLOAT_VEC3
 from ._egraphics import GL_FLOAT_VEC4
@@ -74,11 +85,11 @@ from ._egraphics import GL_INT_VEC4
 from ._egraphics import GL_LEQUAL
 from ._egraphics import GL_LESS
 from ._egraphics import GL_LINE
-from ._egraphics import GL_LINES
-from ._egraphics import GL_LINES_ADJACENCY
 from ._egraphics import GL_LINE_LOOP
 from ._egraphics import GL_LINE_STRIP
 from ._egraphics import GL_LINE_STRIP_ADJACENCY
+from ._egraphics import GL_LINES
+from ._egraphics import GL_LINES_ADJACENCY
 from ._egraphics import GL_MAX
 from ._egraphics import GL_MIN
 from ._egraphics import GL_NEVER
@@ -111,11 +122,11 @@ from ._egraphics import GL_SAMPLER_CUBE_MAP_ARRAY
 from ._egraphics import GL_SAMPLER_CUBE_SHADOW
 from ._egraphics import GL_SRC_ALPHA
 from ._egraphics import GL_SRC_COLOR
-from ._egraphics import GL_TRIANGLES
-from ._egraphics import GL_TRIANGLES_ADJACENCY
 from ._egraphics import GL_TRIANGLE_FAN
 from ._egraphics import GL_TRIANGLE_STRIP
 from ._egraphics import GL_TRIANGLE_STRIP_ADJACENCY
+from ._egraphics import GL_TRIANGLES
+from ._egraphics import GL_TRIANGLES_ADJACENCY
 from ._egraphics import GL_UNSIGNED_BYTE
 from ._egraphics import GL_UNSIGNED_INT
 from ._egraphics import GL_UNSIGNED_INT_SAMPLER_1D
@@ -134,6 +145,18 @@ from ._egraphics import GL_UNSIGNED_INT_VEC3
 from ._egraphics import GL_UNSIGNED_INT_VEC4
 from ._egraphics import GL_UNSIGNED_SHORT
 from ._egraphics import GL_ZERO
+from ._egraphics import GL_DOUBLE_MAT2x3
+from ._egraphics import GL_DOUBLE_MAT2x4
+from ._egraphics import GL_DOUBLE_MAT3x2
+from ._egraphics import GL_DOUBLE_MAT3x4
+from ._egraphics import GL_DOUBLE_MAT4x2
+from ._egraphics import GL_DOUBLE_MAT4x3
+from ._egraphics import GL_FLOAT_MAT2x3
+from ._egraphics import GL_FLOAT_MAT2x4
+from ._egraphics import GL_FLOAT_MAT3x2
+from ._egraphics import GL_FLOAT_MAT3x4
+from ._egraphics import GL_FLOAT_MAT4x2
+from ._egraphics import GL_FLOAT_MAT4x3
 from ._egraphics import GlType
 from ._egraphics import create_gl_program
 from ._egraphics import delete_gl_program
@@ -183,34 +206,6 @@ from ._render_target import set_draw_render_target
 from ._state import register_reset_state_callback
 from ._texture import Texture
 from ._texture import bind_texture_unit
-
-# egeometry
-from egeometry import IBoundingBox2d
-
-# emath
-import emath
-from emath import FVector4
-from emath import I32Array
-from emath import IVector2
-
-# python
-from collections.abc import Buffer
-from collections.abc import Mapping
-from collections.abc import Set
-from contextlib import ExitStack
-import ctypes
-from ctypes import addressof
-from ctypes import c_int32
-from enum import Enum
-from typing import Any
-from typing import ClassVar
-from typing import Final
-from typing import Generic
-from typing import Mapping
-from typing import Sequence
-from typing import TYPE_CHECKING
-from typing import TypeVar
-from weakref import ref
 
 if TYPE_CHECKING:
     # egraphics
@@ -286,23 +281,13 @@ class Shader:
         self._gl_program = create_gl_program(vertex, geometry, fragment)
 
         self._attributes = tuple(
-            ShaderAttribute(
-                name.removesuffix("[0]"),
-                _GL_TYPE_TO_PY[type],
-                size,
-                location,
-            )
+            ShaderAttribute(name.removesuffix("[0]"), _GL_TYPE_TO_PY[type], size, location)
             for name, size, type, location in get_gl_program_attributes(self._gl_program)
             if not name.startswith("gl_")
         )
 
         self._uniforms = tuple(
-            ShaderUniform(
-                name.removesuffix("[0]"),
-                _GL_TYPE_TO_PY[type],
-                size,
-                location,
-            )
+            ShaderUniform(name.removesuffix("[0]"), _GL_TYPE_TO_PY[type], size, location)
             for name, size, type, location in get_gl_program_uniforms(self._gl_program)
             if not name.startswith("gl_")
         )
@@ -324,10 +309,7 @@ class Shader:
         return self._inputs[name]
 
     def _set_uniform(
-        self,
-        uniform: ShaderUniform,
-        value: UniformValue,
-        exit_stack: ExitStack,
+        self, uniform: ShaderUniform, value: UniformValue, exit_stack: ExitStack
     ) -> None:
         assert uniform in self._uniforms
         input_value: Any = None
@@ -365,9 +347,9 @@ class Shader:
                 set_size = 1
                 if uniform._set_type in _POD_UNIFORM_TYPES:
                     input_value = value
-                    cache_key = value.value
+                    cache_key = value.value  # type: ignore
                 else:
-                    input_value = value.pointer
+                    input_value = value.pointer  # type: ignore
             else:
                 array_type = _PY_TYPE_TO_ARRAY[uniform.data_type]
                 if not isinstance(value, array_type):
@@ -375,8 +357,8 @@ class Shader:
                         f"expected {uniform._set_type} or {array_type} for {uniform.name} "
                         f"(got {type(value)})"
                     )
-                input_value = value.pointer
-                set_size = min(uniform.size, len(value))
+                input_value = value.pointer  # type: ignore
+                set_size = min(uniform.size, len(value))  # type: ignore
         if set_size != 0:
             uniform._set(uniform.location, set_size, input_value, cache_key)
 

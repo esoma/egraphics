@@ -1,12 +1,10 @@
 __all__ = ["debug_callback"]
 
-# egraphics
-from ._egraphics import debug_gl
-
-# python
 from contextlib import contextmanager
 from typing import Callable
 from typing import Generator
+
+from ._egraphics import debug_gl
 
 
 @contextmanager

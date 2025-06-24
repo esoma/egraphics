@@ -1,25 +1,10 @@
-# egraphics
-from egraphics import Image
-from egraphics import Texture2d
-from egraphics import TextureComponents
-from egraphics import TextureRenderTarget
-from egraphics import clear_render_target
-from egraphics import read_color_from_render_target
-from egraphics import read_depth_from_render_target
-from egraphics import reset_state
-import egraphics._render_target
-from egraphics._render_target import set_draw_render_target
-from egraphics._render_target import set_read_render_target
+import ctypes
 
-# egeometry
+import pytest
 from egeometry import IRectangle
-
-# emath
 from emath import FVector3
 from emath import FVector4
 from emath import IVector2
-
-# pyopengl
 from OpenGL.GL import GL_DRAW_FRAMEBUFFER_BINDING
 from OpenGL.GL import GL_FRAMEBUFFER_COMPLETE
 from OpenGL.GL import GL_READ_FRAMEBUFFER
@@ -28,11 +13,17 @@ from OpenGL.GL import GL_VIEWPORT
 from OpenGL.GL import glCheckFramebufferStatus
 from OpenGL.GL import glGetIntegerv
 
-# pytest
-import pytest
-
-# python
-import ctypes
+import egraphics._render_target
+from egraphics import Image
+from egraphics import Texture2d
+from egraphics import TextureComponents
+from egraphics import TextureRenderTarget
+from egraphics import clear_render_target
+from egraphics import read_color_from_render_target
+from egraphics import read_depth_from_render_target
+from egraphics import reset_state
+from egraphics._render_target import set_draw_render_target
+from egraphics._render_target import set_read_render_target
 
 
 def test_default_state():

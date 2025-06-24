@@ -1,10 +1,8 @@
 from __future__ import annotations
 
-# egraphics
-from .test_texture import TextureTest
-
-# egraphics
 from egraphics import Texture2d
+
+from .test_texture import TextureTest
 
 
 class TestTexture2d(TextureTest):

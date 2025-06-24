@@ -1,4 +1,11 @@
-# egraphics
+import pytest
+from egeometry import IRectangle
+from emath import FVector2
+from emath import FVector2Array
+from emath import FVector4
+from emath import IVector2
+from emath import U8Array
+
 from egraphics import FaceRasterization
 from egraphics import GBufferView
 from egraphics import GBufferViewMap
@@ -6,19 +13,6 @@ from egraphics import PrimitiveMode
 from egraphics import Shader
 from egraphics import clear_render_target
 from egraphics import read_color_from_render_target
-
-# egeometry
-from egeometry import IRectangle
-
-# emath
-from emath import FVector2
-from emath import FVector2Array
-from emath import FVector4
-from emath import IVector2
-from emath import U8Array
-
-# pytest
-import pytest
 
 
 @pytest.mark.parametrize("face_rasterization", FaceRasterization)

@@ -1,32 +1,25 @@
-# egraphics
+import ctypes
+import sys
+from contextlib import ExitStack
+
+import emath
+import pytest
+from emath import DArray
+from emath import FArray
+from emath import I32Array
+from emath import U32Array
+from emath import UVector2
+from OpenGL.GL import glGetUniformfv
+from OpenGL.GL import glGetUniformiv
+from OpenGL.GL import glGetUniformLocation
+from OpenGL.GL import glIsProgram
+
 from egraphics import Shader
 from egraphics import ShaderAttribute
 from egraphics import ShaderUniform
 from egraphics import Texture
 from egraphics import Texture2d
 from egraphics import TextureComponents
-
-# emath
-import emath
-from emath import DArray
-from emath import FArray
-from emath import I32Array
-from emath import U32Array
-from emath import UVector2
-
-# pyopengl
-from OpenGL.GL import glGetUniformLocation
-from OpenGL.GL import glGetUniformfv
-from OpenGL.GL import glGetUniformiv
-from OpenGL.GL import glIsProgram
-
-# pytest
-import pytest
-
-# python
-from contextlib import ExitStack
-import ctypes
-import sys
 
 
 def test_empty_shader(platform):
@@ -61,9 +54,7 @@ def test_link_error(platform):
             {{
                 gl_Position = some_function_that_doesnt_exist();
             }}
-            """.encode(
-                "utf-8"
-            )
+            """.encode("utf-8")
         )
     assert str(excinfo.value).startswith(f"failed to link:\n")
 
@@ -151,9 +142,7 @@ def test_gl_attributes_and_uniforms(platform):
     {{
         gl_Position = vec4(gl_VertexID, 0, gl_DepthRange.near, 1);
     }}
-    """.encode(
-            "utf-8"
-        )
+    """.encode("utf-8")
     )
     assert len(shader.attributes) == 0
     assert len(shader.uniforms) == 0
@@ -201,9 +190,7 @@ def test_pod_attributes(platform, gl_version, location, glsl_type, python_type, 
     {{
         gl_Position = vec4({x_value}, {y_value}, 0, 1);
     }}
-    """.encode(
-            "utf-8"
-        )
+    """.encode("utf-8")
     )
     attr = shader["attr_name"]
     assert len(shader.attributes) == 1
@@ -259,9 +246,7 @@ def test_pod_uniforms(platform, gl_version, location, glsl_type, python_type, ar
     {{
         gl_Position = vec4({x_value}, {y_value}, 0, 1);
     }}
-    """.encode(
-            "utf-8"
-        )
+    """.encode("utf-8")
     )
     uni = shader["uni_name"]
     assert len(shader.uniforms) == 1
@@ -427,9 +412,7 @@ def test_sampler_uniforms(platform, gl_version, location, prefix, postfix, compo
     {{
         gl_Position = vec4({x_value}, {y_value}, 0, 1);
     }}
-    """.encode(
-            "utf-8"
-        )
+    """.encode("utf-8")
     )
     uni = shader["uni_name"]
     assert len(shader.uniforms) == 1
@@ -554,14 +537,7 @@ def test_sampler_uniforms(platform, gl_version, location, prefix, postfix, compo
     ],
 )
 @pytest.mark.parametrize("array", [False, True])
-def test_shadow_sampler_uniforms(
-    platform,
-    gl_version,
-    location,
-    postfix,
-    components,
-    array,
-):
+def test_shadow_sampler_uniforms(platform, gl_version, location, postfix, components, array):
     glsl_version = "140"
 
     if location is not None:
@@ -591,9 +567,7 @@ def test_shadow_sampler_uniforms(
     {{
         gl_Position = vec4({x_value}, {y_value}, 0, 1);
     }}
-    """.encode(
-            "utf-8"
-        )
+    """.encode("utf-8")
     )
     uni = shader["uni_name"]
     assert len(shader.uniforms) == 1
@@ -750,9 +724,7 @@ def test_vector_attributes(
     {{
         gl_Position = vec4({x_value}, {y_value}, 0, 1);
     }}
-    """.encode(
-            "utf-8"
-        )
+    """.encode("utf-8")
     )
     attr = shader["attr_name"]
     assert len(shader.attributes) == 1
@@ -771,13 +743,7 @@ def test_vector_attributes(
 )
 @pytest.mark.parametrize("array", [False, True])
 def test_vector_uniforms(
-    platform,
-    gl_version,
-    location,
-    components,
-    glsl_prefix,
-    emath_prefix,
-    array,
+    platform, gl_version, location, components, glsl_prefix, emath_prefix, array
 ):
     glsl_version = "140"
 
@@ -810,9 +776,7 @@ def test_vector_uniforms(
     {{
         gl_Position = vec4({x_value}, {y_value}, 0, 1);
     }}
-    """.encode(
-            "utf-8"
-        )
+    """.encode("utf-8")
     )
     uni = shader["uni_name"]
     assert len(shader.uniforms) == 1
@@ -940,13 +904,7 @@ def test_vector_uniforms(
 @pytest.mark.parametrize("location", [None, 1])
 @pytest.mark.parametrize("rows", [2, 3, 4])
 @pytest.mark.parametrize("columns", [2, 3, 4])
-@pytest.mark.parametrize(
-    "glsl_prefix, emath_prefix",
-    [
-        ("", "F"),
-        ("d", "D"),
-    ],
-)
+@pytest.mark.parametrize("glsl_prefix, emath_prefix", [("", "F"), ("d", "D")])
 @pytest.mark.parametrize("array", [False, True])
 def test_matrix_attributes(
     platform, gl_version, location, rows, columns, glsl_prefix, emath_prefix, array
@@ -991,9 +949,7 @@ def test_matrix_attributes(
     {{
         gl_Position = vec4({x_value}, {y_value}, 0, 1);
     }}
-    """.encode(
-            "utf-8"
-        )
+    """.encode("utf-8")
     )
     attr = shader["attr_name"]
     assert len(shader.attributes) == 1
@@ -1008,23 +964,10 @@ def test_matrix_attributes(
 @pytest.mark.parametrize("location", [None, 1])
 @pytest.mark.parametrize("rows", [2, 3, 4])
 @pytest.mark.parametrize("columns", [2, 3, 4])
-@pytest.mark.parametrize(
-    "glsl_prefix, emath_prefix",
-    [
-        ("", "F"),
-        ("d", "D"),
-    ],
-)
+@pytest.mark.parametrize("glsl_prefix, emath_prefix", [("", "F"), ("d", "D")])
 @pytest.mark.parametrize("array", [False, True])
 def test_matrix_uniforms(
-    platform,
-    gl_version,
-    location,
-    rows,
-    columns,
-    glsl_prefix,
-    emath_prefix,
-    array,
+    platform, gl_version, location, rows, columns, glsl_prefix, emath_prefix, array
 ) -> None:
     glsl_version = "140"
 
@@ -1057,9 +1000,7 @@ def test_matrix_uniforms(
     {{
         gl_Position = vec4({x_value}, {y_value}, 0, 1);
     }}
-    """.encode(
-            "utf-8"
-        )
+    """.encode("utf-8")
     )
     uni = shader["uni_name"]
     assert len(shader.uniforms) == 1
@@ -1137,11 +1078,7 @@ def test_matrix_uniforms(
                     assert get_value_1[c][r] == 55
 
             shader._set_uniform(
-                uni,
-                array_type(
-                    python_type(*(40 for i in range(rows * columns))),
-                ),
-                exit_stack,
+                uni, array_type(python_type(*(40 for i in range(rows * columns)))), exit_stack
             )
             get_value_0 = (ctypes.c_float * rows * columns)()
             glGetUniformfv(shader._gl_program, uni.location, get_value_0)
@@ -1158,11 +1095,7 @@ def test_matrix_uniforms(
                 for c in range(columns):
                     assert get_value_1[c][r] == 55
 
-            shader._set_uniform(
-                uni,
-                array_type(),
-                exit_stack,
-            )
+            shader._set_uniform(uni, array_type(), exit_stack)
             get_value_0 = (ctypes.c_float * rows * columns)()
             glGetUniformfv(shader._gl_program, uni.location, get_value_0)
             for r in range(rows):
@@ -1178,11 +1111,7 @@ def test_matrix_uniforms(
                 for c in range(columns):
                     assert get_value_1[c][r] == 55
 
-            shader._set_uniform(
-                uni,
-                python_type(*(44 for i in range(rows * columns))),
-                exit_stack,
-            )
+            shader._set_uniform(uni, python_type(*(44 for i in range(rows * columns))), exit_stack)
             get_value_0 = (ctypes.c_float * rows * columns)()
             glGetUniformfv(shader._gl_program, uni.location, get_value_0)
             for r in range(rows):
@@ -1208,11 +1137,7 @@ def test_matrix_uniforms(
                     assert get_value[c][r] == 100
 
             shader._set_uniform(
-                uni,
-                array_type(
-                    python_type(*(40 for i in range(rows * columns))),
-                ),
-                exit_stack,
+                uni, array_type(python_type(*(40 for i in range(rows * columns)))), exit_stack
             )
             get_value = (ctypes.c_float * rows * columns)()
             glGetUniformfv(shader._gl_program, uni.location, get_value)
@@ -1234,11 +1159,7 @@ def test_matrix_uniforms(
                 for c in range(columns):
                     assert get_value[c][r] == 41
 
-            shader._set_uniform(
-                uni,
-                array_type(),
-                exit_stack,
-            )
+            shader._set_uniform(uni, array_type(), exit_stack)
             get_value = (ctypes.c_float * rows * columns)()
             glGetUniformfv(shader._gl_program, uni.location, get_value)
             for r in range(rows):

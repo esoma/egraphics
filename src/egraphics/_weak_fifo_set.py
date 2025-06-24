@@ -2,7 +2,6 @@ from __future__ import annotations
 
 __all__ = ["WeakFifoSet"]
 
-# python
 from typing import Generic
 from typing import TypeVar
 from weakref import ref

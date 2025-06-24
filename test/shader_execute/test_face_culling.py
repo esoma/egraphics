@@ -1,4 +1,11 @@
-# egraphics
+import pytest
+from egeometry import IRectangle
+from emath import FVector2
+from emath import FVector2Array
+from emath import FVector4
+from emath import IVector2
+from eplatform import Window
+
 from egraphics import FaceCull
 from egraphics import GBufferView
 from egraphics import GBufferViewMap
@@ -6,21 +13,6 @@ from egraphics import PrimitiveMode
 from egraphics import Shader
 from egraphics import clear_render_target
 from egraphics import read_color_from_render_target
-
-# egeometry
-from egeometry import IRectangle
-
-# emath
-from emath import FVector2
-from emath import FVector2Array
-from emath import FVector4
-from emath import IVector2
-
-# eplatform
-from eplatform import Window
-
-# pytest
-import pytest
 
 VERTEX_SHADER = b"""
 #version 140
@@ -43,21 +35,14 @@ void main()
 
 
 def draw_fullscreen_quad(render_target, shader, color, front, face_cull) -> None:
-    xy = [
-        FVector2(-1, -1),
-        FVector2(-1, 1),
-        FVector2(1, 1),
-        FVector2(1, -1),
-    ]
+    xy = [FVector2(-1, -1), FVector2(-1, 1), FVector2(1, 1), FVector2(1, -1)]
     shader.execute(
         render_target,
         PrimitiveMode.TRIANGLE_FAN,
         GBufferViewMap(
             {"xy": GBufferView.from_array(FVector2Array(*(reversed(xy) if front else xy)))}, (0, 4)
         ),
-        {
-            "color": color,
-        },
+        {"color": color},
         face_cull=face_cull,
     )
 
@@ -77,13 +62,7 @@ def test_basic(render_target, face_cull, expected_color):
     shader = Shader(vertex=VERTEX_SHADER, fragment=FRAGMENT_SHADER)
 
     def test_draw_fullscreen_quad(color, front, face_cull) -> None:
-        draw_fullscreen_quad(
-            render_target,
-            shader,
-            color,
-            front,
-            face_cull,
-        )
+        draw_fullscreen_quad(render_target, shader, color, front, face_cull)
 
     test_draw_fullscreen_quad(FVector4(1, 0, 0, 1), True, face_cull)
     test_draw_fullscreen_quad(FVector4(0, 1, 0, 1), False, face_cull)

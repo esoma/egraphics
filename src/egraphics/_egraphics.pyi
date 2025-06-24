@@ -191,7 +191,7 @@ __all__ = [
     "GL_POINT",
     "GL_LINE",
     "GL_FILL",
-    "gl_debug",
+    "debug_gl",
     "activate_gl_vertex_array",
     "set_gl_buffer_target",
     "create_gl_buffer",
@@ -220,7 +220,7 @@ __all__ = [
     "set_gl_texture_target",
     "set_gl_texture_target_2d_data",
     "generate_gl_texture_target_mipmaps",
-    "set_gl_texture_target_filters",
+    "set_gl_texture_target_parameters",
     "get_gl_program_uniforms",
     "get_gl_program_attributes",
     "create_gl_program",
@@ -266,22 +266,16 @@ __all__ = [
     "get_gl_version",
 ]
 
-# egeometry
-from egeometry import IRectangle
+from collections.abc import Buffer
+from typing import Callable
+from typing import NewType
 
-# emath
+from egeometry import IRectangle
 from emath import FArray
-from emath import FVector2
-from emath import FVector3
 from emath import FVector4
 from emath import FVector4Array
 from emath import IVector2
 from emath import UVector2
-
-# python
-from collections.abc import Buffer
-from typing import Callable
-from typing import NewType
 
 GlBlendFactor = NewType("GlBlendFactor", int)
 GlBlendFunction = NewType("GlBlendFunction", int)

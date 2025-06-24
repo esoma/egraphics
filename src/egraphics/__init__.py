@@ -36,7 +36,6 @@ __all__ = [
     "WindowRenderTargetMixin",
 ]
 
-# egraphics
 from ._g_buffer import GBuffer
 from ._g_buffer import GBufferFrequency
 from ._g_buffer import GBufferNature

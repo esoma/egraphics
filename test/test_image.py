@@ -1,18 +1,13 @@
-# egraphics
+import io
+from datetime import timedelta
+
+import pytest
+from emath import UVector2
+
 from egraphics import Image
 from egraphics import ImageInvalidError
 from egraphics import Texture2d
 from egraphics import TextureComponents
-
-# emath
-from emath import UVector2
-
-# pytest
-import pytest
-
-# python
-from datetime import timedelta
-import io
 
 
 def test_non_image():

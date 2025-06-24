@@ -1,13 +1,10 @@
-# egraphics
+import ctypes
+
+import pytest
+
 from egraphics import GBuffer
 from egraphics import GBufferView
 from egraphics import GBufferViewMap
-
-# pytest
-import pytest
-
-# python
-import ctypes
 
 
 @pytest.mark.parametrize("indices", [(0, 10), None])
@@ -19,11 +16,7 @@ def test_read_only(platform, indices) -> None:
     bv_2 = GBufferView(GBuffer(), ctypes.c_float)
     bv_3 = GBufferView(GBuffer(), ctypes.c_float)
     bv_4 = GBufferView(GBuffer(), ctypes.c_float)
-    map = {
-        "vbo_1": bv_1,
-        "vbo_2": bv_2,
-        "vbo_3": [bv_3, bv_4],
-    }
+    map = {"vbo_1": bv_1, "vbo_2": bv_2, "vbo_3": [bv_3, bv_4]}
     bvm = GBufferViewMap(map, indices)
 
     assert len(bvm) == 3

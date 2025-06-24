@@ -1,13 +1,24 @@
-# python
 import os
 
 if hasattr(os, "add_dll_directory"):
     os.add_dll_directory(os.getcwd() + "/vendor/SDL")
 
-# egraphics
-from . import resources
+import asyncio
+import gc
+from ctypes import c_float
+from ctypes import c_uint8
+from math import isclose
+from pathlib import Path
 
-# egraphics
+import pytest
+from emath import FVector4
+from emath import IVector2
+from emath import UVector2
+from eplatform import EventLoop
+from eplatform import Platform
+from eplatform import Window
+from eplatform import get_window
+
 from egraphics import clear_render_target
 from egraphics._debug import debug_callback
 from egraphics._render_target import TextureRenderTarget
@@ -17,27 +28,7 @@ from egraphics._state import reset_state
 from egraphics._texture_2d import Texture2d
 from egraphics._texture_2d import TextureComponents
 
-# emath
-from emath import FVector4
-from emath import IVector2
-from emath import UVector2
-
-# eplatform
-from eplatform import EventLoop
-from eplatform import Platform
-from eplatform import Window
-from eplatform import get_window
-
-# pytest
-import pytest
-
-# python
-import asyncio
-from ctypes import c_float
-from ctypes import c_uint8
-import gc
-from math import isclose
-from pathlib import Path
+from . import resources
 
 
 class TestWindow(Window, WindowRenderTargetMixin):
@@ -130,26 +121,12 @@ def render_target(platform, capture_event, request):
         clear_render_target(render_target, depth=1, color=FVector4(0, 0, 0, 1))
     elif request.param == "texture":
         render_target = TextureRenderTarget(
-            [
-                Texture2d(
-                    UVector2(10),
-                    TextureComponents.RGBA,
-                    c_uint8,
-                    b"\x00" * (10 * 10 * 4),
-                )
-            ],
+            [Texture2d(UVector2(10), TextureComponents.RGBA, c_uint8, b"\x00" * (10 * 10 * 4))],
             depth=True,
         )
     elif request.param == "texture_with_depth_texture":
         render_target = TextureRenderTarget(
-            [
-                Texture2d(
-                    UVector2(10),
-                    TextureComponents.RGBA,
-                    c_uint8,
-                    b"\x00" * (10 * 10 * 4),
-                )
-            ],
+            [Texture2d(UVector2(10), TextureComponents.RGBA, c_uint8, b"\x00" * (10 * 10 * 4))],
             depth=Texture2d(UVector2(10), TextureComponents.D, c_float, b"\x00" * (4 * 10 * 10)),
         )
     return render_target

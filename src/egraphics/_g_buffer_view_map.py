@@ -2,7 +2,18 @@ from __future__ import annotations
 
 __all__ = ["GBufferViewMap", "IndexGBufferView"]
 
-# egraphics
+import ctypes
+from collections.abc import Mapping
+from collections.abc import Set
+from typing import Any
+from typing import ClassVar
+from typing import Final
+from typing import Sequence
+from weakref import WeakKeyDictionary
+from weakref import ref
+
+import emath
+
 from ._egraphics import GL_BYTE
 from ._egraphics import GL_DOUBLE
 from ._egraphics import GL_ELEMENT_ARRAY_BUFFER
@@ -23,20 +34,6 @@ from ._g_buffer import GBufferTarget
 from ._g_buffer import get_g_buffer_gl_buffer
 from ._g_buffer_view import GBufferView
 from ._shader import Shader
-
-# emath
-import emath
-
-# python
-from collections.abc import Mapping
-from collections.abc import Set
-import ctypes
-from typing import Any
-from typing import ClassVar
-from typing import Final
-from typing import Sequence
-from weakref import WeakKeyDictionary
-from weakref import ref
 
 IndexGBufferView = (
     GBufferView[ctypes.c_uint8] | GBufferView[ctypes.c_uint16] | GBufferView[ctypes.c_uint32]

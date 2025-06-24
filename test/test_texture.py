@@ -2,7 +2,22 @@ from __future__ import annotations
 
 __all__ = ["TextureTest"]
 
-# egraphics
+
+import ctypes
+from ctypes import sizeof as c_sizeof
+from math import prod
+from unittest.mock import patch
+
+import pytest
+from emath import FVector4
+from emath import UVector2
+from OpenGL.GL import GL_ACTIVE_TEXTURE
+from OpenGL.GL import GL_TEXTURE0
+from OpenGL.GL import GL_TEXTURE_BINDING_2D
+from OpenGL.GL import glActiveTexture
+from OpenGL.GL import glGetIntegerv
+from OpenGL.GL import glIsTexture
+
 from egraphics import MipmapSelection
 from egraphics import Texture
 from egraphics import TextureComponents
@@ -13,27 +28,6 @@ from egraphics._texture import _FIRST_BINDABLE_TEXTURE_UNIT
 from egraphics._texture import _TextureTarget
 from egraphics._texture import bind_texture
 from egraphics._texture import bind_texture_unit
-
-# emath
-from emath import FVector4
-from emath import UVector2
-
-# pyopengl
-from OpenGL.GL import GL_ACTIVE_TEXTURE
-from OpenGL.GL import GL_TEXTURE0
-from OpenGL.GL import GL_TEXTURE_BINDING_2D
-from OpenGL.GL import glActiveTexture
-from OpenGL.GL import glGetIntegerv
-from OpenGL.GL import glIsTexture
-
-# pytest
-import pytest
-
-# python
-import ctypes
-from ctypes import sizeof as c_sizeof
-from math import prod
-from unittest.mock import patch
 
 TEXTURE_COMPONENTS_COUNT = {
     TextureComponents.R: 1,
@@ -159,14 +153,7 @@ class TextureTest:
     @pytest.mark.parametrize("mipmap_selection", MipmapSelection)
     @pytest.mark.parametrize("minify_filter", TextureFilter)
     @pytest.mark.parametrize("magnify_filter", TextureFilter)
-    def test_min_mag_mip(
-        self,
-        platform,
-        size,
-        mipmap_selection,
-        minify_filter,
-        magnify_filter,
-    ):
+    def test_min_mag_mip(self, platform, size, mipmap_selection, minify_filter, magnify_filter):
         data = b"\x00" * self.data_multiplier
         texture = self.create_texture(
             size,
@@ -186,22 +173,11 @@ class TextureTest:
     @pytest.mark.parametrize("wrap_s", TextureWrap)
     @pytest.mark.parametrize("wrap_t", TextureWrap)
     @pytest.mark.parametrize("wrap_r", TextureWrap)
-    def test_wrap(
-        self,
-        platform,
-        size,
-        wrap_s,
-        wrap_t,
-        wrap_r,
-    ):
+    def test_wrap(self, platform, size, wrap_s, wrap_t, wrap_r):
         data = b"\x00" * self.data_multiplier
         wrap: Any = (wrap_s, wrap_t, wrap_r)[: self.wrap_length]
         texture = self.create_texture(
-            size,
-            TextureComponents.R,
-            ctypes.c_uint8,
-            memoryview(data),
-            wrap=wrap,
+            size, TextureComponents.R, ctypes.c_uint8, memoryview(data), wrap=wrap
         )
         assert texture.components == TextureComponents.R
         assert texture.size == size
@@ -211,11 +187,7 @@ class TextureTest:
     def test_wrap_color(self, platform, size, wrap_color):
         data = b"\x00" * self.data_multiplier
         texture = self.create_texture(
-            size,
-            TextureComponents.R,
-            ctypes.c_uint8,
-            memoryview(data),
-            wrap_color=wrap_color,
+            size, TextureComponents.R, ctypes.c_uint8, memoryview(data), wrap_color=wrap_color
         )
         assert texture.components == TextureComponents.R
         assert texture.size == size

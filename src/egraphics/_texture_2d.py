@@ -2,7 +2,11 @@ from __future__ import annotations
 
 __all__ = ["Texture2d"]
 
-# egraphics
+from collections.abc import Buffer
+
+from emath import FVector4
+from emath import UVector2
+
 from ._texture import MipmapSelection
 from ._texture import Texture
 from ._texture import TextureComponents
@@ -10,13 +14,6 @@ from ._texture import TextureDataType
 from ._texture import TextureFilter
 from ._texture import TextureType
 from ._texture import TextureWrap
-
-# emath
-from emath import FVector4
-from emath import UVector2
-
-# python
-from collections.abc import Buffer
 
 
 class Texture2d(Texture):

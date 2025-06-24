@@ -40,3 +40,10 @@ before-all = [
 [[tool.cibuildwheel.overrides]]
 select = "*-musllinux*"
 before-all = "apk add mesa-gl glu-dev"
+
+[virtualenvs]
+in-project = true
+
+[tool.pyright]
+venvPath = "."
+venv = ".venv"

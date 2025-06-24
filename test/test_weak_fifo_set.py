@@ -1,8 +1,6 @@
-# egraphics
-from egraphics._weak_fifo_set import WeakFifoSet
-
-# pytest
 import pytest
+
+from egraphics._weak_fifo_set import WeakFifoSet
 
 
 def test_weakness():

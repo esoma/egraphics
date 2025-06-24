@@ -1,4 +1,13 @@
-# egraphics
+import ctypes
+
+import pytest
+from egeometry import IRectangle
+from emath import FVector2
+from emath import FVector2Array
+from emath import FVector4
+from emath import IVector2
+from eplatform import Window
+
 from egraphics import DepthTest
 from egraphics import GBufferView
 from egraphics import GBufferViewMap
@@ -7,24 +16,6 @@ from egraphics import Shader
 from egraphics import clear_render_target
 from egraphics import read_color_from_render_target
 from egraphics import read_depth_from_render_target
-
-# egeometry
-from egeometry import IRectangle
-
-# emath
-from emath import FVector2
-from emath import FVector2Array
-from emath import FVector4
-from emath import IVector2
-
-# eplatform
-from eplatform import Window
-
-# pytest
-import pytest
-
-# python
-import ctypes
 
 VERTEX_SHADER = b"""
 #version 140
@@ -62,19 +53,13 @@ def draw_fullscreen_quad(
             {
                 "xy": GBufferView.from_array(
                     FVector2Array(
-                        FVector2(-1, -1),
-                        FVector2(-1, 1),
-                        FVector2(1, 1),
-                        FVector2(1, -1),
+                        FVector2(-1, -1), FVector2(-1, 1), FVector2(1, 1), FVector2(1, -1)
                     )
                 )
             },
             (0, 4),
         ),
-        {
-            "color": color,
-            "depth": ctypes.c_float(depth),
-        },
+        {"color": color, "depth": ctypes.c_float(depth)},
         depth_test=depth_test,
         depth_write=depth_write,
     )

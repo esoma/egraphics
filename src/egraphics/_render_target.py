@@ -12,7 +12,17 @@ __all__ = [
 ]
 
 
-# egraphics
+import sys
+from typing import Any
+from typing import Protocol
+from typing import Sequence
+
+from egeometry import IRectangle
+from emath import FArray
+from emath import FVector4
+from emath import FVector4Array
+from emath import IVector2
+
 from ._egraphics import GlFramebuffer
 from ._egraphics import GlRenderbuffer
 from ._egraphics import attach_color_texture_to_gl_read_framebuffer
@@ -31,30 +41,13 @@ from ._state import register_reset_state_callback
 from ._texture import get_gl_texture
 from ._texture_2d import Texture2d
 
-# egeometry
-from egeometry import IRectangle
-
-# emath
-from emath import FArray
-from emath import FVector4
-from emath import FVector4Array
-from emath import IVector2
-
-# python
-import sys
-from typing import Any
-from typing import Protocol
-from typing import Sequence
-
 
 class RenderTarget(Protocol):
     @property
-    def _gl_framebuffer(self) -> GlFramebuffer:
-        ...
+    def _gl_framebuffer(self) -> GlFramebuffer: ...
 
     @property
-    def size(self) -> IVector2:
-        ...
+    def size(self) -> IVector2: ...
 
 
 class TextureRenderTarget:

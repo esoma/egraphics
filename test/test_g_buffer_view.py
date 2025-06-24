@@ -1,17 +1,12 @@
-# egraphics
+import ctypes
+from struct import unpack as c_unpack
+
+import emath
+import pytest
+
 from egraphics import GBuffer
 from egraphics import GBufferView
 from egraphics._g_buffer_view import _get_size_of_bvt
-
-# emath
-import emath
-
-# pytest
-import pytest
-
-# python
-import ctypes
-from struct import unpack as c_unpack
 
 VIEW_DATA_TYPES = (
     ctypes.c_float,
@@ -147,12 +142,7 @@ def test_init_defaults(platform, data_type):
     ],
 )
 @pytest.mark.parametrize("instancing_divisor", [None, 1])
-def test_from_array(
-    platform,
-    array,
-    data_type,
-    instancing_divisor,
-):
+def test_from_array(platform, array, data_type, instancing_divisor):
     view = GBufferView.from_array(array, instancing_divisor=instancing_divisor)
     assert bytes(view.g_buffer) == bytes(array)
     assert view.data_type is data_type

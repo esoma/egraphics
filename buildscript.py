@@ -2,17 +2,15 @@ from __future__ import annotations
 
 __all__ = ()
 
-# setuptools
+import os
+import shutil
+import sys
+from pathlib import Path
+from platform import system
+
 from setuptools import Distribution
 from setuptools import Extension
 from setuptools.command.build_ext import build_ext
-
-# python
-import os
-from pathlib import Path
-from platform import system
-import shutil
-import sys
 
 _coverage_compile_args: list[str] = []
 _coverage_links_args: list[str] = []

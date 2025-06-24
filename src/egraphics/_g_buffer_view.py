@@ -2,13 +2,6 @@ from __future__ import annotations
 
 __all__ = ["GBufferView"]
 
-# egraphics
-from ._g_buffer import GBuffer
-
-# emath
-import emath
-
-# python
 import ctypes
 from ctypes import sizeof as c_sizeof
 from struct import unpack as c_unpack
@@ -18,6 +11,10 @@ from typing import Generator
 from typing import Generic
 from typing import TypeVar
 from typing import overload
+
+import emath
+
+from ._g_buffer import GBuffer
 
 _BVT = TypeVar(
     "_BVT",
@@ -207,7 +204,7 @@ class GBufferView(Generic[_BVT]):
                 data = c_unpack(struct_name, chunk)[0]
             except KeyError:
                 data = self._data_type.from_buffer(chunk)
-            yield data
+            yield data  # type: ignore
 
     @property
     def g_buffer(self) -> GBuffer:
@@ -241,288 +238,247 @@ class GBufferView(Generic[_BVT]):
     @classmethod
     def from_array(
         cls, array: emath.FVector2Array, *, instancing_divisor: int | None = None
-    ) -> GBufferView[emath.FVector2]:
-        ...
+    ) -> GBufferView[emath.FVector2]: ...
 
     @overload
     @classmethod
     def from_array(
         cls, array: emath.DVector2Array, *, instancing_divisor: int | None = None
-    ) -> GBufferView[emath.DVector2]:
-        ...
+    ) -> GBufferView[emath.DVector2]: ...
 
     @overload
     @classmethod
     def from_array(
         cls, array: emath.I8Vector2Array, *, instancing_divisor: int | None = None
-    ) -> GBufferView[emath.I8Vector2]:
-        ...
+    ) -> GBufferView[emath.I8Vector2]: ...
 
     @overload
     @classmethod
     def from_array(
         cls, array: emath.U8Vector2Array, *, instancing_divisor: int | None = None
-    ) -> GBufferView[emath.U8Vector2]:
-        ...
+    ) -> GBufferView[emath.U8Vector2]: ...
 
     @overload
     @classmethod
     def from_array(
         cls, array: emath.I16Vector2Array, *, instancing_divisor: int | None = None
-    ) -> GBufferView[emath.I16Vector2]:
-        ...
+    ) -> GBufferView[emath.I16Vector2]: ...
 
     @overload
     @classmethod
     def from_array(
         cls, array: emath.U16Vector2Array, *, instancing_divisor: int | None = None
-    ) -> GBufferView[emath.U16Vector2]:
-        ...
+    ) -> GBufferView[emath.U16Vector2]: ...
 
     @overload
     @classmethod
     def from_array(
         cls, array: emath.I32Vector2Array, *, instancing_divisor: int | None = None
-    ) -> GBufferView[emath.I32Vector2]:
-        ...
+    ) -> GBufferView[emath.I32Vector2]: ...
 
     @overload
     @classmethod
     def from_array(
         cls, array: emath.U32Vector2Array, *, instancing_divisor: int | None = None
-    ) -> GBufferView[emath.U32Vector2]:
-        ...
+    ) -> GBufferView[emath.U32Vector2]: ...
 
     @overload
     @classmethod
     def from_array(
         cls, array: emath.FVector3Array, *, instancing_divisor: int | None = None
-    ) -> GBufferView[emath.FVector3]:
-        ...
+    ) -> GBufferView[emath.FVector3]: ...
 
     @overload
     @classmethod
     def from_array(
         cls, array: emath.DVector3Array, *, instancing_divisor: int | None = None
-    ) -> GBufferView[emath.DVector3]:
-        ...
+    ) -> GBufferView[emath.DVector3]: ...
 
     @overload
     @classmethod
     def from_array(
         cls, array: emath.I8Vector3Array, *, instancing_divisor: int | None = None
-    ) -> GBufferView[emath.I8Vector3]:
-        ...
+    ) -> GBufferView[emath.I8Vector3]: ...
 
     @overload
     @classmethod
     def from_array(
         cls, array: emath.U8Vector3Array, *, instancing_divisor: int | None = None
-    ) -> GBufferView[emath.U8Vector3]:
-        ...
+    ) -> GBufferView[emath.U8Vector3]: ...
 
     @overload
     @classmethod
     def from_array(
         cls, array: emath.I16Vector3Array, *, instancing_divisor: int | None = None
-    ) -> GBufferView[emath.I16Vector3]:
-        ...
+    ) -> GBufferView[emath.I16Vector3]: ...
 
     @overload
     @classmethod
     def from_array(
         cls, array: emath.U16Vector3Array, *, instancing_divisor: int | None = None
-    ) -> GBufferView[emath.U16Vector3]:
-        ...
+    ) -> GBufferView[emath.U16Vector3]: ...
 
     @overload
     @classmethod
     def from_array(
         cls, array: emath.I32Vector3Array, *, instancing_divisor: int | None = None
-    ) -> GBufferView[emath.I32Vector3]:
-        ...
+    ) -> GBufferView[emath.I32Vector3]: ...
 
     @overload
     @classmethod
     def from_array(
         cls, array: emath.U32Vector3Array, *, instancing_divisor: int | None = None
-    ) -> GBufferView[emath.U32Vector3]:
-        ...
+    ) -> GBufferView[emath.U32Vector3]: ...
 
     @overload
     @classmethod
     def from_array(
         cls, array: emath.FVector4Array, *, instancing_divisor: int | None = None
-    ) -> GBufferView[emath.FVector4]:
-        ...
+    ) -> GBufferView[emath.FVector4]: ...
 
     @overload
     @classmethod
     def from_array(
         cls, array: emath.DVector4Array, *, instancing_divisor: int | None = None
-    ) -> GBufferView[emath.DVector4]:
-        ...
+    ) -> GBufferView[emath.DVector4]: ...
 
     @overload
     @classmethod
     def from_array(
         cls, array: emath.I8Vector4Array, *, instancing_divisor: int | None = None
-    ) -> GBufferView[emath.I8Vector4]:
-        ...
+    ) -> GBufferView[emath.I8Vector4]: ...
 
     @overload
     @classmethod
     def from_array(
         cls, array: emath.U8Vector4Array, *, instancing_divisor: int | None = None
-    ) -> GBufferView[emath.U8Vector4]:
-        ...
+    ) -> GBufferView[emath.U8Vector4]: ...
 
     @overload
     @classmethod
     def from_array(
         cls, array: emath.I16Vector4Array, *, instancing_divisor: int | None = None
-    ) -> GBufferView[emath.I16Vector4]:
-        ...
+    ) -> GBufferView[emath.I16Vector4]: ...
 
     @overload
     @classmethod
     def from_array(
         cls, array: emath.U16Vector4Array, *, instancing_divisor: int | None = None
-    ) -> GBufferView[emath.U16Vector4]:
-        ...
+    ) -> GBufferView[emath.U16Vector4]: ...
 
     @overload
     @classmethod
     def from_array(
         cls, array: emath.I32Vector4Array, *, instancing_divisor: int | None = None
-    ) -> GBufferView[emath.I32Vector4]:
-        ...
+    ) -> GBufferView[emath.I32Vector4]: ...
 
     @overload
     @classmethod
     def from_array(
         cls, array: emath.U32Vector4Array, *, instancing_divisor: int | None = None
-    ) -> GBufferView[emath.U32Vector4]:
-        ...
+    ) -> GBufferView[emath.U32Vector4]: ...
 
     @overload
     @classmethod
     def from_array(
         cls, array: emath.FMatrix2x2Array, *, instancing_divisor: int | None = None
-    ) -> GBufferView[emath.FMatrix2x2]:
-        ...
+    ) -> GBufferView[emath.FMatrix2x2]: ...
 
     @overload
     @classmethod
     def from_array(
         cls, array: emath.FMatrix2x3Array, *, instancing_divisor: int | None = None
-    ) -> GBufferView[emath.FMatrix2x3]:
-        ...
+    ) -> GBufferView[emath.FMatrix2x3]: ...
 
     @overload
     @classmethod
     def from_array(
         cls, array: emath.FMatrix2x4Array, *, instancing_divisor: int | None = None
-    ) -> GBufferView[emath.FMatrix2x4]:
-        ...
+    ) -> GBufferView[emath.FMatrix2x4]: ...
 
     @overload
     @classmethod
     def from_array(
         cls, array: emath.FMatrix3x2Array, *, instancing_divisor: int | None = None
-    ) -> GBufferView[emath.FMatrix3x2]:
-        ...
+    ) -> GBufferView[emath.FMatrix3x2]: ...
 
     @overload
     @classmethod
     def from_array(
         cls, array: emath.FMatrix3x3Array, *, instancing_divisor: int | None = None
-    ) -> GBufferView[emath.FMatrix3x3]:
-        ...
+    ) -> GBufferView[emath.FMatrix3x3]: ...
 
     @overload
     @classmethod
     def from_array(
         cls, array: emath.FMatrix3x4Array, *, instancing_divisor: int | None = None
-    ) -> GBufferView[emath.FMatrix3x4]:
-        ...
+    ) -> GBufferView[emath.FMatrix3x4]: ...
 
     @overload
     @classmethod
     def from_array(
         cls, array: emath.FMatrix4x2Array, *, instancing_divisor: int | None = None
-    ) -> GBufferView[emath.FMatrix4x2]:
-        ...
+    ) -> GBufferView[emath.FMatrix4x2]: ...
 
     @overload
     @classmethod
     def from_array(
         cls, array: emath.FMatrix4x3Array, *, instancing_divisor: int | None = None
-    ) -> GBufferView[emath.FMatrix4x3]:
-        ...
+    ) -> GBufferView[emath.FMatrix4x3]: ...
 
     @overload
     @classmethod
     def from_array(
         cls, array: emath.FMatrix4x4Array, *, instancing_divisor: int | None = None
-    ) -> GBufferView[emath.FMatrix4x4]:
-        ...
+    ) -> GBufferView[emath.FMatrix4x4]: ...
 
     @overload
     @classmethod
     def from_array(
         cls, array: emath.FArray, *, instancing_divisor: int | None = None
-    ) -> GBufferView[ctypes.c_float]:
-        ...
+    ) -> GBufferView[ctypes.c_float]: ...
 
     @overload
     @classmethod
     def from_array(
         cls, array: emath.DArray, *, instancing_divisor: int | None = None
-    ) -> GBufferView[ctypes.c_double]:
-        ...
+    ) -> GBufferView[ctypes.c_double]: ...
 
     @overload
     @classmethod
     def from_array(
         cls, array: emath.I8Array, *, instancing_divisor: int | None = None
-    ) -> GBufferView[ctypes.c_int8]:
-        ...
+    ) -> GBufferView[ctypes.c_int8]: ...
 
     @overload
     @classmethod
     def from_array(
         cls, array: emath.U8Array, *, instancing_divisor: int | None = None
-    ) -> GBufferView[ctypes.c_uint8]:
-        ...
+    ) -> GBufferView[ctypes.c_uint8]: ...
 
     @overload
     @classmethod
     def from_array(
         cls, array: emath.I16Array, *, instancing_divisor: int | None = None
-    ) -> GBufferView[ctypes.c_int16]:
-        ...
+    ) -> GBufferView[ctypes.c_int16]: ...
 
     @overload
     @classmethod
     def from_array(
         cls, array: emath.U16Array, *, instancing_divisor: int | None = None
-    ) -> GBufferView[ctypes.c_uint16]:
-        ...
+    ) -> GBufferView[ctypes.c_uint16]: ...
 
     @overload
     @classmethod
     def from_array(
         cls, array: emath.I32Array, *, instancing_divisor: int | None = None
-    ) -> GBufferView[ctypes.c_int32]:
-        ...
+    ) -> GBufferView[ctypes.c_int32]: ...
 
     @overload
     @classmethod
     def from_array(
         cls, array: emath.U32Array, *, instancing_divisor: int | None = None
-    ) -> GBufferView[ctypes.c_uint32]:
-        ...
+    ) -> GBufferView[ctypes.c_uint32]: ...
 
     @classmethod
     def from_array(

@@ -1,4 +1,15 @@
-# egraphics
+from itertools import permutations
+
+import pytest
+from egeometry import IRectangle
+from emath import FVector2
+from emath import FVector2Array
+from emath import FVector3
+from emath import FVector3Array
+from emath import FVector4
+from emath import IVector2
+from eplatform import Window
+
 from egraphics import GBuffer
 from egraphics import GBufferView
 from egraphics import GBufferViewMap
@@ -6,26 +17,6 @@ from egraphics import PrimitiveMode
 from egraphics import Shader
 from egraphics import clear_render_target
 from egraphics import read_color_from_render_target
-
-# egeometry
-from egeometry import IRectangle
-
-# emath
-from emath import FVector2
-from emath import FVector2Array
-from emath import FVector3
-from emath import FVector3Array
-from emath import FVector4
-from emath import IVector2
-
-# eplatform
-from eplatform import Window
-
-# pytest
-import pytest
-
-# python
-from itertools import permutations
 
 VERTEX_SHADER = b"""
 #version 140
@@ -50,11 +41,7 @@ void main()
 """
 
 
-def draw_fullscreen_quads(
-    render_target,
-    shader,
-    colors,
-):
+def draw_fullscreen_quads(render_target, shader, colors):
     shader.execute(
         render_target,
         PrimitiveMode.TRIANGLE_FAN,
@@ -62,10 +49,7 @@ def draw_fullscreen_quads(
             {
                 "xy": GBufferView.from_array(
                     FVector2Array(
-                        FVector2(-1, -1),
-                        FVector2(-1, 1),
-                        FVector2(1, 1),
-                        FVector2(1, -1),
+                        FVector2(-1, -1), FVector2(-1, 1), FVector2(1, 1), FVector2(1, -1)
                     )
                 ),
                 "instance_color": GBufferView.from_array(
@@ -119,14 +103,7 @@ def test_zero_instances(render_target):
 
 @pytest.mark.parametrize(
     "colors",
-    permutations(
-        [
-            FVector3(1, 1, 1),
-            FVector3(1, 0, 0),
-            FVector3(0, 1, 0),
-            FVector3(0, 0, 1),
-        ]
-    ),
+    permutations([FVector3(1, 1, 1), FVector3(1, 0, 0), FVector3(0, 1, 0), FVector3(0, 0, 1)]),
 )
 def test_basic(render_target, colors) -> None:
     clear_render_target(render_target, color=FVector4(0))

@@ -8,7 +8,15 @@ __all__ = [
     "get_g_buffer_gl_buffer",
 ]
 
-# egraphics
+from collections.abc import Buffer
+from enum import Enum
+from typing import Any
+from typing import ClassVar
+from typing import Final
+from typing import Self
+from typing import TypeAlias
+from weakref import ref
+
 from ._egraphics import GL_ARRAY_BUFFER
 from ._egraphics import GL_COPY_READ_BUFFER
 from ._egraphics import GL_DYNAMIC_COPY
@@ -29,16 +37,6 @@ from ._egraphics import set_gl_buffer_target
 from ._egraphics import set_gl_buffer_target_data
 from ._egraphics import write_gl_buffer_target_data
 from ._state import register_reset_state_callback
-
-# python
-from collections.abc import Buffer
-from enum import Enum
-from typing import Any
-from typing import ClassVar
-from typing import Final
-from typing import Self
-from typing import TypeAlias
-from weakref import ref
 
 
 class GBufferFrequency(Enum):

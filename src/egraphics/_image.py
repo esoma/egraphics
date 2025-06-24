@@ -1,27 +1,22 @@
 __all__ = ["Image", "ImageInvalidError"]
 
-# egraphics
-from ._texture import MipmapSelection
-from ._texture import TextureComponents
-from ._texture import TextureFilter
-from ._texture import TextureWrap
-from ._texture_2d import Texture2d
-
-# emath
-from emath import FVector4
-from emath import UVector2
-
-# pillow
-from PIL import Image as PilImage
-from PIL import ImageMath as PilImageMath
-from PIL import UnidentifiedImageError as PilUnidentifiedImageError
-
-# python
 from collections.abc import Mapping
 from ctypes import c_uint8
 from datetime import timedelta
 from typing import BinaryIO
 from typing import Final
+
+from emath import FVector4
+from emath import UVector2
+from PIL import Image as PilImage
+from PIL import ImageMath as PilImageMath
+from PIL import UnidentifiedImageError as PilUnidentifiedImageError
+
+from ._texture import MipmapSelection
+from ._texture import TextureComponents
+from ._texture import TextureFilter
+from ._texture import TextureWrap
+from ._texture_2d import Texture2d
 
 _PIL_MODE_TO_TEXTURE_COMPONENTS: Final[Mapping[str, TextureComponents]] = {
     "L": TextureComponents.R,
@@ -30,11 +25,7 @@ _PIL_MODE_TO_TEXTURE_COMPONENTS: Final[Mapping[str, TextureComponents]] = {
 }
 
 
-_PIL_MODE_TO_COMPONENTS: Final[Mapping[str, int]] = {
-    "L": 1,
-    "RGB": 3,
-    "RGBA": 4,
-}
+_PIL_MODE_TO_COMPONENTS: Final[Mapping[str, int]] = {"L": 1, "RGB": 3, "RGBA": 4}
 
 
 _PIL_CONVERT: Final[Mapping[str, str]] = {
@@ -71,6 +62,7 @@ class Image:
             convert_mode = "L"
         # P/PA are palette modes, so use whatever the mode is of the palette
         if convert_mode in ["P", "PA"]:
+            assert self._pil.palette is not None
             convert_mode = self._pil.palette.mode
         if convert_mode not in _PIL_MODE_TO_TEXTURE_COMPONENTS:
             try:
@@ -86,7 +78,7 @@ class Image:
 
     def __len__(self) -> int:
         try:
-            return self._pil.n_frames
+            return self._pil.n_frames  # type: ignore
         except AttributeError:
             return 1
 
