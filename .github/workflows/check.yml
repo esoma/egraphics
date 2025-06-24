@@ -109,6 +109,10 @@ jobs:
       with:
         virtualenvs-in-project: true
 
+    - name: Install
+      run: |
+        poetry install
+
     - name: Upgrade pip & setuptools
       run: |
         python -m pip install --upgrade pip
