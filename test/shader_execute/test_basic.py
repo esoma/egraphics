@@ -13,7 +13,6 @@ from egeometry import IRectangle
 # emath
 from emath import FVector2
 from emath import FVector2Array
-from emath import FVector3
 from emath import FVector4
 from emath import IVector2
 from emath import U8Array
@@ -201,7 +200,7 @@ def test_missing_attribute(render_target):
     "index_array_type", [None, U8Array, U16Array, U32Array, "length", "offset"]
 )
 def test_basic(render_target, primitive_mode, color, index_array_type):
-    clear_render_target(render_target, color=FVector3(0, 0, 0), depth=True)
+    clear_render_target(render_target, color=FVector4(0, 0, 0, 1), depth=True)
 
     if primitive_mode in {
         PrimitiveMode.LINE_STRIP_ADJACENCY,
@@ -324,7 +323,7 @@ def test_basic(render_target, primitive_mode, color, index_array_type):
 
 @pytest.mark.parametrize("weight_0", [0, 0.25, 0.5, 0.75, 1])
 def test_attribute_arrays(render_target, weight_0):
-    clear_render_target(render_target, color=FVector3(0, 0, 0), depth=True)
+    clear_render_target(render_target, color=FVector4(0), depth=True)
 
     weight_1 = 1 - weight_0
     positions_0 = FVector2Array(

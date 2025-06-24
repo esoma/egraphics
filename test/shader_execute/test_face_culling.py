@@ -13,7 +13,6 @@ from egeometry import IRectangle
 # emath
 from emath import FVector2
 from emath import FVector2Array
-from emath import FVector3
 from emath import FVector4
 from emath import IVector2
 
@@ -73,7 +72,7 @@ def draw_fullscreen_quad(render_target, shader, color, front, face_cull) -> None
 )
 def test_basic(render_target, face_cull, expected_color):
     ignore_alpha = isinstance(render_target, Window)
-    clear_render_target(render_target, color=FVector3(0, 0, 0))
+    clear_render_target(render_target, color=FVector4(0))
 
     shader = Shader(vertex=VERTEX_SHADER, fragment=FRAGMENT_SHADER)
 

@@ -12,7 +12,6 @@ from egeometry import IRectangle
 # emath
 from emath import FVector2
 from emath import FVector2Array
-from emath import FVector3
 from emath import FVector4
 from emath import IVector2
 
@@ -76,7 +75,7 @@ def draw_fullscreen_quad(
 @pytest.mark.parametrize("blue", [True, False])
 @pytest.mark.parametrize("alpha", [True, False])
 def test_mask(render_target, red, green, blue, alpha):
-    clear_render_target(render_target, color=FVector3(0, 0, 0))
+    clear_render_target(render_target, color=FVector4(0, 0, 0, 1))
 
     shader = Shader(vertex=VERTEX_SHADER, fragment=FRAGMENT_SHADER)
 

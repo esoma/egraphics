@@ -16,6 +16,7 @@ from egeometry import IRectangle
 
 # emath
 from emath import FVector3
+from emath import FVector4
 from emath import IVector2
 
 # pyopengl
@@ -161,14 +162,14 @@ def test_clear_window(window, is_kinda_close, capture_event):
 
     rect = IRectangle(IVector2(0, 0), window.size)
 
-    clear_render_target(window, color=FVector3(0.3, 0.5, 0.7), depth=1)
+    clear_render_target(window, color=FVector4(0.3, 0.5, 0.7, 1.0), depth=1)
     assert all(
         is_kinda_close(p.rgb, FVector3(0.3, 0.5, 0.7))
         for p in read_color_from_render_target(window, rect)
     )
     assert all(is_kinda_close(p, 1) for p in read_depth_from_render_target(window, rect))
 
-    clear_render_target(window, color=FVector3(0.2, 0.4, 0.6))
+    clear_render_target(window, color=FVector4(0.2, 0.4, 0.6, 0.8))
     assert all(
         is_kinda_close(p.rgb, FVector3(0.2, 0.4, 0.6))
         for p in read_color_from_render_target(window, rect)
@@ -189,6 +190,12 @@ def test_clear_render_target(platform, is_kinda_close, resource_dir, depth):
         colors_1 = Image(f).to_texture()
     with open(resource_dir / "gamut.gif", "rb") as f:
         colors_2 = Image(f).to_texture()
+    colors_3 = Texture2d(
+        colors_1.size,
+        TextureComponents.RGBA,
+        ctypes.c_float,
+        b"\x00" * 4 * colors_1.size[0] * colors_1.size[1] * 4,
+    )
     if depth is None:
         depth = Texture2d(
             colors_1.size,
@@ -196,11 +203,11 @@ def test_clear_render_target(platform, is_kinda_close, resource_dir, depth):
             ctypes.c_float,
             b"\x00" * 4 * colors_1.size[0] * colors_1.size[1],
         )
-    render_target = TextureRenderTarget([colors_1, colors_2], depth=depth)
+    render_target = TextureRenderTarget([colors_1, colors_2, colors_3], depth=depth)
 
     rect = IRectangle(IVector2(0, 0), render_target.size)
 
-    clear_render_target(render_target, color=FVector3(0.3, 0.5, 0.7), depth=1)
+    clear_render_target(render_target, color=FVector4(0.3, 0.5, 0.7, 0.5), depth=1)
     assert all(
         is_kinda_close(p.rgb, FVector3(0.3, 0.5, 0.7))
         for p in read_color_from_render_target(render_target, rect)
@@ -208,13 +215,17 @@ def test_clear_render_target(platform, is_kinda_close, resource_dir, depth):
     assert all(
         is_kinda_close(p.rgb, FVector3(0.3, 0.5, 0.7))
         for p in read_color_from_render_target(render_target, rect, index=1)
+    )
+    assert all(
+        is_kinda_close(p, FVector4(0.3, 0.5, 0.7, 0.5))
+        for p in read_color_from_render_target(render_target, rect, index=2)
     )
     if depth is not False:
         assert all(
             is_kinda_close(p, 1) for p in read_depth_from_render_target(render_target, rect)
         )
 
-    clear_render_target(render_target, color=FVector3(0.2, 0.4, 0.6))
+    clear_render_target(render_target, color=FVector4(0.2, 0.4, 0.6, 0.8))
     assert all(
         is_kinda_close(p.rgb, FVector3(0.2, 0.4, 0.6))
         for p in read_color_from_render_target(render_target, rect)
@@ -222,6 +233,10 @@ def test_clear_render_target(platform, is_kinda_close, resource_dir, depth):
     assert all(
         is_kinda_close(p.rgb, FVector3(0.2, 0.4, 0.6))
         for p in read_color_from_render_target(render_target, rect, index=1)
+    )
+    assert all(
+        is_kinda_close(p, FVector4(0.2, 0.4, 0.6, 0.8))
+        for p in read_color_from_render_target(render_target, rect, index=2)
     )
     if depth is not False:
         assert all(
@@ -236,6 +251,10 @@ def test_clear_render_target(platform, is_kinda_close, resource_dir, depth):
     assert all(
         is_kinda_close(p.rgb, FVector3(0.2, 0.4, 0.6))
         for p in read_color_from_render_target(render_target, rect, index=1)
+    )
+    assert all(
+        is_kinda_close(p, FVector4(0.2, 0.4, 0.6, 0.8))
+        for p in read_color_from_render_target(render_target, rect, index=2)
     )
     if depth is not False:
         assert all(

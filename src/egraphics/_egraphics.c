@@ -38,7 +38,7 @@
 
 typedef struct ModuleState
 {
-    float clear_color[3];
+    float clear_color[4];
     float clear_depth;
     int texture_filter_anisotropic_supported;
     bool depth_test;
@@ -74,6 +74,7 @@ reset_module_state(PyObject *module, PyObject *unused)
     state->clear_color[0] = -1;
     state->clear_color[1] = -1;
     state->clear_color[2] = -1;
+    state->clear_color[3] = -1;
     state->clear_depth = -1;
     state->depth_test = false;
     state->depth_mask = true;
@@ -724,17 +725,17 @@ clear_framebuffer(PyObject *module, PyObject **args, Py_ssize_t nargs)
         emath_api = EMathApi_Get();
         CHECK_UNEXPECTED_PYTHON_ERROR();
 
-        const float *color = emath_api->FVector3_GetValuePointer(py_color);
+        const float *color = emath_api->FVector4_GetValuePointer(py_color);
         CHECK_UNEXPECTED_PYTHON_ERROR();
 
         EMathApi_Release();
         emath_api = 0;
 
-        if (memcmp(state->clear_color, color, sizeof(float) * 3) != 0)
+        if (memcmp(state->clear_color, color, sizeof(float) * 4) != 0)
         {
-            glClearColor(color[0], color[1], color[2], 1.0);
+            glClearColor(color[0], color[1], color[2], color[3]);
             CHECK_GL_ERROR();
-            memcpy(state->clear_color, color, sizeof(float) * 3);
+            memcpy(state->clear_color, color, sizeof(float) * 4);
         }
         clear_mask |= GL_COLOR_BUFFER_BIT;
         if (

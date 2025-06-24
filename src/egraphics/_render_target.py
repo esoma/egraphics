@@ -36,7 +36,7 @@ from egeometry import IRectangle
 
 # emath
 from emath import FArray
-from emath import FVector3
+from emath import FVector4
 from emath import FVector4Array
 from emath import IVector2
 
@@ -172,7 +172,7 @@ def read_depth_from_render_target(render_target: RenderTarget, rect: IRectangle)
 
 
 def clear_render_target(
-    render_target: RenderTarget, *, color: FVector3 | None = None, depth: float | None = None
+    render_target: RenderTarget, *, color: FVector4 | None = None, depth: float | None = None
 ) -> None:
     set_draw_render_target(render_target)
     clear_framebuffer(color, depth)

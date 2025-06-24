@@ -11,7 +11,6 @@ from egeometry import IRectangle
 
 # emath
 from emath import FArray
-from emath import FVector3
 from emath import FVector4
 from emath import IVector2
 
@@ -31,7 +30,7 @@ import pytest
 )
 @pytest.mark.parametrize("depth_clamp_kwargs", [{}, {"depth_clamp": False}])
 def test_no_clamp(render_target, z, is_rendered, depth_clamp_kwargs):
-    clear_render_target(render_target, color=FVector3(0, 0, 0))
+    clear_render_target(render_target, color=FVector4(0))
     shader = Shader(
         vertex=b"""
         #version 140
@@ -69,7 +68,7 @@ def test_no_clamp(render_target, z, is_rendered, depth_clamp_kwargs):
 
 @pytest.mark.parametrize("z", [-1.1, -1.0, 0.0, 1.0, 1.1])
 def test_clamp(render_target, z):
-    clear_render_target(render_target, color=FVector3(0, 0, 0))
+    clear_render_target(render_target, color=FVector4(0))
     shader = Shader(
         vertex=b"""
         #version 140

@@ -13,7 +13,6 @@ from egeometry import IRectangle
 # emath
 from emath import FVector2
 from emath import FVector2Array
-from emath import FVector3
 from emath import FVector4
 from emath import IVector2
 
@@ -51,7 +50,7 @@ def test_basic(render_target, pixel):
         scissor = IBoundingBox2d(render_target.size.oy - IVector2(0, 2), IVector2(2))
         pixels_changed = [0, 1, render_target.size.x, render_target.size.x + 1]
 
-    clear_render_target(render_target, color=FVector3(0, 0, 0), depth=True)
+    clear_render_target(render_target, color=FVector4(0, 0, 0, 1), depth=True)
     color = FVector4(1, 1, 1, 1)
     shader = Shader(
         vertex=b"""

@@ -14,7 +14,6 @@ from egeometry import IRectangle
 # emath
 from emath import FVector2
 from emath import FVector2Array
-from emath import FVector3
 from emath import FVector4
 from emath import IVector2
 
@@ -126,7 +125,7 @@ def test_source_destination_factors(
     clear_color = FVector4(0.2, 0.5, 0.2, 1)
     blend_color = FVector4(0.8, 0.7, 0.6, 0.5)
 
-    clear_render_target(render_target, color=clear_color.rgb)
+    clear_render_target(render_target, color=clear_color)
 
     shader = Shader(vertex=VERTEX_SHADER, fragment=FRAGMENT_SHADER)
     draw_fullscreen_quad(
@@ -169,7 +168,7 @@ def test_source_destination_alpha_factors(
     clear_color = FVector4(0.2, 0.5, 0.2, 1)
     blend_color = FVector4(0.8, 0.7, 0.6, 0.5)
 
-    clear_render_target(render_target, color=clear_color.rgb)
+    clear_render_target(render_target, color=clear_color)
 
     shader = Shader(vertex=VERTEX_SHADER, fragment=FRAGMENT_SHADER)
 
@@ -212,7 +211,7 @@ def test_function(render_target, blend_function):
     color = FVector4(0.45, 0.3, 0.8, 0.333)
     clear_color = FVector4(0.2, 0.5, 0.2, 1)
 
-    clear_render_target(render_target, color=clear_color.rgb)
+    clear_render_target(render_target, color=clear_color)
 
     shader = Shader(vertex=VERTEX_SHADER, fragment=FRAGMENT_SHADER)
 
@@ -256,7 +255,7 @@ def test_function(render_target, blend_function):
 
 
 def test_default_blend_color(render_target):
-    clear_render_target(render_target, color=FVector3(0, 0, 0))
+    clear_render_target(render_target, color=FVector4(0))
 
     shader = Shader(vertex=VERTEX_SHADER, fragment=FRAGMENT_SHADER)
 

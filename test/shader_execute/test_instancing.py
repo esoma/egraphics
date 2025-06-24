@@ -99,7 +99,7 @@ def test_negative_instances(render_target):
 
 
 def test_zero_instances(render_target):
-    clear_render_target(render_target, color=FVector3(0, 0, 0))
+    clear_render_target(render_target, color=FVector4(0, 0, 0, 1))
     shader = Shader(vertex=VERTEX_SHADER, fragment=FRAGMENT_SHADER)
     draw_fullscreen_quads(render_target, shader, [])
 
@@ -129,7 +129,7 @@ def test_zero_instances(render_target):
     ),
 )
 def test_basic(render_target, colors) -> None:
-    clear_render_target(render_target, color=FVector3(0, 0, 0))
+    clear_render_target(render_target, color=FVector4(0))
 
     shader = Shader(vertex=VERTEX_SHADER, fragment=FRAGMENT_SHADER)
 

@@ -12,7 +12,6 @@ from egeometry import IRectangle
 # emath
 from emath import FVector2
 from emath import FVector2Array
-from emath import FVector3
 from emath import FVector4
 from emath import IVector2
 
@@ -28,7 +27,7 @@ DIR = Path(__file__).parent
 
 @pytest.mark.parametrize("point_size", [None, 1.0, 2.0, 4.0, 8.0])
 def test_point_size(render_target, point_size):
-    clear_render_target(render_target, color=FVector3(0, 0, 0), depth=True)
+    clear_render_target(render_target, color=FVector4(0), depth=True)
 
     shader = Shader(
         vertex=b"""
