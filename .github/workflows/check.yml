@@ -108,6 +108,11 @@ jobs:
       run: |
         git submodule update --init --recursive
 
+    - name: Prepare Environment
+      run: |
+        sudo apt-get update
+        sudo apt-get install xvfb libglu1-mesa-dev freeglut3-dev mesa-common-dev
+
     - name: Install Poetry
       uses: snok/install-poetry@v1.4.1
       with:
