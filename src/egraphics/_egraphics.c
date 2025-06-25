@@ -1601,6 +1601,7 @@ set_gl_execution_state(PyObject *module, PyObject **args, Py_ssize_t nargs)
             state->depth_test = false;
         }
     }
+    else
     {
         if (!state->depth_test)
         {
