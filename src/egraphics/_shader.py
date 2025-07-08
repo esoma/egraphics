@@ -341,7 +341,7 @@ class Shader:
                             f"(got {value})"
                         )
                     raise
-                input_value = value.pointer
+                input_value = value.address
         else:
             if isinstance(value, uniform._set_type):
                 set_size = 1
@@ -349,7 +349,7 @@ class Shader:
                     input_value = value
                     cache_key = value.value  # type: ignore
                 else:
-                    input_value = value.pointer  # type: ignore
+                    input_value = value.address  # type: ignore
             else:
                 array_type = _PY_TYPE_TO_ARRAY[uniform.data_type]
                 if not isinstance(value, array_type):
@@ -357,7 +357,7 @@ class Shader:
                         f"expected {uniform._set_type} or {array_type} for {uniform.name} "
                         f"(got {type(value)})"
                     )
-                input_value = value.pointer  # type: ignore
+                input_value = value.address  # type: ignore
                 set_size = min(uniform.size, len(value))  # type: ignore
         if set_size != 0:
             uniform._set(uniform.location, set_size, input_value, cache_key)
@@ -507,10 +507,13 @@ class ShaderUniform(Generic[_T]):
     def _set(self, location: int, size: int, gl_value: Any, cache_key: Any) -> None:
         if self._cache == cache_key:
             return
-        try:
-            value_ptr = addressof(gl_value.contents)
-        except AttributeError:
-            value_ptr = addressof(gl_value)
+        if isinstance(gl_value, int):
+            value_ptr = gl_value
+        else:
+            try:
+                value_ptr = addressof(gl_value.contents)
+            except AttributeError:
+                value_ptr = addressof(gl_value)
         self._setter(location, size, value_ptr)
         self._cache = cache_key
 
