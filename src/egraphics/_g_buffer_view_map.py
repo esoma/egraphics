@@ -131,7 +131,7 @@ class _GlVertexArray:
                 for location_offset in range(locations):
                     location = attribute.location + location_offset + i_location_offset
                     offset = buffer_view.offset + (
-                        (buffer_view.stride // locations) * location_offset
+                        (buffer_view.data_type_size // locations) * location_offset
                     )
                     configure_gl_vertex_array_location(
                         location,
