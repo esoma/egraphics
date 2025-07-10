@@ -52,8 +52,7 @@ class GBufferViewMap:
         if isinstance(indices, GBufferView):
             if indices.stride != indices.data_type_size:
                 raise ValueError(
-                    "view buffer with a stride different from its type cannot be used "
-                    "for indexing"
+                    "view buffer with a stride different from its type cannot be used for indexing"
                 )
             if indices.instancing_divisor is not None:
                 raise ValueError("view buffer with instancing_divisor cannot be used for indexing")

@@ -435,7 +435,7 @@ def test_sampler_uniforms(platform, gl_version, location, prefix, postfix, compo
         with pytest.raises(ValueError) as excinfo:
             shader._set_uniform(uni, bad_value, exit_stack)
         assert str(excinfo.value) == (
-            f"expected {Texture} or sequence of {Texture} for uni_name " f"(got {bad_value!r})"
+            f"expected {Texture} or sequence of {Texture} for uni_name (got {bad_value!r})"
         )
 
         tex1 = Texture2d(UVector2(1, 1), TextureComponents.R, ctypes.c_uint8, b"\x00")
@@ -590,7 +590,7 @@ def test_shadow_sampler_uniforms(platform, gl_version, location, postfix, compon
         with pytest.raises(ValueError) as excinfo:
             shader._set_uniform(uni, bad_value, exit_stack)
         assert str(excinfo.value) == (
-            f"expected {Texture} or sequence of {Texture} for uni_name " f"(got {bad_value!r})"
+            f"expected {Texture} or sequence of {Texture} for uni_name (got {bad_value!r})"
         )
 
         tex1 = Texture2d(UVector2(1, 1), TextureComponents.R, ctypes.c_uint8, b"\x00")

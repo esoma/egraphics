@@ -58,7 +58,7 @@ def test_index_buffer_view_different_stride(platform):
     with pytest.raises(ValueError) as excinfo:
         GBufferViewMap({}, index_buffer_view)
     assert str(excinfo.value) == (
-        f"view buffer with a stride different from its type cannot be used " f"for indexing"
+        f"view buffer with a stride different from its type cannot be used for indexing"
     )
 
 
