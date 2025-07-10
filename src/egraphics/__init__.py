@@ -5,6 +5,7 @@ __all__ = [
     "BlendFunction",
     "clear_render_target",
     "DepthTest",
+    "EditGBuffer",
     "FaceCull",
     "FaceRasterization",
     "GBuffer",
@@ -36,6 +37,7 @@ __all__ = [
     "WindowRenderTargetMixin",
 ]
 
+from ._g_buffer import EditGBuffer
 from ._g_buffer import GBuffer
 from ._g_buffer import GBufferFrequency
 from ._g_buffer import GBufferNature

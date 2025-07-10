@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 __all__ = [
+    "EditGBuffer",
     "GBuffer",
     "GBufferTarget",
     "GBufferFrequency",
@@ -10,9 +11,11 @@ __all__ = [
 
 from collections.abc import Buffer
 from enum import Enum
+from itertools import islice
 from typing import Any
 from typing import ClassVar
 from typing import Final
+from typing import NamedTuple
 from typing import Self
 from typing import TypeAlias
 from weakref import ref
@@ -181,3 +184,43 @@ class GBuffer:
 
 def get_g_buffer_gl_buffer(g_buffer: GBuffer) -> GlBuffer:
     return g_buffer._gl_buffer
+
+
+class _WriteGBuffer(NamedTuple):
+    data: Buffer
+    offset: int
+
+
+class EditGBuffer:
+    def __init__(self, g_buffer: GBuffer):
+        self._g_buffer = g_buffer
+        self._write_buffer: list[_WriteGBuffer] = []
+
+    def write(self, data: Buffer, *, offset: int = 0) -> None:
+        self._write_buffer.append(_WriteGBuffer(data, offset))
+
+    def flush(self) -> None:
+        if not self._write_buffer:
+            return
+
+        GBufferTarget.ARRAY.g_buffer = self._g_buffer
+
+        self._write_buffer.sort(key=lambda w: w.offset)
+        data = bytearray(self._write_buffer[0].data)
+        offset = self._write_buffer[0].offset
+        for write in islice(self._write_buffer, 1, None):
+            if write.offset == offset + len(data):
+                data += write.data
+            else:
+                write_gl_buffer_target_data(GL_ARRAY_BUFFER, data, offset)
+                data = bytearray(write.data)
+                offset = write.offset
+        write_gl_buffer_target_data(GL_ARRAY_BUFFER, data, offset)
+        self._write_buffer.clear()
+
+    def clear(self) -> None:
+        self._write_buffer.clear()
+
+    @property
+    def g_buffer(self) -> GBuffer:
+        return self._g_buffer

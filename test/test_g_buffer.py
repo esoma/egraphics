@@ -1,3 +1,5 @@
+from unittest.mock import patch
+
 import pytest
 from emath import FVector3
 from OpenGL.GL import GL_ARRAY_BUFFER
@@ -18,7 +20,9 @@ from OpenGL.GL import glGetBufferParameteriv
 from OpenGL.GL import glGetIntegerv
 from OpenGL.GL import glIsBuffer
 
+from egraphics import EditGBuffer
 from egraphics import GBuffer
+from egraphics._egraphics import write_gl_buffer_target_data
 from egraphics._g_buffer import _reset_g_buffer_target_state
 
 
@@ -127,6 +131,74 @@ def test_write(platform):
     assert str(excinfo.value) == "write would overrun buffer (offset: -1, size: 1, buffer size: 3)"
     g_buffer.write(b"\x90\x91\x92")
     assert bytes(g_buffer) == b"\x90\x91\x92"
+
+
+@patch("egraphics._g_buffer.write_gl_buffer_target_data")
+def test_edit(write_gl_buffer_target_data_mock, platform):
+    write_gl_buffer_target_data_mock.side_effect = write_gl_buffer_target_data
+
+    g_buffer = GBuffer(b"\x00\x00\x00")
+    assert bytes(g_buffer) == b"\x00\x00\x00"
+    edit_g_buffer = EditGBuffer(g_buffer)
+
+    edit_g_buffer.write(b"\x01\x02\x03")
+    assert bytes(g_buffer) == b"\x00\x00\x00"
+    edit_g_buffer.flush()
+    assert bytes(g_buffer) == b"\x01\x02\x03"
+    assert write_gl_buffer_target_data_mock.call_count == 1
+
+    write_gl_buffer_target_data_mock.reset_mock()
+    edit_g_buffer.flush()
+    assert write_gl_buffer_target_data_mock.call_count == 0
+
+    write_gl_buffer_target_data_mock.reset_mock()
+    edit_g_buffer.write(b"\xbb", offset=1)
+    edit_g_buffer.write(b"\xcc", offset=2)
+    edit_g_buffer.write(b"\xaa", offset=0)
+    assert bytes(g_buffer) == b"\x01\x02\x03"
+    edit_g_buffer.flush()
+    assert bytes(g_buffer) == b"\xaa\xbb\xcc"
+    assert write_gl_buffer_target_data_mock.call_count == 1
+
+    write_gl_buffer_target_data_mock.reset_mock()
+    edit_g_buffer.write(b"\x03", offset=2)
+    edit_g_buffer.write(b"\x00", offset=0)
+    assert bytes(g_buffer) == b"\xaa\xbb\xcc"
+    edit_g_buffer.flush()
+    assert bytes(g_buffer) == b"\x00\xbb\x03"
+    assert write_gl_buffer_target_data_mock.call_count == 2
+
+    write_gl_buffer_target_data_mock.reset_mock()
+    edit_g_buffer.write(b"\xff", offset=0)
+    edit_g_buffer.write(b"\xff", offset=-1)
+    assert bytes(g_buffer) == b"\x00\xbb\x03"
+    with pytest.raises(ValueError) as excinfo:
+        edit_g_buffer.flush()
+    assert str(excinfo.value) == "write would overrun buffer (offset: -1, size: 2, buffer size: 3)"
+    assert bytes(g_buffer) == b"\x00\xbb\x03"
+    assert write_gl_buffer_target_data_mock.call_count == 1
+
+    write_gl_buffer_target_data_mock.reset_mock()
+    with pytest.raises(ValueError) as excinfo:
+        edit_g_buffer.flush()
+    assert str(excinfo.value) == "write would overrun buffer (offset: -1, size: 2, buffer size: 3)"
+    assert bytes(g_buffer) == b"\x00\xbb\x03"
+    assert write_gl_buffer_target_data_mock.call_count == 1
+
+    write_gl_buffer_target_data_mock.reset_mock()
+    edit_g_buffer.clear()
+    edit_g_buffer.flush()
+    assert write_gl_buffer_target_data_mock.call_count == 0
+
+    write_gl_buffer_target_data_mock.reset_mock()
+    edit_g_buffer.write(b"\xff", offset=2)
+    edit_g_buffer.write(b"\xff", offset=3)
+    assert bytes(g_buffer) == b"\x00\xbb\x03"
+    with pytest.raises(ValueError) as excinfo:
+        edit_g_buffer.flush()
+    assert str(excinfo.value) == "write would overrun buffer (offset: 2, size: 2, buffer size: 3)"
+    assert bytes(g_buffer) == b"\x00\xbb\x03"
+    assert write_gl_buffer_target_data_mock.call_count == 1
 
 
 @pytest.mark.parametrize(
