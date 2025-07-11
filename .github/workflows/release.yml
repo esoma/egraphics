@@ -46,7 +46,7 @@ jobs:
         repo_token: ${{ secrets.GITHUB_TOKEN }}
         file: ./wheelhouse/*.whl
         file_glob: true
-        tag: ${{ github.ref }}
+        tag: ${{ github.ref_name }}
 
     - name: Upload Wheels to PyPi
       run: |
@@ -68,7 +68,7 @@ jobs:
         repo_token: ${{ secrets.GITHUB_TOKEN }}
         file: ./dist/*.tar.gz
         file_glob: true
-        tag: ${{ github.ref }}
+        tag: ${{ github.ref_name }}
 
     - name: Upload Source to PyPi
       if: runner.os == 'Linux'
