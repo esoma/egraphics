@@ -86,7 +86,7 @@ jobs:
         LIBGL_ALWAYS_SOFTWARE: "true"
 
     - name: Codecov
-      uses: codecov/codecov-action@v4.0.1
+      uses: codecov/codecov-action@v5
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
 
