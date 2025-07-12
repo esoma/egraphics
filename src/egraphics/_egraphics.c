@@ -62,6 +62,7 @@ typedef struct ModuleState
     int scissor[4];
     GLenum polygon_rasterization_mode;
     float point_size;
+    int clip_distances;
 } ModuleState;
 
 static PyObject *
@@ -103,6 +104,7 @@ reset_module_state(PyObject *module, PyObject *unused)
     state->scissor[3] = -1;
     state->polygon_rasterization_mode = GL_FILL;
     state->point_size = 1.0f;
+    state->clip_distances = 0;
 
     state->texture_filter_anisotropic_supported = GLEW_EXT_texture_filter_anisotropic;
     Py_RETURN_NONE;
@@ -1540,7 +1542,7 @@ set_gl_execution_state(PyObject *module, PyObject **args, Py_ssize_t nargs)
     PyObject *ex = 0;
     struct EMathApi *emath_api = 0;
 
-    CHECK_UNEXPECTED_ARG_COUNT_ERROR(18);
+    CHECK_UNEXPECTED_ARG_COUNT_ERROR(19);
 
     bool depth_write = (args[0] == Py_True);
 
@@ -1587,6 +1589,9 @@ set_gl_execution_state(PyObject *module, PyObject **args, Py_ssize_t nargs)
     GLenum polygon_rasterization_mode = PyLong_AsLong(args[16]);
 
     float point_size = PyFloat_AsDouble(args[17]);
+    CHECK_UNEXPECTED_PYTHON_ERROR();
+
+    float clip_distances = PyLong_AsLong(args[18]);
     CHECK_UNEXPECTED_PYTHON_ERROR();
 
     ModuleState *state = (ModuleState *)PyModule_GetState(module);
@@ -1808,6 +1813,27 @@ set_gl_execution_state(PyObject *module, PyObject **args, Py_ssize_t nargs)
         state->point_size = point_size;
     }
 
+    if (state->clip_distances != clip_distances)
+    {
+        if (state->clip_distances < clip_distances)
+        {
+            for (int i = state->clip_distances; i < clip_distances; i++)
+            {
+                glEnable(GL_CLIP_DISTANCE0 + i);
+                CHECK_GL_ERROR();
+            }
+        }
+        else
+        {
+            for (int i = clip_distances; i < state->clip_distances; i++)
+            {
+                glDisable(GL_CLIP_DISTANCE0 + i);
+                CHECK_GL_ERROR();
+            }
+        }
+        state->clip_distances = clip_distances;
+    }
+
     if (emath_api){ EMathApi_Release(); }
     Py_RETURN_NONE;
 error:
@@ -1919,6 +1945,7 @@ PyMODINIT_FUNC
 PyInit__egraphics()
 {
     GLint GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS_VALUE = 0;
+    GLint GL_MAX_CLIP_DISTANCES_VALUE = 0;
     {
         PyObject *eplatform = PyImport_ImportModule("eplatform");
         if (!eplatform){ return 0; }
@@ -1951,6 +1978,11 @@ PyInit__egraphics()
         glGetIntegerv(
             GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS,
             &GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS_VALUE
+        );
+
+        glGetIntegerv(
+            GL_MAX_CLIP_DISTANCES,
+            &GL_MAX_CLIP_DISTANCES_VALUE
         );
 
         context = PyObject_CallMethod(platform, "__exit__", "");
@@ -2165,6 +2197,7 @@ PyInit__egraphics()
     ADD_CONSTANT(GL_TEXTURE_2D);
 
     ADD_CONSTANT(GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS_VALUE);
+    ADD_CONSTANT(GL_MAX_CLIP_DISTANCES_VALUE);
 
     ADD_CONSTANT(GL_NEVER);
     ADD_CONSTANT(GL_ALWAYS);

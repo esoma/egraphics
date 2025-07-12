@@ -398,6 +398,7 @@ class Shader:
         scissor: IBoundingBox2d | None = None,
         face_rasterization: FaceRasterization = FaceRasterization.FILL,
         point_size: float = 1.0,
+        clip_distances: int = 0,
     ) -> None:
         uniform_values: list[tuple[ShaderUniform, Any]] = []
         for uniform in self.uniforms:
@@ -431,6 +432,7 @@ class Shader:
             depth_clamp,
             face_rasterization.value,
             point_size,
+            clip_distances,
         )
 
         set_draw_render_target(render_target)

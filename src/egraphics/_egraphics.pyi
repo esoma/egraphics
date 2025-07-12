@@ -78,6 +78,7 @@ __all__ = [
     "GL_LINEAR_MIPMAP_LINEAR",
     "GL_TEXTURE_2D",
     "GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS_VALUE",
+    "GL_MAX_CLIP_DISTANCES_VALUE",
     "GL_NEVER",
     "GL_ALWAYS",
     "GL_LESS",
@@ -447,6 +448,7 @@ GL_LINEAR_MIPMAP_LINEAR: GlTextureFilter
 GL_TEXTURE_2D: GlTextureTarget
 
 GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS_VALUE: int
+GL_MAX_CLIP_DISTANCES_VALUE: int
 
 GL_NEVER: GlFunc
 GL_ALWAYS: GlFunc
@@ -650,6 +652,7 @@ def set_gl_execution_state(
     depth_clamp: bool,
     polygon_rasterization_mode: GlPolygonRasterizationMode,
     point_size: float,
+    clip_distances: int,
     /,
 ) -> None: ...
 def get_gl_version() -> str: ...
