@@ -21,7 +21,7 @@ script = "buildscript.py"
 python = "^3.12"
 emath = "^0"
 egeometry = "^0"
-pillow = "^10.4"
+pillow = ">=10.4,<12"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "7.4.3"
