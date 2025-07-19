@@ -1243,7 +1243,7 @@ create_gl_program(PyObject *module, PyObject **args, Py_ssize_t nargs)
             Py_buffer buffer;
             if (PyObject_GetBuffer(shader_code, &buffer, PyBUF_CONTIG_RO) == -1){ goto error; }
             GLint length = buffer.len;
-            glShaderSource(shader, 1, (GLchar *const *)&buffer.buf, &length);
+            glShaderSource(shader, 1, (const GLchar *const *)&buffer.buf, &length);
             PyBuffer_Release(&buffer);
             CHECK_GL_ERROR();
         }
