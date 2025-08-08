@@ -47,6 +47,11 @@ def test_clip_space_support(open_gl_version_max):
     )
     out, err = process.communicate(
         f"""
+import os
+
+if hasattr(os, "add_dll_directory"):
+    os.add_dll_directory(os.getcwd() + "/vendor/SDL")
+
 from egraphics import clip_space, ClipOrigin, ClipDepth
 from eplatform import Platform
 
@@ -68,6 +73,11 @@ def test_clip_space_not_supported():
     )
     out, err = process.communicate(
         f"""
+import os
+
+if hasattr(os, "add_dll_directory"):
+    os.add_dll_directory(os.getcwd() + "/vendor/SDL")
+
 from egraphics import clip_space, ClipOrigin, ClipDepth
 from eplatform import Platform
 
