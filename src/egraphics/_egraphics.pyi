@@ -5,8 +5,10 @@ __all__ = [
     "GlBufferTarget",
     "GlBufferUsage",
     "GlCull",
+    "GlDepthMode",
     "GlFunc",
     "GlFramebuffer",
+    "GlOrigin",
     "GlPrimitive",
     "GlProgram",
     "GlRenderbuffer",
@@ -192,6 +194,10 @@ __all__ = [
     "GL_POINT",
     "GL_LINE",
     "GL_FILL",
+    "GL_LOWER_LEFT",
+    "GL_UPPER_LEFT",
+    "GL_NEGATIVE_ONE_TO_ONE",
+    "GL_ZERO_TO_ONE",
     "debug_gl",
     "activate_gl_vertex_array",
     "set_gl_buffer_target",
@@ -265,6 +271,8 @@ __all__ = [
     "execute_gl_program_indices",
     "set_gl_execution_state",
     "get_gl_version",
+    "set_gl_clip",
+    "get_gl_clip",
 ]
 
 from collections.abc import Buffer
@@ -284,8 +292,10 @@ GlBuffer = NewType("GlBuffer", int)
 GlBufferTarget = NewType("GlBufferTarget", int)
 GlBufferUsage = NewType("GlBufferUsage", int)
 GlCull = NewType("GlCull", int)
+GlDepthMode = NewType("GlDepthMode", int)
 GlFunc = NewType("GlFunc", int)
 GlFramebuffer = NewType("GlFramebuffer", int)
+GlOrigin = NewType("GlOrigin", int)
 GlPolygonRasterizationMode = NewType("GlPolygonRasterizationMode", int)
 GlPrimitive = NewType("GlPrimitive", int)
 GlProgram = NewType("GlProgram", int)
@@ -499,6 +509,12 @@ GL_POINT: GlPolygonRasterizationMode
 GL_LINE: GlPolygonRasterizationMode
 GL_FILL: GlPolygonRasterizationMode
 
+GL_LOWER_LEFT: GlOrigin
+GL_UPPER_LEFT: GlOrigin
+
+GL_NEGATIVE_ONE_TO_ONE: GlDepthMode
+GL_ZERO_TO_ONE: GlDepthMode
+
 def debug_gl(callback: Callable[[int, int, int, int, str], None], /) -> None: ...
 def activate_gl_vertex_array(gl_vertex_array: GlVertexArray | None, /) -> None: ...
 def set_gl_buffer_target(target: GlBufferTarget, gl_buffer: GlBuffer | None, /) -> None: ...
@@ -656,3 +672,5 @@ def set_gl_execution_state(
     /,
 ) -> None: ...
 def get_gl_version() -> str: ...
+def set_gl_clip(origin: GlOrigin, depth: GlDepthMode) -> None: ...
+def get_gl_clip() -> tuple[GlOrigin, GlDepthMode]: ...

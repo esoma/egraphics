@@ -38,6 +38,8 @@
 
 typedef struct ModuleState
 {
+    bool is_gl_clip_control_supported;
+
     float clear_color[4];
     float clear_depth;
     int texture_filter_anisotropic_supported;
@@ -63,6 +65,8 @@ typedef struct ModuleState
     GLenum polygon_rasterization_mode;
     float point_size;
     int clip_distances;
+    GLenum clip_origin;
+    GLenum clip_depth;
 } ModuleState;
 
 static PyObject *
@@ -71,6 +75,8 @@ reset_module_state(PyObject *module, PyObject *unused)
     ModuleState *state = (ModuleState *)PyModule_GetState(module);
     CHECK_UNEXPECTED_PYTHON_ERROR();
     if (!state){ Py_RETURN_NONE; }
+
+    state->is_gl_clip_control_supported = false;
 
     state->clear_color[0] = -1;
     state->clear_color[1] = -1;
@@ -105,6 +111,8 @@ reset_module_state(PyObject *module, PyObject *unused)
     state->polygon_rasterization_mode = GL_FILL;
     state->point_size = 1.0f;
     state->clip_distances = 0;
+    state->clip_origin = GL_LOWER_LEFT;
+    state->clip_depth = GL_NEGATIVE_ONE_TO_ONE;
 
     state->texture_filter_anisotropic_supported = GLEW_EXT_texture_filter_anisotropic;
     Py_RETURN_NONE;
@@ -1854,6 +1862,57 @@ error:
     return 0;
 }
 
+static PyObject *
+set_gl_clip(PyObject *module, PyObject **args, Py_ssize_t nargs)
+{
+    CHECK_UNEXPECTED_ARG_COUNT_ERROR(2);
+
+    GLenum origin = PyLong_AsLong(args[0]);
+    CHECK_UNEXPECTED_PYTHON_ERROR();
+
+    GLenum depth = PyLong_AsLong(args[1]);
+    CHECK_UNEXPECTED_PYTHON_ERROR();
+
+    ModuleState *state = (ModuleState *)PyModule_GetState(module);
+    CHECK_UNEXPECTED_PYTHON_ERROR();
+
+    if (
+        !state->is_gl_clip_control_supported &&
+        (
+            origin != GL_LOWER_LEFT ||
+            depth != GL_NEGATIVE_ONE_TO_ONE
+        )
+    )
+    {
+        PyErr_SetString(PyExc_RuntimeError, "glClipControl not supported");
+        goto error;
+    }
+
+    if (state->clip_origin != origin || state->clip_depth != depth)
+    {
+        glClipControl(origin, depth);
+        CHECK_GL_ERROR();
+
+        state->clip_origin = origin;
+        state->clip_depth = depth;
+    }
+
+    Py_RETURN_NONE;
+error:
+    return 0;
+}
+
+static PyObject *
+get_gl_clip(PyObject *module, PyObject* unused)
+{
+    ModuleState *state = (ModuleState *)PyModule_GetState(module);
+    CHECK_UNEXPECTED_PYTHON_ERROR();
+
+    return Py_BuildValue("(ii)", state->clip_origin, state->clip_depth);
+error:
+    return 0;
+}
+
 static PyMethodDef module_PyMethodDef[] = {
     {"reset_module_state", reset_module_state, METH_NOARGS, 0},
     {"debug_gl", debug_gl, METH_O, 0},
@@ -1930,6 +1989,8 @@ static PyMethodDef module_PyMethodDef[] = {
     {"execute_gl_program_indices", (PyCFunction)execute_gl_program_indices, METH_FASTCALL, 0},
     {"set_gl_execution_state", (PyCFunction)set_gl_execution_state, METH_FASTCALL, 0},
     {"get_gl_version", (PyCFunction)get_gl_version, METH_NOARGS, 0},
+    {"set_gl_clip", (PyCFunction)set_gl_clip, METH_FASTCALL, 0},
+    {"get_gl_clip", (PyCFunction)get_gl_clip, METH_NOARGS, 0},
     {0},
 };
 
@@ -1946,6 +2007,7 @@ PyInit__egraphics()
 {
     GLint GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS_VALUE = 0;
     GLint GL_MAX_CLIP_DISTANCES_VALUE = 0;
+    bool is_gl_clip_control_supported = false;
     {
         PyObject *eplatform = PyImport_ImportModule("eplatform");
         if (!eplatform){ return 0; }
@@ -1973,6 +2035,23 @@ PyInit__egraphics()
             Py_DECREF(platform);
             PyErr_SetString(PyExc_RuntimeError, glewGetErrorString(err));
             return 0;
+        }
+
+        char *gl_clip_control_env = getenv("EGRAPHICS_GL_CLIP_CONTROL");
+        if (gl_clip_control_env && strcmp(gl_clip_control_env, "disabled") == 0)
+        {
+            assert(is_gl_clip_control_supported == false);
+        }
+        else
+        {
+            if (GLEW_VERSION_4_5 || glewGetExtension("GL_ARB_clip_control"))
+            {
+                is_gl_clip_control_supported = true;
+            }
+            else
+            {
+                assert(is_gl_clip_control_supported == false);
+            }
         }
 
         glGetIntegerv(
@@ -2009,6 +2088,16 @@ PyInit__egraphics()
         Py_DECREF(r);
     }
 
+    {
+        ModuleState *state = (ModuleState *)PyModule_GetState(module);
+        if (!state)
+        {
+            Py_DECREF(module);
+            return 0;
+        }
+        state->is_gl_clip_control_supported = is_gl_clip_control_supported;
+    }
+
 #define ADD_ALIAS(name, type)\
     {\
         if (PyModule_AddObjectRef(module, name, (PyObject *)&type) != 0)\
@@ -2023,8 +2112,10 @@ PyInit__egraphics()
     ADD_ALIAS("GlBufferTarget", PyLong_Type);
     ADD_ALIAS("GlBufferUsage", PyLong_Type);
     ADD_ALIAS("GlCull", PyLong_Type);
+    ADD_ALIAS("GlDepthMode", PyLong_Type);
     ADD_ALIAS("GlFunc", PyLong_Type);
     ADD_ALIAS("GlFramebuffer", PyLong_Type);
+    ADD_ALIAS("GlOrigin", PyLong_Type);
     ADD_ALIAS("GlPrimitive", PyLong_Type);
     ADD_ALIAS("GlProgram", PyLong_Type);
     ADD_ALIAS("GlRenderbuffer", PyLong_Type);
@@ -2247,6 +2338,12 @@ PyInit__egraphics()
     ADD_CONSTANT(GL_POINT);
     ADD_CONSTANT(GL_LINE);
     ADD_CONSTANT(GL_FILL);
+
+    ADD_CONSTANT(GL_LOWER_LEFT);
+    ADD_CONSTANT(GL_UPPER_LEFT);
+
+    ADD_CONSTANT(GL_NEGATIVE_ONE_TO_ONE);
+    ADD_CONSTANT(GL_ZERO_TO_ONE);
 
     {
         PyObject *eplatform = PyImport_ImportModule("eplatform");

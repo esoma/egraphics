@@ -4,6 +4,9 @@ __all__ = [
     "BlendFactor",
     "BlendFunction",
     "clear_render_target",
+    "ClipDepth",
+    "ClipOrigin",
+    "clip_space",
     "DepthTest",
     "EditGBuffer",
     "FaceCull",
@@ -62,6 +65,9 @@ from ._shader import Shader
 from ._shader import ShaderAttribute
 from ._shader import ShaderUniform
 from ._shader import UniformMap
+from ._state import ClipDepth
+from ._state import ClipOrigin
+from ._state import clip_space
 from ._state import reset_state
 from ._texture import MipmapSelection
 from ._texture import Texture
