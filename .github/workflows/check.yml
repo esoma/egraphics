@@ -77,7 +77,8 @@ jobs:
     - name: Test Mac
       if: runner.os == 'macOS'
       run: |
-        export DYLD_LIBRARY_PATH=$(brew --prefix mesa)/lib/libGL.dylib:$PWD/vendor/SDL:$DYLD_LIBRARY_PATH
+        export DYLD_INSERT_LIBRARIES=$(brew --prefix mesa)/lib/libGL.dylib
+        export DYLD_LIBRARY_PATH=$PWD/vendor/SDL:$DYLD_LIBRARY_PATH
         poetry run pytest --cov=egraphics --cov-report=xml
 
     - name: Test Windows
