@@ -77,10 +77,10 @@ jobs:
     - name: Test Mac
       if: runner.os == 'macOS'
       run: |
-        ls $(brew --prefix mesa)/lib
+        ls $(brew --prefix mesa)
         export DYLD_INSERT_LIBRARIES=$(brew --prefix mesa)/lib/libGL.dylib
         export DYLD_LIBRARY_PATH=$(brew --prefix mesa)/lib:$PWD/vendor/SDL:$DYLD_LIBRARY_PATH
-        arch -arm64 poetry run pytest --cov=egraphics --cov-report=xml
+        poetry run pytest --cov=egraphics --cov-report=xml
 
     - name: Test Windows
       if: runner.os == 'Windows'
