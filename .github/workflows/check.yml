@@ -60,7 +60,7 @@ jobs:
     - name: Prepare Mac Environment
       if: runner.os == 'macOS'
       run: |
-        brew install mesa
+        arch -arm64 brew install mesa
 
     - name: Build SDL
       working-directory: vendor/SDL
