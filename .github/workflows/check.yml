@@ -79,7 +79,7 @@ jobs:
       run: |
         ls $(brew --prefix mesa)/lib
         export DYLD_INSERT_LIBRARIES=$(brew --prefix mesa)/lib/libGL.dylib
-        export DYLD_LIBRARY_PATH=$PWD/vendor/SDL:$DYLD_LIBRARY_PATH
+        export DYLD_LIBRARY_PATH=$(brew --prefix mesa)/lib:$PWD/vendor/SDL:$DYLD_LIBRARY_PATH
         poetry run pytest --cov=egraphics --cov-report=xml
 
     - name: Test Windows
