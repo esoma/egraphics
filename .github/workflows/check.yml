@@ -38,8 +38,6 @@ jobs:
     - name: Setup MSVC
       if: runner.os == 'Windows'
       uses: ilammy/msvc-dev-cmd@v1
-      with:
-        arch: ${{ matrix.arch }}
 
     - name: Initialize Submodules
       run: |
@@ -76,7 +74,6 @@ jobs:
       if: runner.os == 'macOS'
       run: |
         ls $(brew --prefix mesa)/lib
-        export DYLD_INSERT_LIBRARIES=$(brew --prefix mesa)/lib/libGL.dylib
         export DYLD_LIBRARY_PATH=$(brew --prefix mesa)/lib:$PWD/vendor/SDL:$DYLD_LIBRARY_PATH
         poetry run pytest --cov=egraphics --cov-report=xml
 
