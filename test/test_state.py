@@ -16,7 +16,7 @@ from egraphics._egraphics import GL_UPPER_LEFT
 from egraphics._egraphics import GL_ZERO_TO_ONE
 
 
-@pytest.mark.xfail(sys.platform == "darwin")
+@pytest.mark.xfail(sys.platform == "darwin", reason="macos doesn't support glClipSpace")
 def test_clip_space(platform):
     assert glGetIntegerv(GL_CLIP_ORIGIN)[0] == GL_LOWER_LEFT
     assert glGetIntegerv(GL_CLIP_DEPTH_MODE)[0] == GL_NEGATIVE_ONE_TO_ONE
@@ -38,7 +38,7 @@ def test_clip_space(platform):
     assert glGetIntegerv(GL_CLIP_DEPTH_MODE)[0] == GL_NEGATIVE_ONE_TO_ONE
 
 
-@pytest.mark.xfail(sys.platform == "darwin")
+@pytest.mark.xfail(sys.platform == "darwin", reason="macos doesn't support glClipSpace")
 @pytest.mark.parametrize("open_gl_version_max", [(4, 6), (4, 4)])
 def test_clip_space_support(open_gl_version_max):
     process = subprocess.Popen(
