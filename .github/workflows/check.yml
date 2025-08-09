@@ -57,11 +57,6 @@ jobs:
       if: runner.os == 'Windows'
       uses: ssciwr/setup-mesa-dist-win@v2
 
-    - name: Prepare Mac Environment
-      if: runner.os == 'macOS'
-      run: |
-        brew install mesa
-
     - name: Build SDL
       working-directory: vendor/SDL
       run: |
@@ -74,21 +69,15 @@ jobs:
       env:
         EGRAPHICS_BUILD_WITH_COVERAGE: ${{ matrix.os == 'windows-2025' && '0' || '1' }}
 
-    - name: Test Mac
-      if: runner.os == 'macOS'
+    - name: Test
+      if: runner.os != 'Linux'
       run: |
-        export DYLD_INSERT_LIBRARIES=$(brew --prefix mesa)/lib/libGL.dylib
         export DYLD_LIBRARY_PATH=$PWD/vendor/SDL:$DYLD_LIBRARY_PATH
-        poetry run pytest --cov=egraphics --cov-report=xml
-
-    - name: Test Windows
-      if: runner.os == 'Windows'
-      run: |
         poetry run pytest --cov=egraphics --cov-report=xml
       env:
         LIBGL_ALWAYS_SOFTWARE: "true"
 
-    - name: Test Linux
+    - name: Test with Xvfb
       if: runner.os == 'Linux'
       run: |
         export LD_LIBRARY_PATH=$PWD/vendor/SDL:$LD_LIBRARY_PATH
