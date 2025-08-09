@@ -56,7 +56,7 @@ jobs:
     - name: Prepare Mac Environment
       if: runner.os == 'macOS'
       run: |
-        brew install mesa
+        brew install mesa --build-from-source
 
     - name: Build SDL
       working-directory: vendor/SDL
