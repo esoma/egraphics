@@ -60,6 +60,8 @@ class TextureRenderTarget:
         self._depth = depth
 
         sizes = {t.size for t in self._textures if t is not None}
+        if isinstance(depth, Texture2d):
+            sizes.add(depth.size)
         if len(sizes) > 1:
             raise ValueError("all textures must be the same size")
         if len(sizes) == 0:

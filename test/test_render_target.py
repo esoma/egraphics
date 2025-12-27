@@ -5,6 +5,7 @@ from egeometry import IRectangle
 from emath import FVector3
 from emath import FVector4
 from emath import IVector2
+from emath import UVector2
 from OpenGL.GL import GL_DRAW_FRAMEBUFFER_BINDING
 from OpenGL.GL import GL_FRAMEBUFFER_COMPLETE
 from OpenGL.GL import GL_READ_FRAMEBUFFER
@@ -57,6 +58,14 @@ def test_texture_render_target(platform, resource_dir, depth):
         )
     render_target = TextureRenderTarget([colors], depth=depth)
     assert render_target.size == IVector2(*colors.size)
+    set_read_render_target(render_target)
+    assert glCheckFramebufferStatus(GL_READ_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE
+
+
+def test_texture_render_target_no_colors():
+    depth = Texture2d(UVector2(12, 16), TextureComponents.D, ctypes.c_float, b"\x00" * 4 * 12 * 16)
+    render_target = TextureRenderTarget([], depth=depth)
+    assert render_target.size == IVector2(12, 16)
     set_read_render_target(render_target)
     assert glCheckFramebufferStatus(GL_READ_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE
 
