@@ -23,6 +23,7 @@ __all__ = [
     "GL_ARRAY_BUFFER",
     "GL_COPY_READ_BUFFER",
     "GL_ELEMENT_ARRAY_BUFFER",
+    "GL_SHADER_STORAGE_BUFFER",
     "GL_STREAM_DRAW",
     "GL_STREAM_READ",
     "GL_STREAM_COPY",
@@ -337,6 +338,7 @@ GlVertexArray = NewType("GlVertexArray", int)
 GL_ARRAY_BUFFER: GlBufferTarget
 GL_COPY_READ_BUFFER: GlBufferTarget
 GL_ELEMENT_ARRAY_BUFFER: GlBufferTarget
+GL_SHADER_STORAGE_BUFFER: GlBufferTarget
 
 GL_STREAM_DRAW: GlBufferUsage
 GL_STREAM_READ: GlBufferUsage

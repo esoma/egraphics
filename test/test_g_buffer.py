@@ -10,6 +10,7 @@ from OpenGL.GL import GL_COPY_READ_BUFFER_BINDING
 from OpenGL.GL import GL_DYNAMIC_COPY
 from OpenGL.GL import GL_DYNAMIC_DRAW
 from OpenGL.GL import GL_DYNAMIC_READ
+from OpenGL.GL import GL_SHADER_STORAGE_BUFFER_BINDING
 from OpenGL.GL import GL_STATIC_COPY
 from OpenGL.GL import GL_STATIC_DRAW
 from OpenGL.GL import GL_STATIC_READ
@@ -203,7 +204,11 @@ def test_edit(write_gl_buffer_target_data_mock, platform):
 
 @pytest.mark.parametrize(
     "name, buffer_binding",
-    [("ARRAY", GL_ARRAY_BUFFER_BINDING), ("COPY_READ", GL_COPY_READ_BUFFER_BINDING)],
+    [
+        ("ARRAY", GL_ARRAY_BUFFER_BINDING),
+        ("COPY_READ", GL_COPY_READ_BUFFER_BINDING),
+        ("SHADER_STORAGE", GL_SHADER_STORAGE_BUFFER_BINDING),
+    ],
 )
 def test_g_buffer_target_default_state(platform, name, buffer_binding):
     target = getattr(GBuffer.Target, name)
@@ -213,7 +218,11 @@ def test_g_buffer_target_default_state(platform, name, buffer_binding):
 
 @pytest.mark.parametrize(
     "name, buffer_binding",
-    [("ARRAY", GL_ARRAY_BUFFER_BINDING), ("COPY_READ", GL_COPY_READ_BUFFER_BINDING)],
+    [
+        ("ARRAY", GL_ARRAY_BUFFER_BINDING),
+        ("COPY_READ", GL_COPY_READ_BUFFER_BINDING),
+        ("SHADER_STORAGE", GL_SHADER_STORAGE_BUFFER_BINDING),
+    ],
 )
 def test_g_buffer_target_set_g_buffer(platform, name, buffer_binding):
     g_buffer = GBuffer(0)
@@ -230,8 +239,10 @@ def test_g_buffer_reset(platform):
     g_buffer = GBuffer(0)
     GBuffer.Target.ARRAY.g_buffer = g_buffer
     GBuffer.Target.COPY_READ.g_buffer = g_buffer
+    GBuffer.Target.SHADER_STORAGE.g_buffer = g_buffer
 
     _reset_g_buffer_target_state()
 
     assert GBuffer.Target.ARRAY.g_buffer is None
     assert GBuffer.Target.COPY_READ.g_buffer is None
+    assert GBuffer.Target.SHADER_STORAGE.g_buffer is None

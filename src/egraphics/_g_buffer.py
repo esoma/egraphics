@@ -25,6 +25,7 @@ from ._egraphics import GL_COPY_READ_BUFFER
 from ._egraphics import GL_DYNAMIC_COPY
 from ._egraphics import GL_DYNAMIC_DRAW
 from ._egraphics import GL_DYNAMIC_READ
+from ._egraphics import GL_SHADER_STORAGE_BUFFER
 from ._egraphics import GL_STATIC_COPY
 from ._egraphics import GL_STATIC_DRAW
 from ._egraphics import GL_STATIC_READ
@@ -72,6 +73,7 @@ class GBufferTarget:
 
     ARRAY: ClassVar[Self]
     COPY_READ: ClassVar[Self]
+    SHADER_STORAGE: ClassVar[Self]
 
     def __init__(self, gl_target: Any):
         self._targets.append(self)
@@ -98,6 +100,7 @@ class GBufferTarget:
 
 GBufferTarget.ARRAY = GBufferTarget(GL_ARRAY_BUFFER)
 GBufferTarget.COPY_READ = GBufferTarget(GL_COPY_READ_BUFFER)
+GBufferTarget.SHADER_STORAGE = GBufferTarget(GL_SHADER_STORAGE_BUFFER)
 
 
 @register_reset_state_callback
