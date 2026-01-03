@@ -20,7 +20,6 @@ from eplatform import Window
 from eplatform import get_window
 
 from egraphics import clear_render_target
-from egraphics._debug import debug_callback
 from egraphics._render_target import TextureRenderTarget
 from egraphics._render_target import WindowRenderTargetMixin
 from egraphics._state import get_gl_version
@@ -44,7 +43,7 @@ def _reset_state():
 
 @pytest.fixture(scope="session")
 def platform():
-    with Platform(window_cls=TestWindow), debug_callback(print):
+    with Platform(window_cls=TestWindow):
         yield
     gc.collect()
 

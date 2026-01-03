@@ -1131,15 +1131,16 @@ get_gl_program_uniforms(PyObject *module, PyObject *py_gl_shader)
         PyErr_Format(PyExc_MemoryError, "out of memory");
         goto error;
     }
-    GLsizei name_length;
-    GLint size;
-    GLenum type;
 
     result = PyTuple_New(uniform_count);
     CHECK_UNEXPECTED_PYTHON_ERROR();
 
     for (GLint i = 0; i < uniform_count; i++)
     {
+        GLsizei name_length;
+        GLint size;
+        GLenum type;
+
         glGetActiveUniform(gl_shader, i, max_name_length, &name_length, &size, &type, name);
         CHECK_GL_ERROR();
         name[name_length] = 0;
@@ -1224,19 +1225,21 @@ create_gl_program(PyObject *module, PyObject **args, Py_ssize_t nargs)
     static const char * SHADER_STAGE_NAME[] = {
         "vertex",
         "geometry",
-        "fragment"
+        "fragment",
+        "compute"
     };
     static const GLenum SHADER_STAGES[] = {
         GL_VERTEX_SHADER,
         GL_GEOMETRY_SHADER,
-        GL_FRAGMENT_SHADER
+        GL_FRAGMENT_SHADER,
+        GL_COMPUTE_SHADER
     };
     static const size_t SHADER_STAGES_LENGTH = sizeof(SHADER_STAGES) / sizeof(SHADER_STAGES[0]);
-    GLuint shaders[] = {0, 0, 0};
+    GLuint shaders[] = {0, 0, 0, 0};
     GLchar *log = 0;
     GLuint gl_program = 0;
 
-    CHECK_UNEXPECTED_ARG_COUNT_ERROR(3);
+    CHECK_UNEXPECTED_ARG_COUNT_ERROR(4);
 
     for(size_t i = 0; i < SHADER_STAGES_LENGTH; i++)
     {
@@ -1538,6 +1541,64 @@ execute_gl_program_indices(PyObject *module, PyObject **args, Py_ssize_t nargs)
         glDrawArrays(mode, first, count);
         CHECK_GL_ERROR();
     }
+
+    Py_RETURN_NONE;
+error:
+    return 0;
+}
+
+static PyObject *
+execute_gl_program_compute(PyObject *module, PyObject **args, Py_ssize_t nargs)
+{
+    CHECK_UNEXPECTED_ARG_COUNT_ERROR(3);
+
+    GLuint num_groups_x = PyLong_AsUnsignedLong(args[0]);
+    CHECK_UNEXPECTED_PYTHON_ERROR();
+
+    GLuint num_groups_y = PyLong_AsUnsignedLong(args[1]);
+    CHECK_UNEXPECTED_PYTHON_ERROR();
+
+    GLuint num_groups_z = PyLong_AsUnsignedLong(args[2]);
+    CHECK_UNEXPECTED_PYTHON_ERROR();
+
+    glDispatchCompute(num_groups_x, num_groups_y, num_groups_z);
+    CHECK_GL_ERROR();
+
+    Py_RETURN_NONE;
+error:
+    return 0;
+}
+
+static PyObject *
+set_gl_memory_barrier(PyObject *module, PyObject *py_barriers)
+{
+    GLbitfield barriers = PyLong_AsUnsignedLong(py_barriers);
+    CHECK_UNEXPECTED_PYTHON_ERROR();
+
+    glMemoryBarrier(barriers);
+    CHECK_GL_ERROR();
+
+    Py_RETURN_NONE;
+error:
+    return 0;
+}
+
+static PyObject *
+set_image_unit(PyObject *module, PyObject **args, Py_ssize_t nargs)
+{
+    CHECK_UNEXPECTED_ARG_COUNT_ERROR(3);
+
+    GLuint unit = PyLong_AsUnsignedLong(args[0]);
+    CHECK_UNEXPECTED_PYTHON_ERROR();
+
+    GLuint texture = PyLong_AsUnsignedLong(args[1]);
+    CHECK_UNEXPECTED_PYTHON_ERROR();
+
+    GLenum format = PyLong_AsLong(args[2]);
+    CHECK_UNEXPECTED_PYTHON_ERROR();
+
+    glBindImageTexture(unit, texture, 0, GL_FALSE, 0, GL_READ_WRITE, format);
+    CHECK_GL_ERROR();
 
     Py_RETURN_NONE;
 error:
@@ -1987,6 +2048,9 @@ static PyMethodDef module_PyMethodDef[] = {
     {"set_active_gl_program_uniform_double_4x4", (PyCFunction)set_active_gl_program_uniform_double_4x4, METH_FASTCALL, 0},
     {"execute_gl_program_index_buffer", (PyCFunction)execute_gl_program_index_buffer, METH_FASTCALL, 0},
     {"execute_gl_program_indices", (PyCFunction)execute_gl_program_indices, METH_FASTCALL, 0},
+    {"execute_gl_program_compute", (PyCFunction)execute_gl_program_compute, METH_FASTCALL, 0},
+    {"set_gl_memory_barrier", set_gl_memory_barrier, METH_O, 0},
+    {"set_image_unit", (PyCFunction)set_image_unit, METH_FASTCALL, 0},
     {"set_gl_execution_state", (PyCFunction)set_gl_execution_state, METH_FASTCALL, 0},
     {"get_gl_version", (PyCFunction)get_gl_version, METH_NOARGS, 0},
     {"set_gl_clip", (PyCFunction)set_gl_clip, METH_FASTCALL, 0},
@@ -2007,6 +2071,7 @@ PyInit__egraphics()
 {
     GLint GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS_VALUE = 0;
     GLint GL_MAX_CLIP_DISTANCES_VALUE = 0;
+    GLint GL_MAX_IMAGE_UNITS_VALUE = 0;
     bool is_gl_clip_control_supported = false;
     {
         PyObject *eplatform = PyImport_ImportModule("eplatform");
@@ -2062,6 +2127,11 @@ PyInit__egraphics()
         glGetIntegerv(
             GL_MAX_CLIP_DISTANCES,
             &GL_MAX_CLIP_DISTANCES_VALUE
+        );
+
+        glGetIntegerv(
+            GL_MAX_IMAGE_UNITS,
+            &GL_MAX_IMAGE_UNITS_VALUE
         );
 
         context = PyObject_CallMethod(platform, "__exit__", "");
@@ -2230,6 +2300,12 @@ PyInit__egraphics()
     ADD_CONSTANT(GL_SAMPLER_2D_RECT_SHADOW);
     ADD_CONSTANT(GL_SAMPLER_1D_ARRAY_SHADOW);
     ADD_CONSTANT(GL_SAMPLER_2D_ARRAY_SHADOW);
+    ADD_CONSTANT(GL_IMAGE_2D);
+    ADD_CONSTANT(GL_IMAGE_3D);
+    ADD_CONSTANT(GL_IMAGE_CUBE);
+    ADD_CONSTANT(GL_IMAGE_BUFFER);
+    ADD_CONSTANT(GL_IMAGE_2D_ARRAY);
+    ADD_CONSTANT(GL_IMAGE_CUBE_MAP_ARRAY);
 
     ADD_CONSTANT(GL_RED);
     ADD_CONSTANT(GL_RG);
@@ -2287,8 +2363,23 @@ PyInit__egraphics()
 
     ADD_CONSTANT(GL_TEXTURE_2D);
 
+    ADD_CONSTANT(GL_VERTEX_ATTRIB_ARRAY_BARRIER_BIT);
+    ADD_CONSTANT(GL_ELEMENT_ARRAY_BARRIER_BIT);
+    ADD_CONSTANT(GL_UNIFORM_BARRIER_BIT);
+    ADD_CONSTANT(GL_TEXTURE_FETCH_BARRIER_BIT);
+    ADD_CONSTANT(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
+    ADD_CONSTANT(GL_COMMAND_BARRIER_BIT);
+    ADD_CONSTANT(GL_PIXEL_BUFFER_BARRIER_BIT);
+    ADD_CONSTANT(GL_TEXTURE_UPDATE_BARRIER_BIT);
+    ADD_CONSTANT(GL_BUFFER_UPDATE_BARRIER_BIT);
+    ADD_CONSTANT(GL_FRAMEBUFFER_BARRIER_BIT);
+    ADD_CONSTANT(GL_TRANSFORM_FEEDBACK_BARRIER_BIT);
+    ADD_CONSTANT(GL_ATOMIC_COUNTER_BARRIER_BIT);
+    ADD_CONSTANT(GL_SHADER_STORAGE_BARRIER_BIT);
+
     ADD_CONSTANT(GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS_VALUE);
     ADD_CONSTANT(GL_MAX_CLIP_DISTANCES_VALUE);
+    ADD_CONSTANT(GL_MAX_IMAGE_UNITS_VALUE);
 
     ADD_CONSTANT(GL_NEVER);
     ADD_CONSTANT(GL_ALWAYS);

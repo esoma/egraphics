@@ -1,4 +1,5 @@
 __all__ = [
+    "GlBarrier",
     "GlBlendFactor",
     "GlBlendFunction",
     "GlBuffer",
@@ -79,8 +80,28 @@ __all__ = [
     "GL_LINEAR_MIPMAP_NEAREST",
     "GL_LINEAR_MIPMAP_LINEAR",
     "GL_TEXTURE_2D",
+    "GL_IMAGE_2D",
+    "GL_IMAGE_2D_ARRAY",
+    "GL_IMAGE_3D",
+    "GL_IMAGE_BUFFER",
+    "GL_IMAGE_CUBE",
+    "GL_IMAGE_CUBE_MAP_ARRAY",
+    "GL_VERTEX_ATTRIB_ARRAY_BARRIER_BIT",
+    "GL_ELEMENT_ARRAY_BARRIER_BIT",
+    "GL_UNIFORM_BARRIER_BIT",
+    "GL_TEXTURE_FETCH_BARRIER_BIT",
+    "GL_SHADER_IMAGE_ACCESS_BARRIER_BIT",
+    "GL_COMMAND_BARRIER_BIT",
+    "GL_PIXEL_BUFFER_BARRIER_BIT",
+    "GL_TEXTURE_UPDATE_BARRIER_BIT",
+    "GL_BUFFER_UPDATE_BARRIER_BIT",
+    "GL_FRAMEBUFFER_BARRIER_BIT",
+    "GL_TRANSFORM_FEEDBACK_BARRIER_BIT",
+    "GL_ATOMIC_COUNTER_BARRIER_BIT",
+    "GL_SHADER_STORAGE_BARRIER_BIT",
     "GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS_VALUE",
     "GL_MAX_CLIP_DISTANCES_VALUE",
+    "GL_MAX_IMAGE_UNITS_VALUE",
     "GL_NEVER",
     "GL_ALWAYS",
     "GL_LESS",
@@ -269,6 +290,9 @@ __all__ = [
     "set_active_gl_program_uniform_double_4x4",
     "execute_gl_program_index_buffer",
     "execute_gl_program_indices",
+    "execute_gl_program_compute",
+    "set_gl_memory_barrier",
+    "set_image_unit",
     "set_gl_execution_state",
     "get_gl_version",
     "set_gl_clip",
@@ -286,6 +310,7 @@ from emath import FVector4Array
 from emath import IVector2
 from emath import UVector2
 
+GlBarrier = NewType("GlBarrier", int)
 GlBlendFactor = NewType("GlBlendFactor", int)
 GlBlendFunction = NewType("GlBlendFunction", int)
 GlBuffer = NewType("GlBuffer", int)
@@ -456,9 +481,30 @@ GL_LINEAR_MIPMAP_NEAREST: GlTextureFilter
 GL_LINEAR_MIPMAP_LINEAR: GlTextureFilter
 
 GL_TEXTURE_2D: GlTextureTarget
+GL_IMAGE_2D: GlType
+GL_IMAGE_3D: GlType
+GL_IMAGE_CUBE: GlType
+GL_IMAGE_BUFFER: GlType
+GL_IMAGE_2D_ARRAY: GlType
+GL_IMAGE_CUBE_MAP_ARRAY: GlType
+
+GL_VERTEX_ATTRIB_ARRAY_BARRIER_BIT: GlBarrier
+GL_ELEMENT_ARRAY_BARRIER_BIT: GlBarrier
+GL_UNIFORM_BARRIER_BIT: GlBarrier
+GL_TEXTURE_FETCH_BARRIER_BIT: GlBarrier
+GL_SHADER_IMAGE_ACCESS_BARRIER_BIT: GlBarrier
+GL_COMMAND_BARRIER_BIT: GlBarrier
+GL_PIXEL_BUFFER_BARRIER_BIT: GlBarrier
+GL_TEXTURE_UPDATE_BARRIER_BIT: GlBarrier
+GL_BUFFER_UPDATE_BARRIER_BIT: GlBarrier
+GL_FRAMEBUFFER_BARRIER_BIT: GlBarrier
+GL_TRANSFORM_FEEDBACK_BARRIER_BIT: GlBarrier
+GL_ATOMIC_COUNTER_BARRIER_BIT: GlBarrier
+GL_SHADER_STORAGE_BARRIER_BIT: GlBarrier
 
 GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS_VALUE: int
 GL_MAX_CLIP_DISTANCES_VALUE: int
+GL_MAX_IMAGE_UNITS_VALUE: int
 
 GL_NEVER: GlFunc
 GL_ALWAYS: GlFunc
@@ -579,7 +625,11 @@ def get_gl_program_attributes(
     program: GlProgram, /
 ) -> tuple[tuple[str, int, GlType, int], ...]: ...
 def create_gl_program(
-    vertex: Buffer | None, geometry: Buffer | None, fragment: Buffer | None, /
+    vertex: Buffer | None,
+    geometry: Buffer | None,
+    fragment: Buffer | None,
+    compute: Buffer | None,
+    /,
 ) -> GlProgram: ...
 def delete_gl_program(gl_program: GlProgram, /) -> None: ...
 def use_gl_program(gl_program: GlProgram | None, /) -> None: ...
@@ -649,6 +699,11 @@ def execute_gl_program_index_buffer(
 def execute_gl_program_indices(
     mode: GlPrimitive, first: int, count: int, instances: int
 ) -> None: ...
+def execute_gl_program_compute(
+    num_groups_x: int, num_groups_y: int, num_groups_z: int
+) -> None: ...
+def set_gl_memory_barrier(barriers: GlBarrier, /) -> None: ...
+def set_image_unit(unit: int, texture: GlTexture, format: GlTextureComponents, /) -> None: ...
 def set_gl_execution_state(
     depth_write: bool,
     depth_func: GlFunc,

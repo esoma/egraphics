@@ -14,6 +14,7 @@ from OpenGL.GL import glGetUniformiv
 from OpenGL.GL import glGetUniformLocation
 from OpenGL.GL import glIsProgram
 
+from egraphics import ComputeShader
 from egraphics import Shader
 from egraphics import ShaderAttribute
 from egraphics import ShaderUniform
@@ -214,7 +215,51 @@ def test_pod_attributes(platform, gl_version, location, glsl_type, python_type, 
     ],
 )
 @pytest.mark.parametrize("array", [False, True])
-def test_pod_uniforms(platform, gl_version, location, glsl_type, python_type, array_type, array):
+@pytest.mark.parametrize(
+    "shader_cls, shader_kwargs, expected_uniform_count",
+    [
+        (
+            Shader,
+            {
+                "vertex": """#version {glsl_version}
+{layout} uniform {glsl_type} uni_name{array_def};
+void main()
+{{
+    gl_Position = vec4({x_value}, {y_value}, 0, 1);
+}}
+    """
+            },
+            1,
+        ),
+        (
+            ComputeShader,
+            {
+                "compute": """#version {glsl_version}
+layout (local_size_x=1, local_size_y=1, local_size_z=1) in;
+{layout} uniform {glsl_type} uni_name{array_def};
+layout(rgba32f, binding=0, location=10) uniform image2D result;
+void main()
+{{
+    imageStore(result, ivec2(0, 0), vec4({x_value}, {y_value}, 0, 1));
+}}
+    """
+            },
+            2,
+        ),
+    ],
+)
+def test_pod_uniforms(
+    platform,
+    gl_version,
+    location,
+    glsl_type,
+    python_type,
+    array_type,
+    array,
+    shader_cls,
+    shader_kwargs,
+    expected_uniform_count,
+):
     glsl_version = "140"
 
     if glsl_type == "double":
@@ -222,7 +267,7 @@ def test_pod_uniforms(platform, gl_version, location, glsl_type, python_type, ar
         if gl_version < (4, 0):
             pytest.xfail()
 
-    if location is not None:
+    if location is not None or shader_cls is ComputeShader:
         glsl_version = "430 core"
         if gl_version < (4, 3):
             pytest.xfail()
@@ -239,18 +284,38 @@ def test_pod_uniforms(platform, gl_version, location, glsl_type, python_type, ar
         array_def = ""
         x_value = "uni_name"
         y_value = "0"
-    shader = Shader(
-        vertex=f"""#version {glsl_version}
-    {layout} uniform {glsl_type} uni_name{array_def};
-    void main()
-    {{
-        gl_Position = vec4({x_value}, {y_value}, 0, 1);
-    }}
-    """.encode("utf-8")
+    try:
+        print(
+            {
+                k: v.format(
+                    glsl_version=glsl_version,
+                    glsl_type=glsl_type,
+                    array_def=array_def,
+                    x_value=x_value,
+                    y_value=y_value,
+                    layout=layout,
+                )
+                for k, v in shader_kwargs.items()
+            }["compute"]
+        )
+    except KeyError:
+        pass
+    shader = shader_cls(
+        **{
+            k: v.format(
+                glsl_version=glsl_version,
+                glsl_type=glsl_type,
+                array_def=array_def,
+                x_value=x_value,
+                y_value=y_value,
+                layout=layout,
+            ).encode("utf-8")
+            for k, v in shader_kwargs.items()
+        }
     )
     uni = shader["uni_name"]
-    assert len(shader.uniforms) == 1
-    assert shader.uniforms[0] is uni
+    assert len(shader.uniforms) == expected_uniform_count
+    assert uni in shader.uniforms
     assert isinstance(uni, ShaderUniform)
     assert uni.name == "uni_name"
     assert uni.data_type is python_type
@@ -367,7 +432,51 @@ def test_pod_uniforms(platform, gl_version, location, glsl_type, python_type, ar
     ],
 )
 @pytest.mark.parametrize("array", [False, True])
-def test_sampler_uniforms(platform, gl_version, location, prefix, postfix, components, array):
+@pytest.mark.parametrize(
+    "shader_cls, shader_kwargs, expected_uniform_count",
+    [
+        (
+            Shader,
+            {
+                "vertex": """#version {glsl_version}
+{layout} uniform {prefix}sampler{postfix} uni_name{array_def};
+void main()
+{{
+    gl_Position = vec4({x_value}, {y_value}, 0, 1);
+}}
+    """
+            },
+            1,
+        ),
+        (
+            ComputeShader,
+            {
+                "compute": """#version {glsl_version}
+layout (local_size_x=1, local_size_y=1, local_size_z=1) in;
+{layout} uniform {prefix}sampler{postfix} uni_name{array_def};
+layout(rgba32f, binding=0, location=10) uniform image2D result;
+void main()
+{{
+    imageStore(result, ivec2(0, 0), vec4({x_value}, {y_value}, 0, 1));
+}}
+    """
+            },
+            2,
+        ),
+    ],
+)
+def test_sampler_uniforms(
+    platform,
+    gl_version,
+    location,
+    prefix,
+    postfix,
+    components,
+    array,
+    shader_cls,
+    shader_kwargs,
+    expected_uniform_count,
+):
     glsl_version = "140"
 
     if postfix in ["2DMS", "2DMSArray"]:
@@ -380,7 +489,7 @@ def test_sampler_uniforms(platform, gl_version, location, prefix, postfix, compo
         if gl_version < (4, 0):
             pytest.xfail()
 
-    if location is not None:
+    if location is not None or shader_cls is ComputeShader:
         glsl_version = "430 core"
         if gl_version < (4, 3):
             pytest.xfail()
@@ -405,18 +514,23 @@ def test_sampler_uniforms(platform, gl_version, location, prefix, postfix, compo
         array_def = ""
         x_value = f"{texture_function}(uni_name, {texture_lookup}).r"
         y_value = "0"
-    shader = Shader(
-        vertex=f"""#version {glsl_version}
-    {layout} uniform {prefix}sampler{postfix} uni_name{array_def};
-    void main()
-    {{
-        gl_Position = vec4({x_value}, {y_value}, 0, 1);
-    }}
-    """.encode("utf-8")
+    shader = shader_cls(
+        **{
+            k: v.format(
+                glsl_version=glsl_version,
+                layout=layout,
+                prefix=prefix,
+                postfix=postfix,
+                array_def=array_def,
+                x_value=x_value,
+                y_value=y_value,
+            ).encode("utf-8")
+            for k, v in shader_kwargs.items()
+        }
     )
     uni = shader["uni_name"]
-    assert len(shader.uniforms) == 1
-    assert shader.uniforms[0] is uni
+    assert len(shader.uniforms) == expected_uniform_count
+    assert uni in shader.uniforms
     assert isinstance(uni, ShaderUniform)
     assert uni.name == "uni_name"
     assert uni.data_type is Texture
@@ -452,8 +566,8 @@ def test_sampler_uniforms(platform, gl_version, location, prefix, postfix, compo
                 glGetUniformLocation(shader._gl_program, "uni_name[1]"),
                 get_value_1,
             )
-            assert get_value_0.value == tex1._unit
-            assert get_value_1.value == tex2._unit
+            assert get_value_0.value == tex1._texture_unit
+            assert get_value_1.value == tex2._texture_unit
 
             shader._set_uniform(uni, [tex3], exit_stack)
             get_value_0 = ctypes.c_int32()
@@ -464,8 +578,8 @@ def test_sampler_uniforms(platform, gl_version, location, prefix, postfix, compo
                 glGetUniformLocation(shader._gl_program, "uni_name[1]"),
                 get_value_1,
             )
-            assert get_value_0.value == tex3._unit
-            assert get_value_1.value == tex2._unit
+            assert get_value_0.value == tex3._texture_unit
+            assert get_value_1.value == tex2._texture_unit
 
             shader._set_uniform(uni, tex1, exit_stack)
             get_value_0 = ctypes.c_int32()
@@ -476,8 +590,8 @@ def test_sampler_uniforms(platform, gl_version, location, prefix, postfix, compo
                 glGetUniformLocation(shader._gl_program, "uni_name[1]"),
                 get_value_1,
             )
-            assert get_value_0.value == tex1._unit
-            assert get_value_1.value == tex2._unit
+            assert get_value_0.value == tex1._texture_unit
+            assert get_value_1.value == tex2._texture_unit
 
             shader._set_uniform(uni, [], exit_stack)
             get_value_0 = ctypes.c_int32()
@@ -488,8 +602,8 @@ def test_sampler_uniforms(platform, gl_version, location, prefix, postfix, compo
                 glGetUniformLocation(shader._gl_program, "uni_name[1]"),
                 get_value_1,
             )
-            assert get_value_0.value == tex1._unit
-            assert get_value_1.value == tex2._unit
+            assert get_value_0.value == tex1._texture_unit
+            assert get_value_1.value == tex2._texture_unit
 
             shader._set_uniform(uni, [tex3, tex1, tex2], exit_stack)
             get_value_0 = ctypes.c_int32()
@@ -500,28 +614,28 @@ def test_sampler_uniforms(platform, gl_version, location, prefix, postfix, compo
                 glGetUniformLocation(shader._gl_program, "uni_name[1]"),
                 get_value_1,
             )
-            assert get_value_0.value == tex3._unit
-            assert get_value_1.value == tex1._unit
+            assert get_value_0.value == tex3._texture_unit
+            assert get_value_1.value == tex1._texture_unit
         else:
             shader._set_uniform(uni, tex1, exit_stack)
             get_value = ctypes.c_int32()
             glGetUniformiv(shader._gl_program, uni.location, get_value)
-            assert get_value.value == tex1._unit
+            assert get_value.value == tex1._texture_unit
 
             shader._set_uniform(uni, [tex2], exit_stack)
             get_value = ctypes.c_int32()
             glGetUniformiv(shader._gl_program, uni.location, get_value)
-            assert get_value.value == tex2._unit
+            assert get_value.value == tex2._texture_unit
 
             shader._set_uniform(uni, [tex1, tex3], exit_stack)
             get_value = ctypes.c_int32()
             glGetUniformiv(shader._gl_program, uni.location, get_value)
-            assert get_value.value == tex1._unit
+            assert get_value.value == tex1._texture_unit
 
             shader._set_uniform(uni, [], exit_stack)
             get_value = ctypes.c_int32()
             glGetUniformiv(shader._gl_program, uni.location, get_value)
-            assert get_value.value == tex1._unit
+            assert get_value.value == tex1._texture_unit
 
 
 @pytest.mark.parametrize("location", [None, 1])
@@ -537,10 +651,53 @@ def test_sampler_uniforms(platform, gl_version, location, prefix, postfix, compo
     ],
 )
 @pytest.mark.parametrize("array", [False, True])
-def test_shadow_sampler_uniforms(platform, gl_version, location, postfix, components, array):
+@pytest.mark.parametrize(
+    "shader_cls, shader_kwargs, expected_uniform_count",
+    [
+        (
+            Shader,
+            {
+                "vertex": """#version {glsl_version}
+{layout} uniform sampler{postfix} uni_name{array_def};
+void main()
+{{
+    gl_Position = vec4({x_value}, {y_value}, 0, 1);
+}}
+    """
+            },
+            1,
+        ),
+        (
+            ComputeShader,
+            {
+                "compute": """#version {glsl_version}
+layout (local_size_x=1, local_size_y=1, local_size_z=1) in;
+{layout} uniform sampler{postfix} uni_name{array_def};
+layout(rgba32f, binding=0, location=10) uniform image2D result;
+void main()
+{{
+    imageStore(result, ivec2(0, 0), vec4({x_value}, {y_value}, 0, 1));
+}}
+    """
+            },
+            2,
+        ),
+    ],
+)
+def test_shadow_sampler_uniforms(
+    platform,
+    gl_version,
+    location,
+    postfix,
+    components,
+    array,
+    shader_cls,
+    shader_kwargs,
+    expected_uniform_count,
+):
     glsl_version = "140"
 
-    if location is not None:
+    if location is not None or shader_cls is ComputeShader:
         glsl_version = "430 core"
         if gl_version < (4, 3):
             pytest.xfail()
@@ -560,18 +717,22 @@ def test_shadow_sampler_uniforms(platform, gl_version, location, postfix, compon
         array_def = ""
         x_value = f"texture(uni_name, {texture_lookup})"
         y_value = "0"
-    shader = Shader(
-        vertex=f"""#version {glsl_version}
-    {layout} uniform sampler{postfix} uni_name{array_def};
-    void main()
-    {{
-        gl_Position = vec4({x_value}, {y_value}, 0, 1);
-    }}
-    """.encode("utf-8")
+    shader = shader_cls(
+        **{
+            k: v.format(
+                glsl_version=glsl_version,
+                layout=layout,
+                postfix=postfix,
+                array_def=array_def,
+                x_value=x_value,
+                y_value=y_value,
+            ).encode("utf-8")
+            for k, v in shader_kwargs.items()
+        }
     )
     uni = shader["uni_name"]
-    assert len(shader.uniforms) == 1
-    assert shader.uniforms[0] is uni
+    assert len(shader.uniforms) == expected_uniform_count
+    assert uni in shader.uniforms
     assert isinstance(uni, ShaderUniform)
     assert uni.name == "uni_name"
     assert uni.data_type is Texture
@@ -607,8 +768,8 @@ def test_shadow_sampler_uniforms(platform, gl_version, location, postfix, compon
                 glGetUniformLocation(shader._gl_program, "uni_name[1]"),
                 get_value_1,
             )
-            assert get_value_0.value == tex1._unit
-            assert get_value_1.value == tex2._unit
+            assert get_value_0.value == tex1._texture_unit
+            assert get_value_1.value == tex2._texture_unit
 
             shader._set_uniform(uni, [tex3], exit_stack)
             get_value_0 = ctypes.c_int32()
@@ -619,8 +780,8 @@ def test_shadow_sampler_uniforms(platform, gl_version, location, postfix, compon
                 glGetUniformLocation(shader._gl_program, "uni_name[1]"),
                 get_value_1,
             )
-            assert get_value_0.value == tex3._unit
-            assert get_value_1.value == tex2._unit
+            assert get_value_0.value == tex3._texture_unit
+            assert get_value_1.value == tex2._texture_unit
 
             shader._set_uniform(uni, tex1, exit_stack)
             get_value_0 = ctypes.c_int32()
@@ -631,8 +792,8 @@ def test_shadow_sampler_uniforms(platform, gl_version, location, postfix, compon
                 glGetUniformLocation(shader._gl_program, "uni_name[1]"),
                 get_value_1,
             )
-            assert get_value_0.value == tex1._unit
-            assert get_value_1.value == tex2._unit
+            assert get_value_0.value == tex1._texture_unit
+            assert get_value_1.value == tex2._texture_unit
 
             shader._set_uniform(uni, [], exit_stack)
             get_value_0 = ctypes.c_int32()
@@ -643,8 +804,8 @@ def test_shadow_sampler_uniforms(platform, gl_version, location, postfix, compon
                 glGetUniformLocation(shader._gl_program, "uni_name[1]"),
                 get_value_1,
             )
-            assert get_value_0.value == tex1._unit
-            assert get_value_1.value == tex2._unit
+            assert get_value_0.value == tex1._texture_unit
+            assert get_value_1.value == tex2._texture_unit
 
             shader._set_uniform(uni, [tex3, tex1, tex2], exit_stack)
             get_value_0 = ctypes.c_int32()
@@ -655,28 +816,200 @@ def test_shadow_sampler_uniforms(platform, gl_version, location, postfix, compon
                 glGetUniformLocation(shader._gl_program, "uni_name[1]"),
                 get_value_1,
             )
-            assert get_value_0.value == tex3._unit
-            assert get_value_1.value == tex1._unit
+            assert get_value_0.value == tex3._texture_unit
+            assert get_value_1.value == tex1._texture_unit
         else:
             shader._set_uniform(uni, tex1, exit_stack)
             get_value = ctypes.c_int32()
             glGetUniformiv(shader._gl_program, uni.location, get_value)
-            assert get_value.value == tex1._unit
+            assert get_value.value == tex1._texture_unit
 
             shader._set_uniform(uni, [tex2], exit_stack)
             get_value = ctypes.c_int32()
             glGetUniformiv(shader._gl_program, uni.location, get_value)
-            assert get_value.value == tex2._unit
+            assert get_value.value == tex2._texture_unit
 
             shader._set_uniform(uni, [tex1, tex3], exit_stack)
             get_value = ctypes.c_int32()
             glGetUniformiv(shader._gl_program, uni.location, get_value)
-            assert get_value.value == tex1._unit
+            assert get_value.value == tex1._texture_unit
 
             shader._set_uniform(uni, [], exit_stack)
             get_value = ctypes.c_int32()
             glGetUniformiv(shader._gl_program, uni.location, get_value)
-            assert get_value.value == tex1._unit
+            assert get_value.value == tex1._texture_unit
+
+
+@pytest.mark.parametrize("location", [None, 1])
+@pytest.mark.parametrize(
+    "postfix, components",
+    [("2D", 2), ("3D", 3), ("Cube", 3), ("2DArray", 3), ("Buffer", 1), ("CubeArray", 3)],
+)
+@pytest.mark.parametrize("array", [False, True])
+@pytest.mark.parametrize(
+    "shader_cls, shader_kwargs, expected_uniform_count",
+    [
+        (
+            ComputeShader,
+            {
+                "compute": """#version 430 core
+layout (local_size_x=1, local_size_y=1, local_size_z=1) in;
+{layout} uniform image{postfix} uni_name{array_def};
+layout(rgba32f, location=10, binding=0) uniform image2D result;
+void main()
+{{
+    vec4 val = imageLoad(uni_name{texture_access}, {coord_expr});
+    imageStore(result, ivec2(0, 0), vec4({x_value}, {y_value}, val.r, 1));
+}}
+    """
+            },
+            2,
+        )
+    ],
+)
+def test_image_uniforms(
+    platform,
+    gl_version,
+    location,
+    postfix,
+    components,
+    array,
+    shader_cls,
+    shader_kwargs,
+    expected_uniform_count,
+):
+    glsl_version = "430 core"
+    if gl_version < (4, 3):
+        pytest.xfail()
+
+    if location is None:
+        layout = "layout(rgba32f)"
+    else:
+        layout = f"layout(rgba32f, location={location})"
+
+    # Build coordinate for imageLoad based on image type
+    if postfix == "Buffer":
+        coord = "0"
+        coord_expr = "0"
+    else:
+        coord = f"ivec{components}({', '.join('0' * components)})"
+        coord_expr = coord
+
+    if array:
+        array_def = "[2]"
+        texture_access = "[0]"
+        x_value = f"imageLoad(uni_name[0], {coord}).r"
+        y_value = f"imageLoad(uni_name[1], {coord}).r"
+    else:
+        array_def = ""
+        texture_access = ""
+        x_value = f"imageLoad(uni_name, {coord}).r"
+        y_value = "0"
+
+    print(
+        shader_kwargs["compute"]
+        .format(
+            glsl_version=glsl_version,
+            layout=layout,
+            postfix=postfix,
+            array_def=array_def,
+            coord_expr=coord_expr,
+            texture_access=texture_access,
+            x_value=x_value,
+            y_value=y_value,
+        )
+        .encode("utf-8")
+    )
+    shader = shader_cls(
+        **{
+            k: v.format(
+                glsl_version=glsl_version,
+                layout=layout,
+                postfix=postfix,
+                array_def=array_def,
+                coord_expr=coord_expr,
+                texture_access=texture_access,
+                x_value=x_value,
+                y_value=y_value,
+            ).encode("utf-8")
+            for k, v in shader_kwargs.items()
+        }
+    )
+    uni = shader["uni_name"]
+    assert len(shader.uniforms) == expected_uniform_count
+    assert uni in shader.uniforms
+    assert isinstance(uni, ShaderUniform)
+    assert uni.name == "uni_name"
+    assert uni.data_type is Texture
+    assert uni.size == (2 if array else 1)
+    assert uni.location == (0 if location is None else location)
+    assert uni._is_image
+
+    shader._activate()
+    with ExitStack() as exit_stack:
+        with pytest.raises(ValueError) as excinfo:
+            shader._set_uniform(uni, None, exit_stack)
+        assert str(excinfo.value) == (
+            f"expected {Texture} or sequence of {Texture} for uni_name (got {type(None)})"
+        )
+
+        bad_value = ["1", "2"]
+        with pytest.raises(ValueError) as excinfo:
+            shader._set_uniform(uni, bad_value, exit_stack)
+        assert str(excinfo.value) == (
+            f"expected {Texture} or sequence of {Texture} for uni_name (got {bad_value!r})"
+        )
+
+        tex1 = Texture2d(UVector2(1, 1), TextureComponents.XYZW, ctypes.c_float, b"\x00" * 16)
+        tex2 = Texture2d(UVector2(1, 1), TextureComponents.XYZW, ctypes.c_float, b"\x00" * 16)
+        tex3 = Texture2d(UVector2(1, 1), TextureComponents.XYZW, ctypes.c_float, b"\x00" * 16)
+
+        if array:
+            shader._set_uniform(uni, [tex1, tex2], exit_stack)
+            get_value_0 = ctypes.c_int32()
+            glGetUniformiv(shader._gl_program, uni.location, get_value_0)
+            get_value_1 = ctypes.c_int32()
+            glGetUniformiv(
+                shader._gl_program,
+                glGetUniformLocation(shader._gl_program, "uni_name[1]"),
+                get_value_1,
+            )
+            assert get_value_0.value == tex1._image_unit
+            assert get_value_1.value == tex2._image_unit
+
+            shader._set_uniform(uni, [tex3], exit_stack)
+            get_value_0 = ctypes.c_int32()
+            glGetUniformiv(shader._gl_program, uni.location, get_value_0)
+            get_value_1 = ctypes.c_int32()
+            glGetUniformiv(
+                shader._gl_program,
+                glGetUniformLocation(shader._gl_program, "uni_name[1]"),
+                get_value_1,
+            )
+            assert get_value_0.value == tex3._image_unit
+            assert get_value_1.value == tex2._image_unit
+
+            shader._set_uniform(uni, tex1, exit_stack)
+            get_value_0 = ctypes.c_int32()
+            glGetUniformiv(shader._gl_program, uni.location, get_value_0)
+            get_value_1 = ctypes.c_int32()
+            glGetUniformiv(
+                shader._gl_program,
+                glGetUniformLocation(shader._gl_program, "uni_name[1]"),
+                get_value_1,
+            )
+            assert get_value_0.value == tex1._image_unit
+            assert get_value_1.value == tex2._image_unit
+        else:
+            shader._set_uniform(uni, tex1, exit_stack)
+            get_value = ctypes.c_int32()
+            glGetUniformiv(shader._gl_program, uni.location, get_value)
+            assert get_value.value == tex1._image_unit
+
+            shader._set_uniform(uni, tex2, exit_stack)
+            get_value = ctypes.c_int32()
+            glGetUniformiv(shader._gl_program, uni.location, get_value)
+            assert get_value.value == tex2._image_unit
 
 
 @pytest.mark.parametrize("location", [None, 1])
@@ -742,8 +1075,50 @@ def test_vector_attributes(
     "glsl_prefix, emath_prefix", [("", "F"), ("d", "D"), ("i", "I32"), ("u", "U32")]
 )
 @pytest.mark.parametrize("array", [False, True])
+@pytest.mark.parametrize(
+    "shader_cls, shader_kwargs, expected_uniform_count",
+    [
+        (
+            Shader,
+            {
+                "vertex": """#version {glsl_version}
+{layout} uniform {glsl_prefix}vec{components} uni_name{array_def};
+void main()
+{{
+    gl_Position = vec4({x_value}, {y_value}, 0, 1);
+}}
+    """
+            },
+            1,
+        ),
+        (
+            ComputeShader,
+            {
+                "compute": """#version {glsl_version}
+layout (local_size_x=1, local_size_y=1, local_size_z=1) in;
+{layout} uniform {glsl_prefix}vec{components} uni_name{array_def};
+layout(rgba32f, binding=0, location=10) uniform image2D result;
+void main()
+{{
+    imageStore(result, ivec2(0, 0), vec4({x_value}, {y_value}, 0, 1));
+}}
+    """
+            },
+            2,
+        ),
+    ],
+)
 def test_vector_uniforms(
-    platform, gl_version, location, components, glsl_prefix, emath_prefix, array
+    platform,
+    gl_version,
+    location,
+    components,
+    glsl_prefix,
+    emath_prefix,
+    array,
+    shader_cls,
+    shader_kwargs,
+    expected_uniform_count,
 ):
     glsl_version = "140"
 
@@ -752,7 +1127,7 @@ def test_vector_uniforms(
         if gl_version < (4, 0):
             pytest.xfail()
 
-    if location is not None:
+    if location is not None or shader_cls is ComputeShader:
         glsl_version = "430 core"
         if gl_version < (4, 3):
             pytest.xfail()
@@ -769,18 +1144,23 @@ def test_vector_uniforms(
         array_def = ""
         x_value = "uni_name.x"
         y_value = "0"
-    shader = Shader(
-        vertex=f"""#version {glsl_version}
-    {layout} uniform {glsl_prefix}vec{components} uni_name{array_def};
-    void main()
-    {{
-        gl_Position = vec4({x_value}, {y_value}, 0, 1);
-    }}
-    """.encode("utf-8")
+    shader = shader_cls(
+        **{
+            k: v.format(
+                glsl_version=glsl_version,
+                layout=layout,
+                glsl_prefix=glsl_prefix,
+                components=components,
+                array_def=array_def,
+                x_value=x_value,
+                y_value=y_value,
+            ).encode("utf-8")
+            for k, v in shader_kwargs.items()
+        }
     )
     uni = shader["uni_name"]
-    assert len(shader.uniforms) == 1
-    assert shader.uniforms[0] is uni
+    assert len(shader.uniforms) == expected_uniform_count
+    assert uni in shader.uniforms
     assert isinstance(uni, ShaderUniform)
     assert uni.name == "uni_name"
     assert uni.data_type is getattr(emath, f"{emath_prefix}Vector{components}")
@@ -966,8 +1346,51 @@ def test_matrix_attributes(
 @pytest.mark.parametrize("columns", [2, 3, 4])
 @pytest.mark.parametrize("glsl_prefix, emath_prefix", [("", "F"), ("d", "D")])
 @pytest.mark.parametrize("array", [False, True])
+@pytest.mark.parametrize(
+    "shader_cls, shader_kwargs, expected_uniform_count",
+    [
+        (
+            Shader,
+            {
+                "vertex": """#version {glsl_version}
+{layout} uniform {glsl_prefix}mat{rows}x{columns} uni_name{array_def};
+void main()
+{{
+    gl_Position = vec4({x_value}, {y_value}, 0, 1);
+}}
+    """
+            },
+            1,
+        ),
+        (
+            ComputeShader,
+            {
+                "compute": """#version {glsl_version}
+layout (local_size_x=1, local_size_y=1, local_size_z=1) in;
+{layout} uniform {glsl_prefix}mat{rows}x{columns} uni_name{array_def};
+layout(rgba32f, binding=0, location=10) uniform image2D result;
+void main()
+{{
+    imageStore(result, ivec2(0, 0), vec4({x_value}, {y_value}, 0, 1));
+}}
+    """
+            },
+            2,
+        ),
+    ],
+)
 def test_matrix_uniforms(
-    platform, gl_version, location, rows, columns, glsl_prefix, emath_prefix, array
+    platform,
+    gl_version,
+    location,
+    rows,
+    columns,
+    glsl_prefix,
+    emath_prefix,
+    array,
+    shader_cls,
+    shader_kwargs,
+    expected_uniform_count,
 ) -> None:
     glsl_version = "140"
 
@@ -976,7 +1399,7 @@ def test_matrix_uniforms(
         if gl_version < (4, 0):
             pytest.xfail()
 
-    if location is not None:
+    if location is not None or shader_cls is ComputeShader:
         glsl_version = "430 core"
         if gl_version < (4, 3):
             pytest.xfail()
@@ -993,18 +1416,24 @@ def test_matrix_uniforms(
         array_def = ""
         x_value = "uni_name[0][0]"
         y_value = "0"
-    shader = Shader(
-        vertex=f"""#version {glsl_version}
-    {layout} uniform {glsl_prefix}mat{rows}x{columns} uni_name{array_def};
-    void main()
-    {{
-        gl_Position = vec4({x_value}, {y_value}, 0, 1);
-    }}
-    """.encode("utf-8")
+    shader = shader_cls(
+        **{
+            k: v.format(
+                glsl_version=glsl_version,
+                layout=layout,
+                glsl_prefix=glsl_prefix,
+                rows=rows,
+                columns=columns,
+                array_def=array_def,
+                x_value=x_value,
+                y_value=y_value,
+            ).encode("utf-8")
+            for k, v in shader_kwargs.items()
+        }
     )
     uni = shader["uni_name"]
-    assert len(shader.uniforms) == 1
-    assert shader.uniforms[0] is uni
+    assert len(shader.uniforms) == expected_uniform_count
+    assert uni in shader.uniforms
     assert isinstance(uni, ShaderUniform)
     assert uni.name == "uni_name"
     assert uni.data_type is getattr(emath, f"{emath_prefix}Matrix{rows}x{columns}")

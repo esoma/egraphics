@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 __all__ = [
+    "bind_texture_image_unit",
     "bind_texture_unit",
     "MipmapSelection",
     "Texture",
@@ -41,6 +42,7 @@ from ._egraphics import GL_LINEAR
 from ._egraphics import GL_LINEAR_MIPMAP_LINEAR
 from ._egraphics import GL_LINEAR_MIPMAP_NEAREST
 from ._egraphics import GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS_VALUE
+from ._egraphics import GL_MAX_IMAGE_UNITS_VALUE
 from ._egraphics import GL_MIRRORED_REPEAT
 from ._egraphics import GL_NEAREST
 from ._egraphics import GL_NEAREST_MIPMAP_LINEAR
@@ -67,10 +69,13 @@ from ._egraphics import set_active_gl_texture_unit
 from ._egraphics import set_gl_texture_target
 from ._egraphics import set_gl_texture_target_2d_data
 from ._egraphics import set_gl_texture_target_parameters
+from ._egraphics import set_image_unit
 from ._state import register_reset_state_callback
 
 _DEFAULT_TEXTURE_UNIT: Final[int] = 0
 _FIRST_BINDABLE_TEXTURE_UNIT: Final[int] = 1
+
+_FIRST_BINDABLE_IMAGE_UNIT: Final[int] = 1
 
 
 class _TextureTarget:
@@ -86,13 +91,15 @@ class _TextureTarget:
         self._gl_target = gl_target
         self._unit_texture: dict[int, ref[Texture] | None] = {}
 
-    def _set_texture(self, texture: Texture, unit: int, *, unit_only: bool = False) -> None:
+    def _set_texture(
+        self, texture: Texture, texture_unit: int, *, unit_only: bool = False
+    ) -> None:
         if not unit_only:
             if self._bound:
                 raise RuntimeError("texture already bound to target")
             self._bound = True
 
-        unit_texture_ref = self._unit_texture.get(unit)
+        unit_texture_ref = self._unit_texture.get(texture_unit)
         unit_texture: Texture | None
         if unit_texture_ref is None:
             unit_texture = unit_texture_ref
@@ -101,16 +108,16 @@ class _TextureTarget:
         if unit_only and unit_texture is texture:
             return
 
-        if self._texture_unit != unit:
-            set_active_gl_texture_unit(unit)
+        if self._texture_unit != texture_unit:
+            set_active_gl_texture_unit(texture_unit)
             if (unit_only and not self._bound) or not unit_only:
-                self.__class__._texture_unit = unit
+                self.__class__._texture_unit = texture_unit
 
         if unit_texture is texture:
             return
 
         set_gl_texture_target(self._gl_target, texture._gl_texture)
-        self._unit_texture[unit] = ref(texture)
+        self._unit_texture[texture_unit] = ref(texture)
 
         if self._bound and unit_only:
             set_active_gl_texture_unit(self.__class__._texture_unit)
@@ -293,11 +300,17 @@ _TEXTURE_COMPONENTS_TO_GL_FORMAT: Final[
 class Texture:
     _gl_texture: GlTexture | None = None
 
-    _max_unit: ClassVar[int | None] = None
-    _next_unit: ClassVar[int] = _FIRST_BINDABLE_TEXTURE_UNIT
-    _unbound_units: ClassVar[WeakFifoSet[Texture]] = WeakFifoSet()
-    _unit: int | None = None
-    _open_units: set[int] = set()
+    _max_texture_unit: ClassVar[int | None] = None
+    _next_texture_unit: ClassVar[int] = _FIRST_BINDABLE_TEXTURE_UNIT
+    _unbound_texture_units: ClassVar[WeakFifoSet[Texture]] = WeakFifoSet()
+    _texture_unit: int | None = None
+    _open_texture_units: set[int] = set()
+
+    _max_image_unit: ClassVar[int | None] = None
+    _next_image_unit: ClassVar[int] = _FIRST_BINDABLE_IMAGE_UNIT
+    _unbound_image_units: ClassVar[WeakFifoSet[Texture]] = WeakFifoSet()
+    _image_unit: int | None = None
+    _open_image_units: set[int] = set()
 
     def __init__(
         self,
@@ -339,6 +352,9 @@ class Texture:
         gl_data_type = _TEXTURE_DATA_TYPE_TO_GL_DATA_TYPE[data_type]
         component_count = _TEXTURE_COMPONENTS_COUNT[components]
         self._components = components
+        self._gl_internal_format = _TEXTURE_COMPONENTS_AND_TYPE_TO_GL_INTERNAL_FORMAT[
+            (components, data_type)
+        ]
         # check filters
         gl_min_filter = _TEXTURE_FILTER_TO_GL_MIN_FILTER[(mipmap_selection, minify_filter)]
         gl_mag_filter = _TEXTURE_FILTER_TO_GL_MAG_FILTER[magnify_filter]
@@ -354,7 +370,7 @@ class Texture:
             assert type == TextureType.TWO_DIMENSIONS
             set_gl_texture_target_2d_data(
                 gl_target,
-                _TEXTURE_COMPONENTS_AND_TYPE_TO_GL_INTERNAL_FORMAT[(components, data_type)],
+                self._gl_internal_format,
                 size,
                 _TEXTURE_COMPONENTS_TO_GL_FORMAT[(components, data_type)],
                 gl_data_type,
@@ -381,8 +397,10 @@ class Texture:
             )
 
     def __del__(self) -> None:
-        if self._unit is not None:
-            self._release_unit()
+        if self._image_unit is not None:
+            self._release_image_unit()
+        if self._texture_unit is not None:
+            self._release_texture_unit()
         if self._gl_texture is not None:
             delete_gl_texture(self._gl_texture)
             self._gl_texture = None
@@ -392,53 +410,95 @@ class Texture:
         size_str = "x".join(str(c) for c in self._size)
         return f"<Texture {self.type.name!r} {size_str} {self.components.name!r}>"
 
-    def _acquire_unit(self) -> None:
-        if self._open_units:
-            self._unit = self._open_units.pop()
+    def _acquire_texture_unit(self) -> None:
+        if self._open_texture_units:
+            self._texture_unit = self._open_texture_units.pop()
             return
-        assert self._next_unit <= GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS_VALUE
-        if self._next_unit == GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS_VALUE:
-            self._steal_unit()
+        assert self._next_texture_unit <= GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS_VALUE
+        if self._next_texture_unit == GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS_VALUE:
+            self._steal_texture_unit()
         else:
-            self._unit = self._next_unit
-            Texture._next_unit += 1
+            self._texture_unit = self._next_texture_unit
+            Texture._next_texture_unit += 1
 
-    def _release_unit(self) -> None:
-        assert self._unit is not None
-        self._open_units.add(self._unit)
-        self._unit = None
+    def _release_texture_unit(self) -> None:
+        assert self._texture_unit is not None
+        self._open_texture_units.add(self._texture_unit)
+        self._texture_unit = None
         try:
-            self._unbound_units.remove(self)
+            self._unbound_texture_units.remove(self)
         except KeyError:
             pass
 
-    def _steal_unit(self) -> None:
+    def _steal_texture_unit(self) -> None:
         try:
-            texture = self._unbound_units.pop()
+            texture = self._unbound_texture_units.pop()
         except IndexError:
             raise RuntimeError("no texture unit available")
-        texture._release_unit()
-        self._acquire_unit()
+        texture._release_texture_unit()
+        self._acquire_texture_unit()
 
-    def _bind_unit(self) -> None:
-        if self._unit is None:
-            self._acquire_unit()
-        assert self._unit is not None
-        self._type.value.target._set_texture(self, self._unit, unit_only=True)
+    def _bind_texture_unit(self) -> None:
+        if self._texture_unit is None:
+            self._acquire_texture_unit()
+        assert self._texture_unit is not None
+        self._type.value.target._set_texture(self, self._texture_unit, unit_only=True)
 
-    def _unbind_unit(self) -> None:
-        assert self._unit is not None
-        self._unbound_units.add(self)
+    def _unbind_texture_unit(self) -> None:
+        assert self._texture_unit is not None
+        self._unbound_texture_units.add(self)
 
     def _bind(self) -> None:
-        if self._unit is None:
-            self._acquire_unit()
-        assert self._unit is not None
-        self._type.value.target._set_texture(self, self._unit)
+        if self._texture_unit is None:
+            self._acquire_texture_unit()
+        assert self._texture_unit is not None
+        self._type.value.target._set_texture(self, self._texture_unit)
 
     def _unbind(self) -> None:
-        self._unbind_unit()
+        self._unbind_texture_unit()
         self._type.value.target._unset_texture()
+
+    def _acquire_image_unit(self) -> None:
+        if self._image_unit is not None:
+            return
+        if self._open_image_units:
+            self._image_unit = self._open_image_units.pop()
+            return
+        assert self._next_image_unit <= GL_MAX_IMAGE_UNITS_VALUE
+        if self._next_image_unit == GL_MAX_IMAGE_UNITS_VALUE:
+            self._steal_image_unit()
+        else:
+            self._image_unit = self._next_image_unit
+            Texture._next_image_unit += 1
+
+    def _release_image_unit(self) -> None:
+        assert self._image_unit is not None
+        image_unit = self._image_unit
+        self._image_unit = None
+        self._open_image_units.add(image_unit)
+        try:
+            self._unbound_image_units.remove(self)
+        except KeyError:
+            pass
+
+    def _steal_image_unit(self) -> None:
+        try:
+            texture = self._unbound_image_units.pop()
+        except IndexError:
+            raise RuntimeError("no image unit available")
+        texture._release_image_unit()
+        self._acquire_image_unit()
+
+    def _bind_image_unit(self) -> None:
+        if self._image_unit is None:
+            self._acquire_image_unit()
+        assert self._image_unit is not None
+        assert self._gl_texture is not None
+        set_image_unit(self._image_unit, self._gl_texture, self._gl_internal_format)
+
+    def _unbind_image_unit(self) -> None:
+        assert self._image_unit is not None
+        self._unbound_image_units.add(self)
 
     @property
     def anisotropy(self) -> float:
@@ -481,6 +541,10 @@ def bind_texture_unit(texture: Texture) -> _TextureUnitBind:
     return _TextureUnitBind(texture)
 
 
+def bind_texture_image_unit(texture: Texture) -> _ImageUnitBind:
+    return _ImageUnitBind(texture)
+
+
 def bind_texture(texture: Texture) -> _TextureBind:
     return _TextureBind(texture)
 
@@ -492,10 +556,14 @@ def get_gl_texture(texture: Texture) -> GlTexture:
 
 @register_reset_state_callback
 def _reset_texture_state() -> None:
-    Texture._max_unit = None
-    Texture._next_unit = _FIRST_BINDABLE_TEXTURE_UNIT
-    Texture._open_units.clear()
-    Texture._unbound_units.clear()
+    Texture._max_texture_unit = None
+    Texture._next_texture_unit = _FIRST_BINDABLE_TEXTURE_UNIT
+    Texture._open_texture_units.clear()
+    Texture._unbound_texture_units.clear()
+    Texture._max_image_unit = None
+    Texture._next_image_unit = _FIRST_BINDABLE_IMAGE_UNIT
+    Texture._open_image_units.clear()
+    Texture._unbound_image_units.clear()
 
 
 class _TextureUnitBind:
@@ -506,15 +574,15 @@ class _TextureUnitBind:
 
     def __enter__(self) -> int:
         if self._refs == 0:
-            self._texture._bind_unit()
+            self._texture._bind_texture_unit()
         self._refs += 1
-        assert self._texture._unit is not None
-        return self._texture._unit
+        assert self._texture._texture_unit is not None
+        return self._texture._texture_unit
 
     def __exit__(self, *args: Any, **kwargs: Any) -> None:
         self._refs -= 1
         if self._refs == 0:
-            self._texture._unbind_unit()
+            self._texture._unbind_texture_unit()
         assert self._refs >= 0
 
 
@@ -527,3 +595,23 @@ class _TextureBind:
 
     def __exit__(self, *args: Any, **kwargs: Any) -> None:
         self._texture._unbind()
+
+
+class _ImageUnitBind:
+    _refs: int = 0
+
+    def __init__(self, texture: Texture):
+        self._texture = texture
+
+    def __enter__(self) -> int:
+        if self._refs == 0:
+            self._texture._bind_image_unit()
+        self._refs += 1
+        assert self._texture._image_unit is not None
+        return self._texture._image_unit
+
+    def __exit__(self, *args: Any, **kwargs: Any) -> None:
+        self._refs -= 1
+        if self._refs == 0:
+            self._texture._unbind_image_unit()
+        assert self._refs >= 0

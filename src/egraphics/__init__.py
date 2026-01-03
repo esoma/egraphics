@@ -3,10 +3,12 @@ from __future__ import annotations
 __all__ = [
     "BlendFactor",
     "BlendFunction",
+    "clear_cache",
     "clear_render_target",
     "ClipDepth",
     "ClipOrigin",
     "clip_space",
+    "ComputeShader",
     "DepthTest",
     "EditGBuffer",
     "FaceCull",
@@ -40,6 +42,7 @@ __all__ = [
     "WindowRenderTargetMixin",
 ]
 
+from ._cache import clear_cache
 from ._g_buffer import EditGBuffer
 from ._g_buffer import GBuffer
 from ._g_buffer import GBufferFrequency
@@ -57,6 +60,7 @@ from ._render_target import read_color_from_render_target
 from ._render_target import read_depth_from_render_target
 from ._shader import BlendFactor
 from ._shader import BlendFunction
+from ._shader import ComputeShader
 from ._shader import DepthTest
 from ._shader import FaceCull
 from ._shader import FaceRasterization

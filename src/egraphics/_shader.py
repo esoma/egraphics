@@ -3,6 +3,7 @@ from __future__ import annotations
 __all__ = [
     "BlendFactor",
     "BlendFunction",
+    "ComputeShader",
     "DepthTest",
     "FaceCull",
     "FaceRasterization",
@@ -25,6 +26,7 @@ from enum import Enum
 from typing import TYPE_CHECKING
 from typing import Any
 from typing import ClassVar
+from typing import Collection
 from typing import Final
 from typing import Generic
 from typing import Mapping
@@ -67,6 +69,12 @@ from ._egraphics import GL_FUNC_REVERSE_SUBTRACT
 from ._egraphics import GL_FUNC_SUBTRACT
 from ._egraphics import GL_GEQUAL
 from ._egraphics import GL_GREATER
+from ._egraphics import GL_IMAGE_2D
+from ._egraphics import GL_IMAGE_2D_ARRAY
+from ._egraphics import GL_IMAGE_3D
+from ._egraphics import GL_IMAGE_BUFFER
+from ._egraphics import GL_IMAGE_CUBE
+from ._egraphics import GL_IMAGE_CUBE_MAP_ARRAY
 from ._egraphics import GL_INT
 from ._egraphics import GL_INT_SAMPLER_1D
 from ._egraphics import GL_INT_SAMPLER_1D_ARRAY
@@ -160,6 +168,7 @@ from ._egraphics import GL_FLOAT_MAT4x3
 from ._egraphics import GlType
 from ._egraphics import create_gl_program
 from ._egraphics import delete_gl_program
+from ._egraphics import execute_gl_program_compute
 from ._egraphics import execute_gl_program_index_buffer
 from ._egraphics import execute_gl_program_indices
 from ._egraphics import get_gl_program_attributes
@@ -205,10 +214,10 @@ from ._render_target import RenderTarget
 from ._render_target import set_draw_render_target
 from ._state import register_reset_state_callback
 from ._texture import Texture
+from ._texture import bind_texture_image_unit
 from ._texture import bind_texture_unit
 
 if TYPE_CHECKING:
-    # egraphics
     from ._g_buffer_view_map import GBufferViewMap
 
 _T = TypeVar("_T")
@@ -262,51 +271,31 @@ class FaceRasterization(Enum):
     FILL = GL_FILL
 
 
-class Shader:
-    _active: ClassVar[ref[Shader] | None] = None
+class _CoreShader:
+    _active: ClassVar[ref[_CoreShader] | None] = None
 
-    def __init__(
-        self,
-        *,
-        vertex: Buffer | None = None,
-        geometry: Buffer | None = None,
-        fragment: Buffer | None = None,
-    ):
-        if vertex is None and geometry is None and fragment is None:
-            raise TypeError("vertex, geometry or fragment must be provided")
-
-        if geometry is not None and vertex is None:
-            raise TypeError("geometry shader requires vertex shader")
-
-        self._gl_program = create_gl_program(vertex, geometry, fragment)
-
-        self._attributes = tuple(
-            ShaderAttribute(name.removesuffix("[0]"), _GL_TYPE_TO_PY[type], size, location)
-            for name, size, type, location in get_gl_program_attributes(self._gl_program)
-            if not name.startswith("gl_")
-        )
+    def __init__(self, gl_program: Any) -> None:
+        self._gl_program = gl_program
 
         self._uniforms = tuple(
-            ShaderUniform(name.removesuffix("[0]"), _GL_TYPE_TO_PY[type], size, location)
+            ShaderUniform(name.removesuffix("[0]"), _GL_TYPE_TO_PY[type], size, location, type)
             for name, size, type, location in get_gl_program_uniforms(self._gl_program)
             if not name.startswith("gl_")
         )
 
-        self._inputs: dict[str, ShaderAttribute | ShaderUniform] = {
-            **{attribute.name: attribute for attribute in self._attributes},
-            **{uniform.name: uniform for uniform in self._uniforms},
-        }
-
     def __del__(self) -> None:
         if self._active and self._active() is self:
             use_gl_program(None)
-            Shader._active = None
+            _CoreShader._active = None
         if hasattr(self, "_gl_program") and self._gl_program is not None:
             delete_gl_program(self._gl_program)
             del self._gl_program
 
-    def __getitem__(self, name: str) -> ShaderAttribute | ShaderUniform:
-        return self._inputs[name]
+    def _activate(self) -> None:
+        if self._active and self._active() is self:
+            return
+        use_gl_program(self._gl_program)
+        _CoreShader._active = ref(self)
 
     def _set_uniform(
         self, uniform: ShaderUniform, value: UniformValue, exit_stack: ExitStack
@@ -318,7 +307,10 @@ class Shader:
         if uniform.data_type is Texture:
             if isinstance(value, Texture):
                 set_size = 1
-                input_value = c_int32(exit_stack.enter_context(bind_texture_unit(value)))
+                if uniform._is_image:
+                    input_value = c_int32(exit_stack.enter_context(bind_texture_image_unit(value)))
+                else:
+                    input_value = c_int32(exit_stack.enter_context(bind_texture_unit(value)))
             else:
                 try:
                     set_size = min(uniform.size, len(value))  # type: ignore
@@ -328,12 +320,20 @@ class Shader:
                         f"(got {type(value)})"
                     )
                 try:
-                    value = I32Array(
-                        *(
-                            exit_stack.enter_context(bind_texture_unit(v))  # type: ignore
-                            for v in value  # type: ignore
+                    if uniform._is_image:
+                        value = I32Array(
+                            *(
+                                exit_stack.enter_context(bind_texture_image_unit(v))  # type: ignore
+                                for v in value  # type: ignore
+                            )
                         )
-                    )
+                    else:
+                        value = I32Array(
+                            *(
+                                exit_stack.enter_context(bind_texture_unit(v))  # type: ignore
+                                for v in value  # type: ignore
+                            )
+                        )
                 except Exception as ex:
                     if not all(isinstance(v, Texture) for v in value):  # type: ignore
                         raise ValueError(
@@ -363,18 +363,44 @@ class Shader:
             uniform._set(uniform.location, set_size, input_value, cache_key)
 
     @property
-    def attributes(self) -> tuple[ShaderAttribute, ...]:
-        return self._attributes
-
-    @property
     def uniforms(self) -> tuple[ShaderUniform, ...]:
         return self._uniforms
 
-    def _activate(self) -> None:
-        if self._active and self._active() is self:
-            return
-        use_gl_program(self._gl_program)
-        Shader._active = ref(self)
+
+class Shader(_CoreShader):
+    def __init__(
+        self,
+        *,
+        vertex: Buffer | None = None,
+        geometry: Buffer | None = None,
+        fragment: Buffer | None = None,
+    ):
+        if vertex is None and geometry is None and fragment is None:
+            raise TypeError("vertex, geometry or fragment must be provided")
+
+        if geometry is not None and vertex is None:
+            raise TypeError("geometry shader requires vertex shader")
+
+        gl_program = create_gl_program(vertex, geometry, fragment, None)
+        super().__init__(gl_program)
+
+        self._attributes = tuple(
+            ShaderAttribute(name.removesuffix("[0]"), _GL_TYPE_TO_PY[type], size, location)
+            for name, size, type, location in get_gl_program_attributes(self._gl_program)
+            if not name.startswith("gl_")
+        )
+
+        self._inputs: dict[str, ShaderAttribute | ShaderUniform] = {
+            **{attribute.name: attribute for attribute in self._attributes},
+            **{uniform.name: uniform for uniform in self._uniforms},
+        }
+
+    def __getitem__(self, name: str) -> ShaderAttribute | ShaderUniform:
+        return self._inputs[name]
+
+    @property
+    def attributes(self) -> tuple[ShaderAttribute, ...]:
+        return self._attributes
 
     def execute(
         self,
@@ -461,9 +487,41 @@ class Shader:
                 )
 
 
+class ComputeShader(_CoreShader):
+    def __init__(self, compute: Buffer) -> None:
+        gl_program = create_gl_program(None, None, None, compute)
+        super().__init__(gl_program)
+
+        self._inputs: dict[str, ShaderUniform] = {
+            uniform.name: uniform for uniform in self._uniforms
+        }
+
+    def __getitem__(self, name: str) -> ShaderUniform:
+        return self._inputs[name]
+
+    def execute(
+        self, uniforms: UniformMap, num_groups_x: int, num_groups_y: int, num_groups_z: int
+    ) -> None:
+        uniform_values: list[tuple[ShaderUniform, Any]] = []
+        for uniform in self.uniforms:
+            try:
+                value = uniforms[uniform.name]
+            except KeyError:
+                continue
+            uniform_values.append((uniform, value))
+
+        self._activate()
+
+        with ExitStack() as exit_stack:
+            for uniform, value in uniform_values:
+                self._set_uniform(uniform, value, exit_stack)
+
+            execute_gl_program_compute(num_groups_x, num_groups_y, num_groups_z)
+
+
 @register_reset_state_callback
 def _reset_shader_state() -> None:
-    Shader._active = None
+    _CoreShader._active = None
 
 
 class ShaderAttribute(Generic[_T]):
@@ -494,11 +552,14 @@ class ShaderAttribute(Generic[_T]):
 
 
 class ShaderUniform(Generic[_T]):
-    def __init__(self, name: str, data_type: type[_T], size: int, location: int) -> None:
+    def __init__(
+        self, name: str, data_type: type[_T], size: int, location: int, gl_type: GlType
+    ) -> None:
         self._name = name
         self._data_type: type[_T] = data_type
         self._size = size
         self._location = location
+        self._gl_type = gl_type
         self._setter = _TYPE_TO_UNIFORM_SETTER[data_type]
         self._set_type: Any = c_int32 if data_type is Texture else data_type
         self._cache: Any = None
@@ -520,6 +581,10 @@ class ShaderUniform(Generic[_T]):
         self._cache = cache_key
 
     @property
+    def _is_image(self) -> bool:
+        return self._gl_type in _GL_IMAGE_TYPES
+
+    @property
     def name(self) -> str:
         return self._name
 
@@ -535,6 +600,15 @@ class ShaderUniform(Generic[_T]):
     def location(self) -> int:
         return self._location
 
+
+_GL_IMAGE_TYPES: Final[Collection[GlType]] = {
+    GL_IMAGE_2D,
+    GL_IMAGE_3D,
+    GL_IMAGE_CUBE,
+    GL_IMAGE_2D_ARRAY,
+    GL_IMAGE_BUFFER,
+    GL_IMAGE_CUBE_MAP_ARRAY,
+}
 
 _GL_TYPE_TO_PY: Final[Mapping[GlType, Any]] = {
     GL_FLOAT: ctypes.c_float,
@@ -611,6 +685,12 @@ _GL_TYPE_TO_PY: Final[Mapping[GlType, Any]] = {
     GL_SAMPLER_2D_RECT_SHADOW: Texture,
     GL_SAMPLER_1D_ARRAY_SHADOW: Texture,
     GL_SAMPLER_2D_ARRAY_SHADOW: Texture,
+    GL_IMAGE_2D: Texture,
+    GL_IMAGE_3D: Texture,
+    GL_IMAGE_CUBE: Texture,
+    GL_IMAGE_BUFFER: Texture,
+    GL_IMAGE_2D_ARRAY: Texture,
+    GL_IMAGE_CUBE_MAP_ARRAY: Texture,
 }
 
 

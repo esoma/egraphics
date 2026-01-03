@@ -324,7 +324,7 @@ class TextureTest:
         texture_3 = self.create_texture(
             size, TextureComponents.R, ctypes.c_int8, memoryview(b"\x00" * self.data_multiplier)
         )
-        del _TextureTarget.TEXTURE_2D._unit_texture[texture_3._unit]
+        del _TextureTarget.TEXTURE_2D._unit_texture[texture_3._texture_unit]
 
         with bind_texture_unit(texture_1) as unit_1:
             pass
@@ -355,8 +355,8 @@ class TextureTest:
                 ctypes.c_int8,
                 memoryview(b"\x00" * self.data_multiplier),
             )
-            assert texture_1._unit is not None
-            unit_1 = texture_1._unit
+            assert texture_1._texture_unit is not None
+            unit_1 = texture_1._texture_unit
 
             texture_2 = self.create_texture(
                 size,
@@ -364,9 +364,9 @@ class TextureTest:
                 ctypes.c_int8,
                 memoryview(b"\x00" * self.data_multiplier),
             )
-            assert texture_1._unit == unit_1
-            assert texture_2._unit is not None
-            unit_2 = texture_2._unit
+            assert texture_1._texture_unit == unit_1
+            assert texture_2._texture_unit is not None
+            unit_2 = texture_2._texture_unit
 
             texture_3 = self.create_texture(
                 size,
@@ -374,19 +374,19 @@ class TextureTest:
                 ctypes.c_int8,
                 memoryview(b"\x00" * self.data_multiplier),
             )
-            assert texture_1._unit is None
-            assert texture_2._unit == unit_2
-            assert texture_3._unit == unit_1
+            assert texture_1._texture_unit is None
+            assert texture_2._texture_unit == unit_2
+            assert texture_3._texture_unit == unit_1
 
             with bind_texture_unit(texture_2):
-                assert texture_1._unit is None
-                assert texture_2._unit == unit_2
-                assert texture_3._unit == unit_1
+                assert texture_1._texture_unit is None
+                assert texture_2._texture_unit == unit_2
+                assert texture_3._texture_unit == unit_1
 
             with bind_texture_unit(texture_1):
-                assert texture_1._unit == unit_1
-                assert texture_2._unit == unit_2
-                assert texture_3._unit is None
+                assert texture_1._texture_unit == unit_1
+                assert texture_2._texture_unit == unit_2
+                assert texture_3._texture_unit is None
 
     def test_out_of_units(self, platform, size):
         with patch(
