@@ -29,6 +29,7 @@ __all__ = [
     "reset_state",
     "Shader",
     "ShaderAttribute",
+    "ShaderStorageBlock",
     "ShaderUniform",
     "Texture",
     "Texture2d",
@@ -38,7 +39,8 @@ __all__ = [
     "TextureRenderTarget",
     "TextureType",
     "TextureWrap",
-    "UniformMap",
+    "ShaderInputMap",
+    "ShaderUniformValue",
     "WindowRenderTargetMixin",
 ]
 
@@ -67,8 +69,10 @@ from ._shader import FaceRasterization
 from ._shader import PrimitiveMode
 from ._shader import Shader
 from ._shader import ShaderAttribute
+from ._shader import ShaderInputMap
+from ._shader import ShaderStorageBlock
 from ._shader import ShaderUniform
-from ._shader import UniformMap
+from ._shader import ShaderUniformValue
 from ._state import ClipDepth
 from ._state import ClipOrigin
 from ._state import clip_space

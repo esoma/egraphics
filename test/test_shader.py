@@ -909,7 +909,6 @@ def test_image_uniforms(
     else:
         layout = f"layout(rgba32f, location={location})"
 
-    # Build coordinate for imageLoad based on image type
     if postfix == "Buffer":
         coord = "0"
         coord_expr = "0"

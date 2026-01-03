@@ -10,8 +10,10 @@ __all__ = [
     "PrimitiveMode",
     "Shader",
     "ShaderAttribute",
+    "ShaderStorageBlock",
     "ShaderUniform",
-    "UniformMap",
+    "ShaderInputMap",
+    "ShaderUniformValue",
 ]
 
 
@@ -31,6 +33,7 @@ from typing import Final
 from typing import Generic
 from typing import Mapping
 from typing import Sequence
+from typing import TypeAlias
 from typing import TypeVar
 from weakref import ref
 
@@ -172,6 +175,7 @@ from ._egraphics import execute_gl_program_compute
 from ._egraphics import execute_gl_program_index_buffer
 from ._egraphics import execute_gl_program_indices
 from ._egraphics import get_gl_program_attributes
+from ._egraphics import get_gl_program_storage_blocks
 from ._egraphics import get_gl_program_uniforms
 from ._egraphics import set_active_gl_program_uniform_double
 from ._egraphics import set_active_gl_program_uniform_double_2
@@ -209,6 +213,7 @@ from ._egraphics import set_active_gl_program_uniform_unsigned_int_3
 from ._egraphics import set_active_gl_program_uniform_unsigned_int_4
 from ._egraphics import set_gl_execution_state
 from ._egraphics import use_gl_program
+from ._g_buffer import GBuffer
 from ._g_buffer_view import GBufferView
 from ._render_target import RenderTarget
 from ._render_target import set_draw_render_target
@@ -283,6 +288,11 @@ class _CoreShader:
             if not name.startswith("gl_")
         )
 
+        self._storage_blocks = tuple(
+            ShaderStorageBlock(name, location)
+            for name, location in get_gl_program_storage_blocks(self._gl_program)
+        )
+
     def __del__(self) -> None:
         if self._active and self._active() is self:
             use_gl_program(None)
@@ -298,7 +308,7 @@ class _CoreShader:
         _CoreShader._active = ref(self)
 
     def _set_uniform(
-        self, uniform: ShaderUniform, value: UniformValue, exit_stack: ExitStack
+        self, uniform: ShaderUniform, value: ShaderUniformValue, exit_stack: ExitStack
     ) -> None:
         assert uniform in self._uniforms
         input_value: Any = None
@@ -366,6 +376,10 @@ class _CoreShader:
     def uniforms(self) -> tuple[ShaderUniform, ...]:
         return self._uniforms
 
+    @property
+    def storage_blocks(self) -> tuple[ShaderStorageBlock, ...]:
+        return self._storage_blocks
+
 
 class Shader(_CoreShader):
     def __init__(
@@ -407,7 +421,7 @@ class Shader(_CoreShader):
         render_target: RenderTarget,
         primitive_mode: PrimitiveMode,
         buffer_view_map: GBufferViewMap,
-        uniforms: UniformMap,
+        input_map: ShaderInputMap,
         *,
         blend_source: BlendFactor = BlendFactor.ONE,
         blend_destination: BlendFactor = BlendFactor.ZERO,
@@ -426,17 +440,18 @@ class Shader(_CoreShader):
         point_size: float = 1.0,
         clip_distances: int = 0,
     ) -> None:
-        uniform_values: list[tuple[ShaderUniform, Any]] = []
-        for uniform in self.uniforms:
-            try:
-                value = uniforms[uniform.name]
-            except KeyError:
-                continue
-            uniform_values.append((uniform, value))
         if instances < 0:
             raise ValueError("instances must be 0 or more")
         elif instances == 0:
             return
+
+        uniform_values: list[tuple[ShaderUniform, Any]] = []
+        for uniform in self.uniforms:
+            try:
+                value = input_map[uniform.name]
+            except KeyError:
+                continue
+            uniform_values.append((uniform, value))
 
         set_gl_execution_state(
             depth_write,
@@ -500,12 +515,12 @@ class ComputeShader(_CoreShader):
         return self._inputs[name]
 
     def execute(
-        self, uniforms: UniformMap, num_groups_x: int, num_groups_y: int, num_groups_z: int
+        self, input_map: ShaderInputMap, num_groups_x: int, num_groups_y: int, num_groups_z: int
     ) -> None:
         uniform_values: list[tuple[ShaderUniform, Any]] = []
         for uniform in self.uniforms:
             try:
-                value = uniforms[uniform.name]
+                value = input_map[uniform.name]
             except KeyError:
                 continue
             uniform_values.append((uniform, value))
@@ -595,6 +610,20 @@ class ShaderUniform(Generic[_T]):
     @property
     def size(self) -> int:
         return self._size
+
+    @property
+    def location(self) -> int:
+        return self._location
+
+
+class ShaderStorageBlock:
+    def __init__(self, name: str, location: int):
+        self._name = name
+        self._location = location
+
+    @property
+    def name(self) -> str:
+        return self._name
 
     @property
     def location(self) -> int:
@@ -794,7 +823,7 @@ class PrimitiveMode(Enum):
     TRIANGLE_ADJACENCY = GL_TRIANGLES_ADJACENCY
 
 
-UniformValue = (
+ShaderUniformValue = (
     ctypes.c_float
     | emath.FArray
     | emath.FVector2
@@ -868,7 +897,9 @@ UniformValue = (
     | Sequence[Texture]
 )
 
-UniformMap = Mapping[str, UniformValue]
+ShaderStorageBufferValue: TypeAlias = GBuffer
+
+ShaderInputMap = Mapping[str, ShaderUniformValue | ShaderStorageBufferValue]
 
 _INDEX_BUFFER_VIEW_TYPE_TO_VERTEX_ATTRIB_POINTER: Final[Mapping[Any, GlType]] = {
     ctypes.c_uint8: GL_UNSIGNED_BYTE,

@@ -39,6 +39,7 @@
 typedef struct ModuleState
 {
     bool is_gl_clip_control_supported;
+    bool is_gl_ssbo_supported;
 
     float clear_color[4];
     float clear_depth;
@@ -77,6 +78,7 @@ reset_module_state(PyObject *module, PyObject *unused)
     if (!state){ Py_RETURN_NONE; }
 
     state->is_gl_clip_control_supported = false;
+    state->is_gl_ssbo_supported = false;
 
     state->clear_color[0] = -1;
     state->clear_color[1] = -1;
@@ -1178,6 +1180,75 @@ error:
 
 
 static PyObject *
+get_gl_program_storage_blocks(PyObject *module, PyObject *py_gl_shader)
+{
+    PyObject *result = 0;
+    GLchar *name = 0;
+
+    ModuleState *state = (ModuleState *)PyModule_GetState(module);
+    CHECK_UNEXPECTED_PYTHON_ERROR();
+    if (!state->is_gl_ssbo_supported)
+    {
+        result = PyTuple_New(0);
+        CHECK_UNEXPECTED_PYTHON_ERROR();
+        return result;
+    }
+
+    GLuint gl_shader = PyLong_AsUnsignedLong(py_gl_shader);
+    CHECK_UNEXPECTED_PYTHON_ERROR();
+
+    GLint storage_block_count = 0;
+    glGetProgramInterfaceiv(gl_shader, GL_SHADER_STORAGE_BLOCK, GL_ACTIVE_RESOURCES, &storage_block_count);
+    CHECK_GL_ERROR();
+
+    if (storage_block_count == 0)
+    {
+        result = PyTuple_New(0);
+        CHECK_UNEXPECTED_PYTHON_ERROR();
+        return result;
+    }
+
+    GLint max_name_length = 0;
+    glGetProgramInterfaceiv(gl_shader, GL_SHADER_STORAGE_BLOCK, GL_MAX_NAME_LENGTH, &max_name_length);
+    CHECK_GL_ERROR();
+
+    name = malloc(sizeof(GLchar) * max_name_length + 1);
+    if (!name)
+    {
+        PyErr_Format(PyExc_MemoryError, "out of memory");
+        goto error;
+    }
+
+    result = PyTuple_New(storage_block_count);
+    CHECK_UNEXPECTED_PYTHON_ERROR();
+
+    for (GLint i = 0; i < storage_block_count; i++)
+    {
+        GLsizei name_length = 0;
+        glGetProgramResourceName(gl_shader, GL_SHADER_STORAGE_BLOCK, i, max_name_length + 1, &name_length, name);
+        CHECK_GL_ERROR();
+        name[name_length] = 0;
+
+        GLint location = glGetProgramResourceLocation(gl_shader, GL_SHADER_STORAGE_BLOCK, name);
+        CHECK_GL_ERROR();
+
+        PyObject *storage_block = Py_BuildValue("si", name, location);
+        CHECK_UNEXPECTED_PYTHON_ERROR();
+
+        PyTuple_SET_ITEM(result, i, storage_block);
+    }
+
+    free(name);
+
+    return result;
+error:
+    Py_XDECREF(result);
+    if (name){ free(name); }
+    return 0;
+}
+
+
+static PyObject *
 get_gl_program_attributes(PyObject *module, PyObject *py_gl_shader)
 {
     PyObject *result = 0;
@@ -2022,6 +2093,7 @@ static PyMethodDef module_PyMethodDef[] = {
     {"set_gl_texture_target_parameters", (PyCFunction)set_gl_texture_target_parameters, METH_FASTCALL, 0},
     {"get_gl_program_uniforms", get_gl_program_uniforms, METH_O, 0},
     {"get_gl_program_attributes", get_gl_program_attributes, METH_O, 0},
+    {"get_gl_program_storage_blocks", get_gl_program_storage_blocks, METH_O, 0},
     {"create_gl_program", (PyCFunction)create_gl_program, METH_FASTCALL, 0},
     {"delete_gl_program", delete_gl_program, METH_O, 0},
     {"use_gl_program", use_gl_program, METH_O, 0},
@@ -2086,6 +2158,7 @@ PyInit__egraphics()
     GLint GL_MAX_CLIP_DISTANCES_VALUE = 0;
     GLint GL_MAX_IMAGE_UNITS_VALUE = 0;
     bool is_gl_clip_control_supported = false;
+    bool is_gl_ssbo_supported = false;
     {
         PyObject *eplatform = PyImport_ImportModule("eplatform");
         if (!eplatform){ return 0; }
@@ -2147,6 +2220,23 @@ PyInit__egraphics()
             &GL_MAX_IMAGE_UNITS_VALUE
         );
 
+        char *gl_ssbo_env = getenv("EGRAPHICS_GL_SSBO");
+        if (gl_ssbo_env && strcmp(gl_ssbo_env, "disabled") == 0)
+        {
+            assert(is_gl_ssbo_supported == false);
+        }
+        else
+        {
+            if (GLEW_VERSION_4_3)
+            {
+                is_gl_ssbo_supported = true;
+            }
+            else
+            {
+                assert(is_gl_ssbo_supported == false);
+            }
+        }
+
         context = PyObject_CallMethod(platform, "__exit__", "");
         Py_XDECREF(context);
         Py_DECREF(platform);
@@ -2179,6 +2269,7 @@ PyInit__egraphics()
             return 0;
         }
         state->is_gl_clip_control_supported = is_gl_clip_control_supported;
+        state->is_gl_ssbo_supported = is_gl_ssbo_supported;
     }
 
 #define ADD_ALIAS(name, type)\

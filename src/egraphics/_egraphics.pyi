@@ -251,6 +251,7 @@ __all__ = [
     "set_gl_texture_target_parameters",
     "get_gl_program_uniforms",
     "get_gl_program_attributes",
+    "get_gl_program_storage_blocks",
     "create_gl_program",
     "delete_gl_program",
     "use_gl_program",
@@ -624,6 +625,7 @@ def get_gl_program_uniforms(program: GlProgram, /) -> tuple[tuple[str, int, GlTy
 def get_gl_program_attributes(
     program: GlProgram, /
 ) -> tuple[tuple[str, int, GlType, int], ...]: ...
+def get_gl_program_storage_blocks(program: GlProgram, /) -> tuple[tuple[str, int], ...]: ...
 def create_gl_program(
     vertex: Buffer | None,
     geometry: Buffer | None,
