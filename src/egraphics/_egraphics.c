@@ -955,6 +955,7 @@ set_gl_texture_target_2d_data(PyObject *module, PyObject **args, Py_ssize_t narg
 {
     PyObject *ex = 0;
     struct EMathApi *emath_api = 0;
+    void *data_ptr = 0;
 
     CHECK_UNEXPECTED_ARG_COUNT_ERROR(6);
 
@@ -994,7 +995,11 @@ set_gl_texture_target_2d_data(PyObject *module, PyObject **args, Py_ssize_t narg
     Py_buffer buffer;
     {
         PyObject *py_data = args[5];
-        if (PyObject_GetBuffer(py_data, &buffer, PyBUF_CONTIG_RO) == -1){ goto error; }
+        if (py_data != Py_None)
+        {
+            if (PyObject_GetBuffer(py_data, &buffer, PyBUF_CONTIG_RO) == -1){ goto error; }
+            data_ptr = buffer.buf;
+        }
     }
 
     glTexImage2D(
@@ -1006,9 +1011,13 @@ set_gl_texture_target_2d_data(PyObject *module, PyObject **args, Py_ssize_t narg
         0,
         format,
         type,
-        buffer.buf
+        data_ptr
     );
-    PyBuffer_Release(&buffer);
+    if (data_ptr != 0)
+    {
+        PyBuffer_Release(&buffer);
+        data_ptr = 0;
+    }
     CHECK_UNEXPECTED_PYTHON_ERROR();
     CHECK_GL_ERROR();
 
@@ -1016,6 +1025,10 @@ set_gl_texture_target_2d_data(PyObject *module, PyObject **args, Py_ssize_t narg
 error:
     ex = PyErr_GetRaisedException();
     if (emath_api){ EMathApi_Release(); }
+    if (data_ptr != 0)
+    {
+        PyBuffer_Release(&buffer);
+    }
     PyErr_SetRaisedException(ex);
     return 0;
 }

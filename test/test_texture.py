@@ -97,6 +97,9 @@ class TextureTest:
     def size(self, size_type):
         return size_type(*(1 for _ in range(self.size_length)))
 
+    def test_no_data(self, platform, size):
+        self.create_texture(size, TextureComponents.R, ctypes.c_int8, None)
+
     def test_repr(self, platform, size):
         texture = self.create_texture(
             size, TextureComponents.R, ctypes.c_int8, memoryview(b"\x00" * self.data_multiplier)

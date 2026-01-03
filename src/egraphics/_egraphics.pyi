@@ -605,7 +605,7 @@ def set_gl_texture_target_2d_data(
     size: UVector2,
     format: GlTextureComponents,
     type: GlType,
-    data: Buffer,
+    data: Buffer | None,
     /,
 ) -> None: ...
 def generate_gl_texture_target_mipmaps(target: GlTextureTarget, /) -> None: ...

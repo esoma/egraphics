@@ -320,7 +320,7 @@ class Texture:
         size: UVector2,
         components: TextureComponents,
         data_type: type[TextureDataType],
-        buffer: Buffer,
+        buffer: Buffer | None = None,
         mipmap_selection: MipmapSelection | None = None,
         minify_filter: TextureFilter | None = None,
         magnify_filter: TextureFilter | None = None,
@@ -360,9 +360,10 @@ class Texture:
         gl_mag_filter = _TEXTURE_FILTER_TO_GL_MAG_FILTER[magnify_filter]
         # ensure the length of the data buffer is what we expect give the size,
         # component count and data type
-        expected_data_length = prod(size) * component_count * c_sizeof(data_type)
-        if memoryview(buffer).nbytes != expected_data_length:
-            raise ValueError("too much or not enough data")
+        if buffer is not None:
+            expected_data_length = prod(size) * component_count * c_sizeof(data_type)
+            if memoryview(buffer).nbytes != expected_data_length:
+                raise ValueError("too much or not enough data")
         # generate the texture and copy the data to it
         self._gl_texture = create_gl_texture()
         with bind_texture(self):
