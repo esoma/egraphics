@@ -850,6 +850,28 @@ def test_shadow_sampler_uniforms(
     "shader_cls, shader_kwargs, expected_uniform_count",
     [
         (
+            Shader,
+            {
+                "vertex": """#version 430 core
+in vec2 xy;
+void main()
+{{
+    gl_Position = vec4(xy, 0, 1);
+}}
+""",
+                "fragment": """#version 430 core
+{layout} uniform image{postfix} uni_name{array_def};
+out vec4 FragColor;
+void main()
+{{
+    vec4 val = imageLoad(uni_name{texture_access}, {coord_expr});
+    FragColor = vec4({x_value}, {y_value}, 0, 1);
+}}
+    """,
+            },
+            1,
+        ),
+        (
             ComputeShader,
             {
                 "compute": """#version 430 core
@@ -864,7 +886,7 @@ void main()
     """
             },
             2,
-        )
+        ),
     ],
 )
 def test_image_uniforms(
@@ -906,20 +928,6 @@ def test_image_uniforms(
         x_value = f"imageLoad(uni_name, {coord}).r"
         y_value = "0"
 
-    print(
-        shader_kwargs["compute"]
-        .format(
-            glsl_version=glsl_version,
-            layout=layout,
-            postfix=postfix,
-            array_def=array_def,
-            coord_expr=coord_expr,
-            texture_access=texture_access,
-            x_value=x_value,
-            y_value=y_value,
-        )
-        .encode("utf-8")
-    )
     shader = shader_cls(
         **{
             k: v.format(
