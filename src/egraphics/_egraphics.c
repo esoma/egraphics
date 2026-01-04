@@ -2269,7 +2269,6 @@ PyInit__egraphics()
             );
         }
 
-        bool is_gl_shader_storage_buffer_supported = false;
         char *gl_ssbo_env = getenv("EGRAPHICS_GL_SHADER_STORAGE_BUFFER");
         if (gl_ssbo_env && strcmp(gl_ssbo_env, "disabled") == 0)
         {
