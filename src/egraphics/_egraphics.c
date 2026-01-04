@@ -1699,7 +1699,7 @@ error:
 static PyObject *
 set_shader_storage_buffer_unit(PyObject *module, PyObject **args, Py_ssize_t nargs)
 {
-    CHECK_UNEXPECTED_ARG_COUNT_ERROR(2);
+    CHECK_UNEXPECTED_ARG_COUNT_ERROR(4);
 
     GLuint index = PyLong_AsUnsignedLong(args[0]);
     CHECK_UNEXPECTED_PYTHON_ERROR();
@@ -1707,7 +1707,13 @@ set_shader_storage_buffer_unit(PyObject *module, PyObject **args, Py_ssize_t nar
     GLuint gl_buffer = PyLong_AsUnsignedLong(args[1]);
     CHECK_UNEXPECTED_PYTHON_ERROR();
 
-    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, index, gl_buffer);
+    GLintptr offset = PyLong_AsLong(args[2]);
+    CHECK_UNEXPECTED_PYTHON_ERROR();
+
+    GLsizeiptr size = PyLong_AsLong(args[3]);
+    CHECK_UNEXPECTED_PYTHON_ERROR();
+
+    glBindBufferRange(GL_SHADER_STORAGE_BUFFER, index, gl_buffer, offset, size);
     CHECK_GL_ERROR();
 
     Py_RETURN_NONE;

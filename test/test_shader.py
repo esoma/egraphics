@@ -18,6 +18,7 @@ from OpenGL.GL import glIsProgram
 
 from egraphics import ComputeShader
 from egraphics import GBuffer
+from egraphics import GBufferView
 from egraphics import Shader
 from egraphics import ShaderAttribute
 from egraphics import ShaderStorageBlock
@@ -1672,14 +1673,15 @@ def test_storage_block(platform, gl_version, binding, shader_cls, shader_kwargs)
     assert storage_block.name == "BlockName"
 
     g_buffer = GBuffer(ctypes.sizeof(ctypes.c_float))
+    g_buffer_view = GBufferView(g_buffer, ctypes.c_float)
     with ExitStack() as exit_stack:
-        shader._set_storage_block(storage_block, g_buffer, exit_stack)
+        shader._set_storage_block(storage_block, g_buffer_view, exit_stack)
 
-        assert g_buffer._shader_storage_buffer_unit is not None
+        assert g_buffer_view._shader_storage_buffer_unit is not None
         binding_value = ctypes.c_int()
         glGetIntegeri_v(
             GL_SHADER_STORAGE_BUFFER_BINDING,
-            g_buffer._shader_storage_buffer_unit,
+            g_buffer_view._shader_storage_buffer_unit,
             ctypes.byref(binding_value),
         )
         assert binding_value.value == g_buffer._gl_buffer

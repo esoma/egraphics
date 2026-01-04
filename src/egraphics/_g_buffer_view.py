@@ -1,11 +1,12 @@
 from __future__ import annotations
 
-__all__ = ["GBufferView"]
+__all__ = ["GBufferView", "bind_g_buffer_view_shader_storage_buffer_unit"]
 
 import ctypes
 from ctypes import sizeof as c_sizeof
 from struct import unpack as c_unpack
 from typing import Any
+from typing import ClassVar
 from typing import Final
 from typing import Generator
 from typing import Generic
@@ -14,7 +15,12 @@ from typing import overload
 
 import emath
 
+from ._egraphics import GL_MAX_SHADER_STORAGE_BUFFER_BINDINGS_VALUE
+from ._egraphics import set_shader_storage_buffer_unit
 from ._g_buffer import GBuffer
+from ._g_buffer import get_g_buffer_gl_buffer
+from ._state import register_reset_state_callback
+from ._weak_fifo_set import WeakFifoSet
 
 _BVT = TypeVar(
     "_BVT",
@@ -149,7 +155,19 @@ def _get_size_of_bvt(t: type[_BVT]) -> int:
         return c_sizeof(t)  # type: ignore
 
 
+@register_reset_state_callback
+def _reset_g_buffer_view_shader_storage_buffer_state() -> None:
+    GBufferView._max_shader_storage_buffer_unit = None
+    GBufferView._next_shader_storage_buffer_unit = 0
+    GBufferView._unbound_shader_storage_buffer_units.clear()
+
+
 class GBufferView(Generic[_BVT]):
+    _max_shader_storage_buffer_unit: ClassVar[int | None] = None
+    _next_shader_storage_buffer_unit: ClassVar[int] = 0
+    _unbound_shader_storage_buffer_units: ClassVar[WeakFifoSet[GBufferView]] = WeakFifoSet()
+    _open_shader_storage_buffer_units: ClassVar[set[int]] = set()
+
     def __init__(
         self,
         g_buffer: GBuffer,
@@ -186,6 +204,7 @@ class GBufferView(Generic[_BVT]):
             if instancing_divisor < 1:
                 raise ValueError("instancing divisor must be greater than 0")
         self._instancing_divisor = instancing_divisor
+        self._shader_storage_buffer_unit: int | None = None
 
     def __len__(self) -> int:
         stride_diff = self._stride - _get_size_of_bvt(self._data_type)
@@ -233,6 +252,54 @@ class GBufferView(Generic[_BVT]):
     @property
     def instancing_divisor(self) -> int | None:
         return self._instancing_divisor
+
+    def _acquire_shader_storage_buffer_unit(self) -> None:
+        if self._open_shader_storage_buffer_units:
+            self._shader_storage_buffer_unit = self._open_shader_storage_buffer_units.pop()
+            return
+        assert self._next_shader_storage_buffer_unit <= GL_MAX_SHADER_STORAGE_BUFFER_BINDINGS_VALUE
+        if self._next_shader_storage_buffer_unit == GL_MAX_SHADER_STORAGE_BUFFER_BINDINGS_VALUE:
+            self._steal_shader_storage_buffer_unit()
+        else:
+            self._shader_storage_buffer_unit = self._next_shader_storage_buffer_unit
+            GBufferView._next_shader_storage_buffer_unit += 1
+
+    def _release_shader_storage_buffer_unit(self) -> None:
+        assert self._shader_storage_buffer_unit is not None
+        self._open_shader_storage_buffer_units.add(self._shader_storage_buffer_unit)
+        self._shader_storage_buffer_unit = None
+        try:
+            self._unbound_shader_storage_buffer_units.remove(self)
+        except KeyError:
+            pass
+
+    def _steal_shader_storage_buffer_unit(self) -> None:
+        try:
+            g_buffer_view = self._unbound_shader_storage_buffer_units.pop()
+        except IndexError:
+            raise RuntimeError("no shader storage buffer unit available")
+        g_buffer_view._release_shader_storage_buffer_unit()
+        self._acquire_shader_storage_buffer_unit()
+
+    def _bind_shader_storage_buffer_unit(self) -> int:
+        if self._stride != self.data_type_size:
+            raise RuntimeError(
+                f"stride must match data_type_size for shader storage buffer binding"
+            )
+        if self._instancing_divisor is not None:
+            raise RuntimeError("instancing_divisor must be None for shader storage buffer binding")
+        if self._shader_storage_buffer_unit is None:
+            self._acquire_shader_storage_buffer_unit()
+        assert self._shader_storage_buffer_unit is not None
+        gl_buffer = get_g_buffer_gl_buffer(self._g_buffer)
+        set_shader_storage_buffer_unit(
+            self._shader_storage_buffer_unit, gl_buffer, self._offset, self._length
+        )
+        return self._shader_storage_buffer_unit
+
+    def _unbind_shader_storage_buffer_unit(self) -> None:
+        assert self._shader_storage_buffer_unit is not None
+        self._unbound_shader_storage_buffer_units.add(self)
 
     @overload
     @classmethod
@@ -539,3 +606,31 @@ class GBufferView(Generic[_BVT]):
         data_type = _ARRAY_TO_BUFFER_VIEW_TYPE[type(array)]
         buffer = GBuffer(array)
         return GBufferView(buffer, data_type, instancing_divisor=instancing_divisor)
+
+
+class _ShaderStorageBufferBind:
+    _refs: int = 0
+
+    def __init__(self, g_buffer_view: GBufferView):
+        self._g_buffer_view = g_buffer_view
+        self._unit: int | None = None
+
+    def __enter__(self) -> int:
+        if self._refs == 0:
+            self._unit = self._g_buffer_view._bind_shader_storage_buffer_unit()
+        self._refs += 1
+        assert self._unit is not None
+        return self._unit
+
+    def __exit__(self, *args: Any, **kwargs: Any) -> None:
+        self._refs -= 1
+        if self._refs == 0:
+            assert self._unit is not None
+            self._g_buffer_view._unbind_shader_storage_buffer_unit()
+        assert self._refs >= 0
+
+
+def bind_g_buffer_view_shader_storage_buffer_unit(
+    g_buffer_view: GBufferView,
+) -> _ShaderStorageBufferBind:
+    return _ShaderStorageBufferBind(g_buffer_view)

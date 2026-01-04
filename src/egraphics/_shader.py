@@ -214,8 +214,8 @@ from ._egraphics import set_active_gl_program_uniform_unsigned_int_4
 from ._egraphics import set_gl_execution_state
 from ._egraphics import use_gl_program
 from ._g_buffer import GBuffer
-from ._g_buffer import bind_g_buffer_shader_storage_buffer_unit
 from ._g_buffer_view import GBufferView
+from ._g_buffer_view import bind_g_buffer_view_shader_storage_buffer_unit
 from ._render_target import RenderTarget
 from ._render_target import set_draw_render_target
 from ._state import register_reset_state_callback
@@ -374,12 +374,21 @@ class _CoreShader:
             uniform._set(uniform.location, set_size, input_value, cache_key)
 
     def _set_storage_block(
-        self, storage_block: ShaderStorageBlock, value: GBuffer, exit_stack: ExitStack
+        self,
+        storage_block: ShaderStorageBlock,
+        value: GBuffer | GBufferView,
+        exit_stack: ExitStack,
     ) -> None:
         assert storage_block in self._storage_blocks
-        if not isinstance(value, GBuffer):
-            raise ValueError(f"expected {GBuffer} for {storage_block.name} (got {type(value)})")
-        exit_stack.enter_context(bind_g_buffer_shader_storage_buffer_unit(value))
+        if isinstance(value, GBufferView):
+            exit_stack.enter_context(bind_g_buffer_view_shader_storage_buffer_unit(value))
+        elif isinstance(value, GBuffer):
+            view = GBufferView(value, ctypes.c_uint8, offset=0, length=len(value))
+            exit_stack.enter_context(bind_g_buffer_view_shader_storage_buffer_unit(view))
+        else:
+            raise ValueError(
+                f"expected {GBuffer} or {GBufferView} for {storage_block.name} (got {type(value)})"
+            )
 
     @property
     def uniforms(self) -> tuple[ShaderUniform, ...]:
@@ -922,7 +931,7 @@ ShaderUniformValue = (
     | Sequence[Texture]
 )
 
-ShaderStorageBufferValue: TypeAlias = GBuffer
+ShaderStorageBufferValue: TypeAlias = GBuffer | GBufferView
 
 ShaderInputMap = Mapping[str, ShaderUniformValue | ShaderStorageBufferValue]
 

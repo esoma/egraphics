@@ -6,7 +6,6 @@ __all__ = [
     "GBufferTarget",
     "GBufferFrequency",
     "GBufferNature",
-    "bind_g_buffer_shader_storage_buffer_unit",
     "get_g_buffer_gl_buffer",
 ]
 
@@ -26,7 +25,6 @@ from ._egraphics import GL_COPY_READ_BUFFER
 from ._egraphics import GL_DYNAMIC_COPY
 from ._egraphics import GL_DYNAMIC_DRAW
 from ._egraphics import GL_DYNAMIC_READ
-from ._egraphics import GL_MAX_SHADER_STORAGE_BUFFER_BINDINGS_VALUE
 from ._egraphics import GL_SHADER_STORAGE_BUFFER
 from ._egraphics import GL_STATIC_COPY
 from ._egraphics import GL_STATIC_DRAW
@@ -41,10 +39,8 @@ from ._egraphics import delete_gl_buffer
 from ._egraphics import release_gl_buffer_memory_view
 from ._egraphics import set_gl_buffer_target
 from ._egraphics import set_gl_buffer_target_data
-from ._egraphics import set_shader_storage_buffer_unit
 from ._egraphics import write_gl_buffer_target_data
 from ._state import register_reset_state_callback
-from ._weak_fifo_set import WeakFifoSet
 
 
 class GBufferFrequency(Enum):
@@ -111,20 +107,11 @@ GBufferTarget.SHADER_STORAGE = GBufferTarget(GL_SHADER_STORAGE_BUFFER)
 def _reset_g_buffer_target_state() -> None:
     for target in GBufferTarget._targets:
         target._g_buffer = None
-    GBuffer._max_shader_storage_buffer_unit = None
-    GBuffer._next_shader_storage_buffer_unit = 0
-    GBuffer._unbound_shader_storage_buffer_units.clear()
 
 
 class GBuffer:
     _buffer: memoryview | None = None
     _buffer_refs: int = 0
-
-    _max_shader_storage_buffer_unit: ClassVar[int | None] = None
-    _next_shader_storage_buffer_unit: ClassVar[int] = 0
-    _unbound_shader_storage_buffer_units: ClassVar[WeakFifoSet[GBuffer]] = WeakFifoSet()
-    _shader_storage_buffer_unit: int | None = None
-    _open_shader_storage_buffer_units: set[int] = set()
 
     Nature: TypeAlias = GBufferNature
     Frequency: TypeAlias = GBufferFrequency
@@ -197,45 +184,6 @@ class GBuffer:
     def nature(self) -> GBufferNature:
         return self._nature
 
-    def _acquire_shader_storage_buffer_unit(self) -> None:
-        if self._open_shader_storage_buffer_units:
-            self._shader_storage_buffer_unit = self._open_shader_storage_buffer_units.pop()
-            return
-        assert self._next_shader_storage_buffer_unit <= GL_MAX_SHADER_STORAGE_BUFFER_BINDINGS_VALUE
-        if self._next_shader_storage_buffer_unit == GL_MAX_SHADER_STORAGE_BUFFER_BINDINGS_VALUE:
-            self._steal_shader_storage_buffer_unit()
-        else:
-            self._shader_storage_buffer_unit = self._next_shader_storage_buffer_unit
-            GBuffer._next_shader_storage_buffer_unit += 1
-
-    def _release_shader_storage_buffer_unit(self) -> None:
-        assert self._shader_storage_buffer_unit is not None
-        self._open_shader_storage_buffer_units.add(self._shader_storage_buffer_unit)
-        self._shader_storage_buffer_unit = None
-        try:
-            self._unbound_shader_storage_buffer_units.remove(self)
-        except KeyError:
-            pass
-
-    def _steal_shader_storage_buffer_unit(self) -> None:
-        try:
-            g_buffer = self._unbound_shader_storage_buffer_units.pop()
-        except IndexError:
-            raise RuntimeError("no shader storage buffer unit available")
-        g_buffer._release_shader_storage_buffer_unit()
-        self._acquire_shader_storage_buffer_unit()
-
-    def _bind_shader_storage_buffer_unit(self) -> None:
-        if self._shader_storage_buffer_unit is None:
-            self._acquire_shader_storage_buffer_unit()
-        assert self._shader_storage_buffer_unit is not None
-        assert self._gl_buffer is not None
-        set_shader_storage_buffer_unit(self._shader_storage_buffer_unit, self._gl_buffer)
-
-    def _unbind_shader_storage_buffer_unit(self) -> None:
-        assert self._shader_storage_buffer_unit is not None
-        self._unbound_shader_storage_buffer_units.add(self)
-
 
 def get_g_buffer_gl_buffer(g_buffer: GBuffer) -> GlBuffer:
     return g_buffer._gl_buffer
@@ -279,27 +227,3 @@ class EditGBuffer:
     @property
     def g_buffer(self) -> GBuffer:
         return self._g_buffer
-
-
-class _ShaderStorageBufferBind:
-    _refs: int = 0
-
-    def __init__(self, g_buffer: GBuffer):
-        self._g_buffer = g_buffer
-
-    def __enter__(self) -> int:
-        if self._refs == 0:
-            self._g_buffer._bind_shader_storage_buffer_unit()
-        self._refs += 1
-        assert self._g_buffer._shader_storage_buffer_unit is not None
-        return self._g_buffer._shader_storage_buffer_unit
-
-    def __exit__(self, *args: Any, **kwargs: Any) -> None:
-        self._refs -= 1
-        if self._refs == 0:
-            self._g_buffer._unbind_shader_storage_buffer_unit()
-        assert self._refs >= 0
-
-
-def bind_g_buffer_shader_storage_buffer_unit(g_buffer: GBuffer) -> _ShaderStorageBufferBind:
-    return _ShaderStorageBufferBind(g_buffer)
