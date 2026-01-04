@@ -1713,7 +1713,14 @@ set_shader_storage_buffer_unit(PyObject *module, PyObject **args, Py_ssize_t nar
     GLsizeiptr size = PyLong_AsLong(args[3]);
     CHECK_UNEXPECTED_PYTHON_ERROR();
 
-    glBindBufferRange(GL_SHADER_STORAGE_BUFFER, index, gl_buffer, offset, size);
+    if (size == 0)
+    {
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, index, 0);
+    }
+    else
+    {
+        glBindBufferRange(GL_SHADER_STORAGE_BUFFER, index, gl_buffer, offset, size);
+    }
     CHECK_GL_ERROR();
 
     Py_RETURN_NONE;
