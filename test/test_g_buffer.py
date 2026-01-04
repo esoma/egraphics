@@ -213,7 +213,9 @@ def test_edit(write_gl_buffer_target_data_mock, platform):
         ("SHADER_STORAGE", GL_SHADER_STORAGE_BUFFER_BINDING),
     ],
 )
-def test_g_buffer_target_default_state(platform, name, buffer_binding):
+def test_g_buffer_target_default_state(platform, gl_version, name, buffer_binding):
+    if name == "SHADER_STORAGE" and gl_version < (4, 3):
+        pytest.xfail()
     target = getattr(GBuffer.Target, name)
     target.g_buffer is None
     assert glGetIntegerv(buffer_binding) == 0
@@ -227,7 +229,9 @@ def test_g_buffer_target_default_state(platform, name, buffer_binding):
         ("SHADER_STORAGE", GL_SHADER_STORAGE_BUFFER_BINDING),
     ],
 )
-def test_g_buffer_target_set_g_buffer(platform, name, buffer_binding):
+def test_g_buffer_target_set_g_buffer(platform, gl_version, name, buffer_binding):
+    if name == "SHADER_STORAGE" and gl_version < (4, 3):
+        pytest.xfail()
     g_buffer = GBuffer(0)
 
     target = getattr(GBuffer.Target, name)
@@ -238,20 +242,24 @@ def test_g_buffer_target_set_g_buffer(platform, name, buffer_binding):
     assert glGetIntegerv(buffer_binding) == 0
 
 
-def test_g_buffer_reset(platform):
+def test_g_buffer_reset(platform, gl_version):
     g_buffer = GBuffer(0)
     GBuffer.Target.ARRAY.g_buffer = g_buffer
     GBuffer.Target.COPY_READ.g_buffer = g_buffer
-    GBuffer.Target.SHADER_STORAGE.g_buffer = g_buffer
+    if gl_version >= (4, 3):
+        GBuffer.Target.SHADER_STORAGE.g_buffer = g_buffer
 
     _reset_g_buffer_target_state()
 
     assert GBuffer.Target.ARRAY.g_buffer is None
     assert GBuffer.Target.COPY_READ.g_buffer is None
-    assert GBuffer.Target.SHADER_STORAGE.g_buffer is None
+    if gl_version >= (4, 3):
+        assert GBuffer.Target.SHADER_STORAGE.g_buffer is None
 
 
-def test_bind_g_buffer_shader_storage_buffer_unit_gl_state(platform):
+def test_bind_g_buffer_shader_storage_buffer_unit_gl_state(platform, gl_version):
+    if gl_version < (4, 3):
+        pytest.xfail()
     g_buffer_1 = GBuffer(0)
     g_buffer_2 = GBuffer(0)
     with bind_g_buffer_shader_storage_buffer_unit(g_buffer_1) as unit_1:
@@ -297,7 +305,9 @@ def test_bind_g_buffer_shader_storage_buffer_unit_gl_state(platform):
     assert binding_1.value == 0
 
 
-def test_bind_g_buffer_shader_storage_buffer_unit_gl_buffer_lifetime(platform):
+def test_bind_g_buffer_shader_storage_buffer_unit_gl_buffer_lifetime(platform, gl_version):
+    if gl_version < (4, 3):
+        pytest.xfail()
     g_buffer = GBuffer(0)
     with bind_g_buffer_shader_storage_buffer_unit(g_buffer) as unit:
         gl_buffer = g_buffer._gl_buffer
@@ -307,7 +317,9 @@ def test_bind_g_buffer_shader_storage_buffer_unit_gl_buffer_lifetime(platform):
         assert binding.value == gl_buffer
 
 
-def test_steal_g_buffer_shader_storage_buffer_unit(platform):
+def test_steal_g_buffer_shader_storage_buffer_unit(platform, gl_version):
+    if gl_version < (4, 3):
+        pytest.xfail()
     with patch("egraphics._g_buffer.GL_MAX_SHADER_STORAGE_BUFFER_BINDINGS_VALUE", 2):
         g_buffer_1 = GBuffer(0)
         with bind_g_buffer_shader_storage_buffer_unit(g_buffer_1) as unit_1:
@@ -339,7 +351,9 @@ def test_steal_g_buffer_shader_storage_buffer_unit(platform):
             assert g_buffer_3._shader_storage_buffer_unit is None
 
 
-def test_out_of_g_buffer_shader_storage_buffer_units(platform):
+def test_out_of_g_buffer_shader_storage_buffer_units(platform, gl_version):
+    if gl_version < (4, 3):
+        pytest.xfail()
     with patch("egraphics._g_buffer.GL_MAX_SHADER_STORAGE_BUFFER_BINDINGS_VALUE", 1):
         g_buffer_1 = GBuffer(0)
         g_buffer_2 = GBuffer(0)
