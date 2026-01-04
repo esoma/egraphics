@@ -39,6 +39,7 @@
 typedef struct ModuleState
 {
     bool is_gl_clip_control_supported;
+    bool is_gl_image_unit_supported;
     bool is_gl_shader_storage_buffer_supported;
 
     float clear_color[4];
@@ -78,6 +79,7 @@ reset_module_state(PyObject *module, PyObject *unused)
     if (!state){ Py_RETURN_NONE; }
 
     state->is_gl_clip_control_supported = false;
+    state->is_gl_image_unit_supported = false;
     state->is_gl_shader_storage_buffer_supported = false;
 
     state->clear_color[0] = -1;
@@ -1669,6 +1671,14 @@ set_image_unit(PyObject *module, PyObject **args, Py_ssize_t nargs)
 {
     CHECK_UNEXPECTED_ARG_COUNT_ERROR(3);
 
+    ModuleState *state = (ModuleState *)PyModule_GetState(module);
+    CHECK_UNEXPECTED_PYTHON_ERROR();
+    if (!state->is_gl_image_unit_supported)
+    {
+        PyErr_SetString(PyExc_RuntimeError, "image units not supported");
+        return 0;
+    }
+
     GLuint unit = PyLong_AsUnsignedLong(args[0]);
     CHECK_UNEXPECTED_PYTHON_ERROR();
 
@@ -2177,6 +2187,7 @@ PyInit__egraphics()
     GLint GL_MAX_SHADER_STORAGE_BUFFER_BINDINGS_VALUE = 0;
     bool is_gl_clip_control_supported = false;
     bool is_gl_shader_storage_buffer_supported = false;
+    bool is_gl_image_unit_supported = false;
     {
         PyObject *eplatform = PyImport_ImportModule("eplatform");
         if (!eplatform){ return 0; }
@@ -2233,11 +2244,32 @@ PyInit__egraphics()
             &GL_MAX_CLIP_DISTANCES_VALUE
         );
 
-        glGetIntegerv(
-            GL_MAX_IMAGE_UNITS,
-            &GL_MAX_IMAGE_UNITS_VALUE
-        );
+        char *gl_image_unit_env = getenv("EGRAPHICS_GL_IMAGE_UNIT");
+        if (gl_image_unit_env && strcmp(gl_image_unit_env, "disabled") == 0)
+        {
+            assert(is_gl_image_unit_supported == false);
+        }
+        else
+        {
+            if (GLEW_VERSION_4_2)
+            {
+                is_gl_image_unit_supported = true;
+            }
+            else
+            {
+                assert(is_gl_image_unit_supported == false);
+            }
+        }
 
+        if (is_gl_image_unit_supported)
+        {
+            glGetIntegerv(
+                GL_MAX_IMAGE_UNITS,
+                &GL_MAX_IMAGE_UNITS_VALUE
+            );
+        }
+
+        bool is_gl_shader_storage_buffer_supported = false;
         char *gl_ssbo_env = getenv("EGRAPHICS_GL_SHADER_STORAGE_BUFFER");
         if (gl_ssbo_env && strcmp(gl_ssbo_env, "disabled") == 0)
         {
@@ -2295,6 +2327,7 @@ PyInit__egraphics()
             return 0;
         }
         state->is_gl_clip_control_supported = is_gl_clip_control_supported;
+        state->is_gl_image_unit_supported = is_gl_image_unit_supported;
         state->is_gl_shader_storage_buffer_supported = is_gl_shader_storage_buffer_supported;
     }
 
