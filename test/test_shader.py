@@ -9,14 +9,18 @@ from emath import FArray
 from emath import I32Array
 from emath import U32Array
 from emath import UVector2
+from OpenGL.GL import GL_SHADER_STORAGE_BUFFER_BINDING
+from OpenGL.GL import glGetIntegeri_v
 from OpenGL.GL import glGetUniformfv
 from OpenGL.GL import glGetUniformiv
 from OpenGL.GL import glGetUniformLocation
 from OpenGL.GL import glIsProgram
 
 from egraphics import ComputeShader
+from egraphics import GBuffer
 from egraphics import Shader
 from egraphics import ShaderAttribute
+from egraphics import ShaderStorageBlock
 from egraphics import ShaderUniform
 from egraphics import Texture
 from egraphics import Texture2d
@@ -1601,3 +1605,81 @@ def test_matrix_uniforms(
             for r in range(rows):
                 for c in range(columns):
                     assert get_value[c][r] == 41
+
+
+@pytest.mark.parametrize("binding", [None, 1])
+@pytest.mark.parametrize(
+    "shader_cls, shader_kwargs",
+    [
+        (
+            Shader,
+            {
+                "vertex": """#version 430 core
+in vec2 xy;
+void main()
+{{
+    gl_Position = vec4(xy, 0, 1);
+}}
+""",
+                "fragment": """#version 430 core
+{layout} buffer BlockName
+{{
+    float value;
+}} block_name;
+out vec4 FragColor;
+void main()
+{{
+    FragColor = vec4(block_name.value, 0, 0, 1);
+}}
+""",
+            },
+        ),
+        (
+            ComputeShader,
+            {
+                "compute": """#version 430 core
+layout (local_size_x=1, local_size_y=1, local_size_z=1) in;
+{layout} buffer BlockName
+{{
+    float value;
+}} block_name;
+void main()
+{{
+    block_name.value = 1.0;
+}}
+"""
+            },
+        ),
+    ],
+)
+def test_storage_block(platform, gl_version, binding, shader_cls, shader_kwargs):
+    glsl_version = "430 core"
+    if gl_version < (4, 3):
+        pytest.xfail()
+
+    if binding is None:
+        layout = ""
+    else:
+        layout = f"layout(std430, binding={binding})"
+
+    shader = shader_cls(
+        **{k: v.format(layout=layout).encode("utf-8") for k, v in shader_kwargs.items()}
+    )
+
+    assert len(shader.storage_blocks) == 1
+    storage_block = shader.storage_blocks[0]
+    assert isinstance(storage_block, ShaderStorageBlock)
+    assert storage_block.name == "BlockName"
+
+    g_buffer = GBuffer(ctypes.sizeof(ctypes.c_float))
+    with ExitStack() as exit_stack:
+        shader._set_storage_block(storage_block, g_buffer, exit_stack)
+
+        assert g_buffer._shader_storage_buffer_unit is not None
+        binding_value = ctypes.c_int()
+        glGetIntegeri_v(
+            GL_SHADER_STORAGE_BUFFER_BINDING,
+            g_buffer._shader_storage_buffer_unit,
+            ctypes.byref(binding_value),
+        )
+        assert binding_value.value == g_buffer._gl_buffer

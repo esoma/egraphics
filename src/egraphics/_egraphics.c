@@ -39,7 +39,7 @@
 typedef struct ModuleState
 {
     bool is_gl_clip_control_supported;
-    bool is_gl_ssbo_supported;
+    bool is_gl_shader_storage_buffer_supported;
 
     float clear_color[4];
     float clear_depth;
@@ -78,7 +78,7 @@ reset_module_state(PyObject *module, PyObject *unused)
     if (!state){ Py_RETURN_NONE; }
 
     state->is_gl_clip_control_supported = false;
-    state->is_gl_ssbo_supported = false;
+    state->is_gl_shader_storage_buffer_supported = false;
 
     state->clear_color[0] = -1;
     state->clear_color[1] = -1;
@@ -1187,7 +1187,7 @@ get_gl_program_storage_blocks(PyObject *module, PyObject *py_gl_shader)
 
     ModuleState *state = (ModuleState *)PyModule_GetState(module);
     CHECK_UNEXPECTED_PYTHON_ERROR();
-    if (!state->is_gl_ssbo_supported)
+    if (!state->is_gl_shader_storage_buffer_supported)
     {
         result = PyTuple_New(0);
         CHECK_UNEXPECTED_PYTHON_ERROR();
@@ -1229,13 +1229,10 @@ get_gl_program_storage_blocks(PyObject *module, PyObject *py_gl_shader)
         CHECK_GL_ERROR();
         name[name_length] = 0;
 
-        GLint location = glGetProgramResourceLocation(gl_shader, GL_SHADER_STORAGE_BLOCK, name);
-        CHECK_GL_ERROR();
-
-        PyObject *storage_block = Py_BuildValue("si", name, location);
+        PyObject *storage_block_name = PyUnicode_FromString(name);
         CHECK_UNEXPECTED_PYTHON_ERROR();
 
-        PyTuple_SET_ITEM(result, i, storage_block);
+        PyTuple_SET_ITEM(result, i, storage_block_name);
     }
 
     free(name);
@@ -1690,6 +1687,25 @@ error:
 }
 
 static PyObject *
+set_shader_storage_buffer_unit(PyObject *module, PyObject **args, Py_ssize_t nargs)
+{
+    CHECK_UNEXPECTED_ARG_COUNT_ERROR(2);
+
+    GLuint index = PyLong_AsUnsignedLong(args[0]);
+    CHECK_UNEXPECTED_PYTHON_ERROR();
+
+    GLuint gl_buffer = PyLong_AsUnsignedLong(args[1]);
+    CHECK_UNEXPECTED_PYTHON_ERROR();
+
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, index, gl_buffer);
+    CHECK_GL_ERROR();
+
+    Py_RETURN_NONE;
+error:
+    return 0;
+}
+
+static PyObject *
 set_gl_execution_state(PyObject *module, PyObject **args, Py_ssize_t nargs)
 {
     PyObject *ex = 0;
@@ -2136,6 +2152,7 @@ static PyMethodDef module_PyMethodDef[] = {
     {"execute_gl_program_compute", (PyCFunction)execute_gl_program_compute, METH_FASTCALL, 0},
     {"set_gl_memory_barrier", set_gl_memory_barrier, METH_O, 0},
     {"set_image_unit", (PyCFunction)set_image_unit, METH_FASTCALL, 0},
+    {"set_shader_storage_buffer_unit", (PyCFunction)set_shader_storage_buffer_unit, METH_FASTCALL, 0},
     {"set_gl_execution_state", (PyCFunction)set_gl_execution_state, METH_FASTCALL, 0},
     {"get_gl_version", (PyCFunction)get_gl_version, METH_NOARGS, 0},
     {"set_gl_clip", (PyCFunction)set_gl_clip, METH_FASTCALL, 0},
@@ -2157,8 +2174,9 @@ PyInit__egraphics()
     GLint GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS_VALUE = 0;
     GLint GL_MAX_CLIP_DISTANCES_VALUE = 0;
     GLint GL_MAX_IMAGE_UNITS_VALUE = 0;
+    GLint GL_MAX_SHADER_STORAGE_BUFFER_BINDINGS_VALUE = 0;
     bool is_gl_clip_control_supported = false;
-    bool is_gl_ssbo_supported = false;
+    bool is_gl_shader_storage_buffer_supported = false;
     {
         PyObject *eplatform = PyImport_ImportModule("eplatform");
         if (!eplatform){ return 0; }
@@ -2220,21 +2238,29 @@ PyInit__egraphics()
             &GL_MAX_IMAGE_UNITS_VALUE
         );
 
-        char *gl_ssbo_env = getenv("EGRAPHICS_GL_SSBO");
+        char *gl_ssbo_env = getenv("EGRAPHICS_GL_SHADER_STORAGE_BUFFER");
         if (gl_ssbo_env && strcmp(gl_ssbo_env, "disabled") == 0)
         {
-            assert(is_gl_ssbo_supported == false);
+            assert(is_gl_shader_storage_buffer_supported == false);
         }
         else
         {
             if (GLEW_VERSION_4_3)
             {
-                is_gl_ssbo_supported = true;
+                is_gl_shader_storage_buffer_supported = true;
             }
             else
             {
-                assert(is_gl_ssbo_supported == false);
+                assert(is_gl_shader_storage_buffer_supported == false);
             }
+        }
+
+        if (is_gl_shader_storage_buffer_supported)
+        {
+            glGetIntegerv(
+                GL_MAX_SHADER_STORAGE_BUFFER_BINDINGS,
+                &GL_MAX_SHADER_STORAGE_BUFFER_BINDINGS_VALUE
+            );
         }
 
         context = PyObject_CallMethod(platform, "__exit__", "");
@@ -2269,7 +2295,7 @@ PyInit__egraphics()
             return 0;
         }
         state->is_gl_clip_control_supported = is_gl_clip_control_supported;
-        state->is_gl_ssbo_supported = is_gl_ssbo_supported;
+        state->is_gl_shader_storage_buffer_supported = is_gl_shader_storage_buffer_supported;
     }
 
 #define ADD_ALIAS(name, type)\
@@ -2485,6 +2511,7 @@ PyInit__egraphics()
     ADD_CONSTANT(GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS_VALUE);
     ADD_CONSTANT(GL_MAX_CLIP_DISTANCES_VALUE);
     ADD_CONSTANT(GL_MAX_IMAGE_UNITS_VALUE);
+    ADD_CONSTANT(GL_MAX_SHADER_STORAGE_BUFFER_BINDINGS_VALUE);
 
     ADD_CONSTANT(GL_NEVER);
     ADD_CONSTANT(GL_ALWAYS);

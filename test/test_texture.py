@@ -12,9 +12,11 @@ import pytest
 from emath import FVector4
 from emath import UVector2
 from OpenGL.GL import GL_ACTIVE_TEXTURE
+from OpenGL.GL import GL_IMAGE_BINDING_NAME
 from OpenGL.GL import GL_TEXTURE0
 from OpenGL.GL import GL_TEXTURE_BINDING_2D
 from OpenGL.GL import glActiveTexture
+from OpenGL.GL import glGetIntegeri_v
 from OpenGL.GL import glGetIntegerv
 from OpenGL.GL import glIsTexture
 
@@ -27,6 +29,7 @@ from egraphics import TextureWrap
 from egraphics._texture import _FIRST_BINDABLE_TEXTURE_UNIT
 from egraphics._texture import _TextureTarget
 from egraphics._texture import bind_texture
+from egraphics._texture import bind_texture_image_unit
 from egraphics._texture import bind_texture_unit
 
 TEXTURE_COMPONENTS_COUNT = {
@@ -213,7 +216,7 @@ class TextureTest:
         del texture
         assert not glIsTexture(gl_texture)
 
-    def test_bind_unit_gl_state(self, platform, size):
+    def test_bind_texture_unit_gl_state(self, platform, size):
         texture_1 = self.create_texture(
             size, TextureComponents.R, ctypes.c_int8, memoryview(b"\x00" * self.data_multiplier)
         )
@@ -269,7 +272,7 @@ class TextureTest:
         assert glGetIntegerv(GL_TEXTURE_BINDING_2D) == 0
         glActiveTexture(GL_TEXTURE0 + unit_2)
 
-    def test_bind_unit_gl_texture_lifetime(self, platform, size):
+    def test_bind_texture_unit_gl_texture_lifetime(self, platform, size):
         texture = self.create_texture(
             size, TextureComponents.R, ctypes.c_int8, memoryview(b"\x00" * self.data_multiplier)
         )
@@ -317,7 +320,7 @@ class TextureTest:
             del texture
             assert glGetIntegerv(GL_TEXTURE_BINDING_2D) == gl_texture
 
-    def test_bind_and_bind_unit_interaction(self, platform, size):
+    def test_bind_and_bind_texture_unit_interaction(self, platform, size):
         texture_1 = self.create_texture(
             size, TextureComponents.R, ctypes.c_int8, memoryview(b"\x00" * self.data_multiplier)
         )
@@ -347,7 +350,7 @@ class TextureTest:
 
                 glActiveTexture(GL_TEXTURE0 + unit_1)
 
-    def test_steal_unit(self, platform, size):
+    def test_steal_texture_unit(self, platform, size):
         with patch(
             "egraphics._texture.GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS_VALUE",
             _FIRST_BINDABLE_TEXTURE_UNIT + 2,
@@ -391,7 +394,7 @@ class TextureTest:
                 assert texture_2._texture_unit == unit_2
                 assert texture_3._texture_unit is None
 
-    def test_out_of_units(self, platform, size):
+    def test_out_of_texture_units(self, platform, size):
         with patch(
             "egraphics._texture.GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS_VALUE",
             _FIRST_BINDABLE_TEXTURE_UNIT + 1,
@@ -413,6 +416,118 @@ class TextureTest:
                     with bind_texture_unit(texture_2):
                         pass
                 assert str(excinfo.value) == "no texture unit available"
+                del excinfo
+
+    def test_bind_texture_image_unit_gl_state(self, platform, size):
+        texture_1 = self.create_texture(
+            size, TextureComponents.XYZW, ctypes.c_float, memoryview(b"\x00" * 4 * 4)
+        )
+        texture_2 = self.create_texture(
+            size, TextureComponents.XYZW, ctypes.c_float, memoryview(b"\x00" * 4 * 4)
+        )
+        with bind_texture_image_unit(texture_1) as unit_1:
+            binding_1 = ctypes.c_int()
+            glGetIntegeri_v(GL_IMAGE_BINDING_NAME, unit_1, ctypes.byref(binding_1))
+            assert binding_1.value == texture_1._gl_texture
+
+            with bind_texture_image_unit(texture_2) as unit_2:
+                binding_2 = ctypes.c_int()
+                glGetIntegeri_v(GL_IMAGE_BINDING_NAME, unit_2, ctypes.byref(binding_2))
+                assert binding_2.value == texture_2._gl_texture
+                glGetIntegeri_v(GL_IMAGE_BINDING_NAME, unit_1, ctypes.byref(binding_1))
+                assert binding_1.value == texture_1._gl_texture
+
+                with bind_texture_image_unit(texture_1) as unit_1_2:
+                    assert unit_1 == unit_1_2
+                    glGetIntegeri_v(GL_IMAGE_BINDING_NAME, unit_2, ctypes.byref(binding_2))
+                    assert binding_2.value == texture_2._gl_texture
+                    glGetIntegeri_v(GL_IMAGE_BINDING_NAME, unit_1, ctypes.byref(binding_1))
+                    assert binding_1.value == texture_1._gl_texture
+
+                glGetIntegeri_v(GL_IMAGE_BINDING_NAME, unit_2, ctypes.byref(binding_2))
+                assert binding_2.value == texture_2._gl_texture
+                glGetIntegeri_v(GL_IMAGE_BINDING_NAME, unit_1, ctypes.byref(binding_1))
+                assert binding_1.value == texture_1._gl_texture
+
+            glGetIntegeri_v(GL_IMAGE_BINDING_NAME, unit_2, ctypes.byref(binding_2))
+            assert binding_2.value == texture_2._gl_texture
+            glGetIntegeri_v(GL_IMAGE_BINDING_NAME, unit_1, ctypes.byref(binding_1))
+            assert binding_1.value == texture_1._gl_texture
+
+        glGetIntegeri_v(GL_IMAGE_BINDING_NAME, unit_2, ctypes.byref(binding_2))
+        assert binding_2.value == texture_2._gl_texture
+        glGetIntegeri_v(GL_IMAGE_BINDING_NAME, unit_1, ctypes.byref(binding_1))
+        assert binding_1.value == texture_1._gl_texture
+
+        del texture_1
+        del texture_2
+
+        glGetIntegeri_v(GL_IMAGE_BINDING_NAME, unit_2, ctypes.byref(binding_2))
+        assert binding_2.value == 0
+        glGetIntegeri_v(GL_IMAGE_BINDING_NAME, unit_1, ctypes.byref(binding_1))
+        assert binding_1.value == 0
+
+    def test_bind_texture_image_unit_gl_texture_lifetime(self, platform, size):
+        texture = self.create_texture(
+            size, TextureComponents.XYZW, ctypes.c_float, memoryview(b"\x00" * 4 * 4)
+        )
+        with bind_texture_image_unit(texture) as unit:
+            gl_texture = texture._gl_texture
+            del texture
+            binding = ctypes.c_int()
+            glGetIntegeri_v(GL_IMAGE_BINDING_NAME, unit, ctypes.byref(binding))
+            assert binding.value == gl_texture
+
+    def test_steal_texture_image_unit(self, platform, size):
+        with patch("egraphics._texture.GL_MAX_IMAGE_UNITS_VALUE", 2):
+            texture_1 = self.create_texture(
+                size, TextureComponents.XYZW, ctypes.c_float, memoryview(b"\x00" * 4 * 4)
+            )
+            with bind_texture_image_unit(texture_1) as unit_1:
+                pass
+            assert texture_1._image_unit == unit_1
+
+            texture_2 = self.create_texture(
+                size, TextureComponents.XYZW, ctypes.c_float, memoryview(b"\x00" * 4 * 4)
+            )
+            with bind_texture_image_unit(texture_2) as unit_2:
+                pass
+            assert texture_1._image_unit == unit_1
+            assert texture_2._image_unit == unit_2
+
+            texture_3 = self.create_texture(
+                size, TextureComponents.XYZW, ctypes.c_float, memoryview(b"\x00" * 4 * 4)
+            )
+            with bind_texture_image_unit(texture_3) as unit_3:
+                pass
+            assert texture_1._image_unit is None
+            assert texture_2._image_unit == unit_2
+            assert texture_3._image_unit == unit_3
+            assert unit_1 == unit_3
+
+            with bind_texture_image_unit(texture_2):
+                assert texture_1._image_unit is None
+                assert texture_2._image_unit == unit_2
+                assert texture_3._image_unit == unit_3
+
+            with bind_texture_image_unit(texture_1):
+                assert texture_1._image_unit == unit_1
+                assert texture_2._image_unit == unit_2
+                assert texture_3._image_unit is None
+
+    def test_out_of_texture_image_units(self, platform, size):
+        with patch("egraphics._texture.GL_MAX_IMAGE_UNITS_VALUE", 1):
+            texture_1 = self.create_texture(
+                size, TextureComponents.XYZW, ctypes.c_float, memoryview(b"\x00" * 4 * 4)
+            )
+            texture_2 = self.create_texture(
+                size, TextureComponents.XYZW, ctypes.c_float, memoryview(b"\x00" * 4 * 4)
+            )
+            with bind_texture_image_unit(texture_1):
+                with pytest.raises(RuntimeError) as excinfo:
+                    with bind_texture_image_unit(texture_2):
+                        pass
+                assert str(excinfo.value) == "no image unit available"
                 del excinfo
 
 

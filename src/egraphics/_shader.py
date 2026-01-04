@@ -214,6 +214,7 @@ from ._egraphics import set_active_gl_program_uniform_unsigned_int_4
 from ._egraphics import set_gl_execution_state
 from ._egraphics import use_gl_program
 from ._g_buffer import GBuffer
+from ._g_buffer import bind_g_buffer_shader_storage_buffer_unit
 from ._g_buffer_view import GBufferView
 from ._render_target import RenderTarget
 from ._render_target import set_draw_render_target
@@ -289,8 +290,8 @@ class _CoreShader:
         )
 
         self._storage_blocks = tuple(
-            ShaderStorageBlock(name, location)
-            for name, location in get_gl_program_storage_blocks(self._gl_program)
+            ShaderStorageBlock(name, self._gl_program)
+            for name in get_gl_program_storage_blocks(self._gl_program)
         )
 
     def __del__(self) -> None:
@@ -371,6 +372,14 @@ class _CoreShader:
                 set_size = min(uniform.size, len(value))  # type: ignore
         if set_size != 0:
             uniform._set(uniform.location, set_size, input_value, cache_key)
+
+    def _set_storage_block(
+        self, storage_block: ShaderStorageBlock, value: GBuffer, exit_stack: ExitStack
+    ) -> None:
+        assert storage_block in self._storage_blocks
+        if not isinstance(value, GBuffer):
+            raise ValueError(f"expected {GBuffer} for {storage_block.name} (got {type(value)})")
+        exit_stack.enter_context(bind_g_buffer_shader_storage_buffer_unit(value))
 
     @property
     def uniforms(self) -> tuple[ShaderUniform, ...]:
@@ -453,6 +462,14 @@ class Shader(_CoreShader):
                 continue
             uniform_values.append((uniform, value))
 
+        storage_block_values: list[tuple[ShaderStorageBlock, Any]] = []
+        for storage_block in self.storage_blocks:
+            try:
+                value = input_map[storage_block.name]
+            except KeyError:
+                continue
+            storage_block_values.append((storage_block, value))
+
         set_gl_execution_state(
             depth_write,
             depth_test.value,
@@ -482,6 +499,8 @@ class Shader(_CoreShader):
         with ExitStack() as exit_stack:
             for uniform, value in uniform_values:
                 self._set_uniform(uniform, value, exit_stack)
+            for storage_block, value in storage_block_values:
+                self._set_storage_block(storage_block, value, exit_stack)
             buffer_view_map.activate_for_shader(self)
 
             if isinstance(buffer_view_map.indices, GBufferView):
@@ -525,11 +544,21 @@ class ComputeShader(_CoreShader):
                 continue
             uniform_values.append((uniform, value))
 
+        storage_block_values: list[tuple[ShaderStorageBlock, Any]] = []
+        for storage_block in self.storage_blocks:
+            try:
+                value = input_map[storage_block.name]
+            except KeyError:
+                continue
+            storage_block_values.append((storage_block, value))
+
         self._activate()
 
         with ExitStack() as exit_stack:
             for uniform, value in uniform_values:
                 self._set_uniform(uniform, value, exit_stack)
+            for storage_block, value in storage_block_values:
+                self._set_storage_block(storage_block, value, exit_stack)
 
             execute_gl_program_compute(num_groups_x, num_groups_y, num_groups_z)
 
@@ -617,17 +646,13 @@ class ShaderUniform(Generic[_T]):
 
 
 class ShaderStorageBlock:
-    def __init__(self, name: str, location: int):
+    def __init__(self, name: str, gl_program: Any):
         self._name = name
-        self._location = location
+        self._gl_program = gl_program
 
     @property
     def name(self) -> str:
         return self._name
-
-    @property
-    def location(self) -> int:
-        return self._location
 
 
 _GL_IMAGE_TYPES: Final[Collection[GlType]] = {

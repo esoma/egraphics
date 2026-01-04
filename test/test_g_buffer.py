@@ -1,3 +1,4 @@
+import ctypes
 from unittest.mock import patch
 
 import pytest
@@ -18,6 +19,7 @@ from OpenGL.GL import GL_STREAM_COPY
 from OpenGL.GL import GL_STREAM_DRAW
 from OpenGL.GL import GL_STREAM_READ
 from OpenGL.GL import glGetBufferParameteriv
+from OpenGL.GL import glGetIntegeri_v
 from OpenGL.GL import glGetIntegerv
 from OpenGL.GL import glIsBuffer
 
@@ -25,6 +27,7 @@ from egraphics import EditGBuffer
 from egraphics import GBuffer
 from egraphics._egraphics import write_gl_buffer_target_data
 from egraphics._g_buffer import _reset_g_buffer_target_state
+from egraphics._g_buffer import bind_g_buffer_shader_storage_buffer_unit
 
 
 def test_defaults(platform):
@@ -246,3 +249,103 @@ def test_g_buffer_reset(platform):
     assert GBuffer.Target.ARRAY.g_buffer is None
     assert GBuffer.Target.COPY_READ.g_buffer is None
     assert GBuffer.Target.SHADER_STORAGE.g_buffer is None
+
+
+def test_bind_g_buffer_shader_storage_buffer_unit_gl_state(platform):
+    g_buffer_1 = GBuffer(0)
+    g_buffer_2 = GBuffer(0)
+    with bind_g_buffer_shader_storage_buffer_unit(g_buffer_1) as unit_1:
+        binding_1 = ctypes.c_int()
+        glGetIntegeri_v(GL_SHADER_STORAGE_BUFFER_BINDING, unit_1, ctypes.byref(binding_1))
+        assert binding_1.value == g_buffer_1._gl_buffer
+
+        with bind_g_buffer_shader_storage_buffer_unit(g_buffer_2) as unit_2:
+            binding_2 = ctypes.c_int()
+            glGetIntegeri_v(GL_SHADER_STORAGE_BUFFER_BINDING, unit_2, ctypes.byref(binding_2))
+            assert binding_2.value == g_buffer_2._gl_buffer
+            glGetIntegeri_v(GL_SHADER_STORAGE_BUFFER_BINDING, unit_1, ctypes.byref(binding_1))
+            assert binding_1.value == g_buffer_1._gl_buffer
+
+            with bind_g_buffer_shader_storage_buffer_unit(g_buffer_1) as unit_1_2:
+                assert unit_1 == unit_1_2
+                glGetIntegeri_v(GL_SHADER_STORAGE_BUFFER_BINDING, unit_2, ctypes.byref(binding_2))
+                assert binding_2.value == g_buffer_2._gl_buffer
+                glGetIntegeri_v(GL_SHADER_STORAGE_BUFFER_BINDING, unit_1, ctypes.byref(binding_1))
+                assert binding_1.value == g_buffer_1._gl_buffer
+
+            glGetIntegeri_v(GL_SHADER_STORAGE_BUFFER_BINDING, unit_2, ctypes.byref(binding_2))
+            assert binding_2.value == g_buffer_2._gl_buffer
+            glGetIntegeri_v(GL_SHADER_STORAGE_BUFFER_BINDING, unit_1, ctypes.byref(binding_1))
+            assert binding_1.value == g_buffer_1._gl_buffer
+
+        glGetIntegeri_v(GL_SHADER_STORAGE_BUFFER_BINDING, unit_2, ctypes.byref(binding_2))
+        assert binding_2.value == g_buffer_2._gl_buffer
+        glGetIntegeri_v(GL_SHADER_STORAGE_BUFFER_BINDING, unit_1, ctypes.byref(binding_1))
+        assert binding_1.value == g_buffer_1._gl_buffer
+
+    glGetIntegeri_v(GL_SHADER_STORAGE_BUFFER_BINDING, unit_2, ctypes.byref(binding_2))
+    assert binding_2.value == g_buffer_2._gl_buffer
+    glGetIntegeri_v(GL_SHADER_STORAGE_BUFFER_BINDING, unit_1, ctypes.byref(binding_1))
+    assert binding_1.value == g_buffer_1._gl_buffer
+
+    del g_buffer_1
+    del g_buffer_2
+
+    glGetIntegeri_v(GL_SHADER_STORAGE_BUFFER_BINDING, unit_2, ctypes.byref(binding_2))
+    assert binding_2.value == 0
+    glGetIntegeri_v(GL_SHADER_STORAGE_BUFFER_BINDING, unit_1, ctypes.byref(binding_1))
+    assert binding_1.value == 0
+
+
+def test_bind_g_buffer_shader_storage_buffer_unit_gl_buffer_lifetime(platform):
+    g_buffer = GBuffer(0)
+    with bind_g_buffer_shader_storage_buffer_unit(g_buffer) as unit:
+        gl_buffer = g_buffer._gl_buffer
+        del g_buffer
+        binding = ctypes.c_int()
+        glGetIntegeri_v(GL_SHADER_STORAGE_BUFFER_BINDING, unit, ctypes.byref(binding))
+        assert binding.value == gl_buffer
+
+
+def test_steal_g_buffer_shader_storage_buffer_unit(platform):
+    with patch("egraphics._g_buffer.GL_MAX_SHADER_STORAGE_BUFFER_BINDINGS_VALUE", 2):
+        g_buffer_1 = GBuffer(0)
+        with bind_g_buffer_shader_storage_buffer_unit(g_buffer_1) as unit_1:
+            pass
+        assert g_buffer_1._shader_storage_buffer_unit == unit_1
+
+        g_buffer_2 = GBuffer(0)
+        with bind_g_buffer_shader_storage_buffer_unit(g_buffer_2) as unit_2:
+            pass
+        assert g_buffer_1._shader_storage_buffer_unit == unit_1
+        assert g_buffer_2._shader_storage_buffer_unit == unit_2
+
+        g_buffer_3 = GBuffer(0)
+        with bind_g_buffer_shader_storage_buffer_unit(g_buffer_3) as unit_3:
+            pass
+        assert g_buffer_1._shader_storage_buffer_unit is None
+        assert g_buffer_2._shader_storage_buffer_unit == unit_2
+        assert g_buffer_3._shader_storage_buffer_unit == unit_3
+        assert unit_1 == unit_3
+
+        with bind_g_buffer_shader_storage_buffer_unit(g_buffer_2):
+            assert g_buffer_1._shader_storage_buffer_unit is None
+            assert g_buffer_2._shader_storage_buffer_unit == unit_2
+            assert g_buffer_3._shader_storage_buffer_unit == unit_3
+
+        with bind_g_buffer_shader_storage_buffer_unit(g_buffer_1):
+            assert g_buffer_1._shader_storage_buffer_unit == unit_1
+            assert g_buffer_2._shader_storage_buffer_unit == unit_2
+            assert g_buffer_3._shader_storage_buffer_unit is None
+
+
+def test_out_of_g_buffer_shader_storage_buffer_units(platform):
+    with patch("egraphics._g_buffer.GL_MAX_SHADER_STORAGE_BUFFER_BINDINGS_VALUE", 1):
+        g_buffer_1 = GBuffer(0)
+        g_buffer_2 = GBuffer(0)
+        with bind_g_buffer_shader_storage_buffer_unit(g_buffer_1):
+            with pytest.raises(RuntimeError) as excinfo:
+                with bind_g_buffer_shader_storage_buffer_unit(g_buffer_2):
+                    pass
+            assert str(excinfo.value) == "no shader storage buffer unit available"
+            del excinfo

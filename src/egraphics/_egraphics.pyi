@@ -103,6 +103,7 @@ __all__ = [
     "GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS_VALUE",
     "GL_MAX_CLIP_DISTANCES_VALUE",
     "GL_MAX_IMAGE_UNITS_VALUE",
+    "GL_MAX_SHADER_STORAGE_BUFFER_BINDINGS_VALUE",
     "GL_NEVER",
     "GL_ALWAYS",
     "GL_LESS",
@@ -295,6 +296,7 @@ __all__ = [
     "execute_gl_program_compute",
     "set_gl_memory_barrier",
     "set_image_unit",
+    "set_shader_storage_buffer_unit",
     "set_gl_execution_state",
     "get_gl_version",
     "set_gl_clip",
@@ -508,6 +510,7 @@ GL_SHADER_STORAGE_BARRIER_BIT: GlBarrier
 GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS_VALUE: int
 GL_MAX_CLIP_DISTANCES_VALUE: int
 GL_MAX_IMAGE_UNITS_VALUE: int
+GL_MAX_SHADER_STORAGE_BUFFER_BINDINGS_VALUE: int
 
 GL_NEVER: GlFunc
 GL_ALWAYS: GlFunc
@@ -627,7 +630,7 @@ def get_gl_program_uniforms(program: GlProgram, /) -> tuple[tuple[str, int, GlTy
 def get_gl_program_attributes(
     program: GlProgram, /
 ) -> tuple[tuple[str, int, GlType, int], ...]: ...
-def get_gl_program_storage_blocks(program: GlProgram, /) -> tuple[tuple[str, int], ...]: ...
+def get_gl_program_storage_blocks(program: GlProgram, /) -> tuple[str]: ...
 def create_gl_program(
     vertex: Buffer | None,
     geometry: Buffer | None,
@@ -708,6 +711,7 @@ def execute_gl_program_compute(
 ) -> None: ...
 def set_gl_memory_barrier(barriers: GlBarrier, /) -> None: ...
 def set_image_unit(unit: int, texture: GlTexture, format: GlTextureComponents, /) -> None: ...
+def set_shader_storage_buffer_unit(index: int, buffer: GlBuffer, /) -> None: ...
 def set_gl_execution_state(
     depth_write: bool,
     depth_func: GlFunc,

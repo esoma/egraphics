@@ -75,7 +75,7 @@ from ._state import register_reset_state_callback
 _DEFAULT_TEXTURE_UNIT: Final[int] = 0
 _FIRST_BINDABLE_TEXTURE_UNIT: Final[int] = 1
 
-_FIRST_BINDABLE_IMAGE_UNIT: Final[int] = 1
+_FIRST_BINDABLE_IMAGE_UNIT: Final[int] = 0
 
 
 class _TextureTarget:
