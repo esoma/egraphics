@@ -418,7 +418,9 @@ class TextureTest:
                 assert str(excinfo.value) == "no texture unit available"
                 del excinfo
 
-    def test_bind_texture_image_unit_gl_state(self, platform, size):
+    def test_bind_texture_image_unit_gl_state(self, platform, gl_version, size):
+        if gl_version < (4, 2):
+            pytest.xfail()
         texture_1 = self.create_texture(
             size, TextureComponents.XYZW, ctypes.c_float, memoryview(b"\x00" * 4 * 4)
         )
@@ -467,7 +469,9 @@ class TextureTest:
         glGetIntegeri_v(GL_IMAGE_BINDING_NAME, unit_1, ctypes.byref(binding_1))
         assert binding_1.value == 0
 
-    def test_bind_texture_image_unit_gl_texture_lifetime(self, platform, size):
+    def test_bind_texture_image_unit_gl_texture_lifetime(self, platform, gl_version, size):
+        if gl_version < (4, 2):
+            pytest.xfail()
         texture = self.create_texture(
             size, TextureComponents.XYZW, ctypes.c_float, memoryview(b"\x00" * 4 * 4)
         )
@@ -478,7 +482,9 @@ class TextureTest:
             glGetIntegeri_v(GL_IMAGE_BINDING_NAME, unit, ctypes.byref(binding))
             assert binding.value == gl_texture
 
-    def test_steal_texture_image_unit(self, platform, size):
+    def test_steal_texture_image_unit(self, platform, gl_version, size):
+        if gl_version < (4, 2):
+            pytest.xfail()
         with patch("egraphics._texture.GL_MAX_IMAGE_UNITS_VALUE", 2):
             texture_1 = self.create_texture(
                 size, TextureComponents.XYZW, ctypes.c_float, memoryview(b"\x00" * 4 * 4)
@@ -515,7 +521,9 @@ class TextureTest:
                 assert texture_2._image_unit == unit_2
                 assert texture_3._image_unit is None
 
-    def test_out_of_texture_image_units(self, platform, size):
+    def test_out_of_texture_image_units(self, platform, gl_version, size):
+        if gl_version < (4, 2):
+            pytest.xfail()
         with patch("egraphics._texture.GL_MAX_IMAGE_UNITS_VALUE", 1):
             texture_1 = self.create_texture(
                 size, TextureComponents.XYZW, ctypes.c_float, memoryview(b"\x00" * 4 * 4)
