@@ -1729,6 +1729,36 @@ error:
 }
 
 static PyObject *
+set_program_shader_storage_block_binding(PyObject *module, PyObject **args, Py_ssize_t nargs)
+{
+    CHECK_UNEXPECTED_ARG_COUNT_ERROR(3);
+
+    ModuleState *state = (ModuleState *)PyModule_GetState(module);
+    CHECK_UNEXPECTED_PYTHON_ERROR();
+    if (!state->is_gl_shader_storage_buffer_supported)
+    {
+        PyErr_SetString(PyExc_RuntimeError, "shader storage buffers not supported");
+        return 0;
+    }
+
+    GLuint gl_program = PyLong_AsUnsignedLong(args[0]);
+    CHECK_UNEXPECTED_PYTHON_ERROR();
+
+    GLuint storage_block_index = PyLong_AsUnsignedLong(args[1]);
+    CHECK_UNEXPECTED_PYTHON_ERROR();
+
+    GLuint storage_block_binding = PyLong_AsUnsignedLong(args[2]);
+    CHECK_UNEXPECTED_PYTHON_ERROR();
+
+    glShaderStorageBlockBinding(gl_program, storage_block_index, storage_block_binding);
+    CHECK_GL_ERROR();
+
+    Py_RETURN_NONE;
+error:
+    return 0;
+}
+
+static PyObject *
 set_gl_execution_state(PyObject *module, PyObject **args, Py_ssize_t nargs)
 {
     PyObject *ex = 0;
@@ -2176,6 +2206,7 @@ static PyMethodDef module_PyMethodDef[] = {
     {"set_gl_memory_barrier", set_gl_memory_barrier, METH_O, 0},
     {"set_image_unit", (PyCFunction)set_image_unit, METH_FASTCALL, 0},
     {"set_shader_storage_buffer_unit", (PyCFunction)set_shader_storage_buffer_unit, METH_FASTCALL, 0},
+    {"set_program_shader_storage_block_binding", (PyCFunction)set_program_shader_storage_block_binding, METH_FASTCALL, 0},
     {"set_gl_execution_state", (PyCFunction)set_gl_execution_state, METH_FASTCALL, 0},
     {"get_gl_version", (PyCFunction)get_gl_version, METH_NOARGS, 0},
     {"set_gl_clip", (PyCFunction)set_gl_clip, METH_FASTCALL, 0},

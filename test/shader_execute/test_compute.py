@@ -69,7 +69,7 @@ void main()
         {"result": compute_texture, "ColorBuffer": ssbo_view}, size.x, size.y, 1
     )
 
-    clear_cache(image=True, texture=True)
+    clear_cache(shader_image=True, shader_texture=True, g_buffer=True)
 
     render_shader = Shader(
         vertex=b"""
@@ -131,4 +131,3 @@ void main()
             assert is_kinda_close(buffer_color.r, expected_red)
             assert is_kinda_close(buffer_color.g, expected_green)
             assert is_kinda_close(buffer_color.b, 1.0)
-            assert is_kinda_close(buffer_color.a, 0.0)

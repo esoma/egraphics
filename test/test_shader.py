@@ -9,8 +9,11 @@ from emath import FArray
 from emath import I32Array
 from emath import U32Array
 from emath import UVector2
+from OpenGL.GL import GL_BUFFER_BINDING
+from OpenGL.GL import GL_SHADER_STORAGE_BLOCK
 from OpenGL.GL import GL_SHADER_STORAGE_BUFFER_BINDING
 from OpenGL.GL import glGetIntegeri_v
+from OpenGL.GL import glGetProgramResourceiv
 from OpenGL.GL import glGetUniformfv
 from OpenGL.GL import glGetUniformiv
 from OpenGL.GL import glGetUniformLocation
@@ -1685,3 +1688,17 @@ def test_storage_block(platform, gl_version, binding, shader_cls, shader_kwargs)
             ctypes.byref(binding_value),
         )
         assert binding_value.value == g_buffer._gl_buffer
+
+        storage_block_binding = ctypes.c_int()
+        prop = (ctypes.c_int * 1)(GL_BUFFER_BINDING)
+        glGetProgramResourceiv(
+            shader._gl_program,
+            GL_SHADER_STORAGE_BLOCK,
+            storage_block._index,
+            1,
+            prop,
+            1,
+            None,
+            ctypes.byref(storage_block_binding),
+        )
+        assert storage_block_binding.value == g_buffer_view._shader_storage_buffer_unit

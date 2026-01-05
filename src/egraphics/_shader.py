@@ -212,6 +212,7 @@ from ._egraphics import set_active_gl_program_uniform_unsigned_int_2
 from ._egraphics import set_active_gl_program_uniform_unsigned_int_3
 from ._egraphics import set_active_gl_program_uniform_unsigned_int_4
 from ._egraphics import set_gl_execution_state
+from ._egraphics import set_program_shader_storage_block_binding
 from ._egraphics import use_gl_program
 from ._g_buffer import GBuffer
 from ._g_buffer_view import GBufferView
@@ -290,8 +291,8 @@ class _CoreShader:
         )
 
         self._storage_blocks = tuple(
-            ShaderStorageBlock(name, self._gl_program)
-            for name in get_gl_program_storage_blocks(self._gl_program)
+            ShaderStorageBlock(name, index)
+            for index, name in enumerate(get_gl_program_storage_blocks(self._gl_program))
         )
 
     def __del__(self) -> None:
@@ -381,10 +382,15 @@ class _CoreShader:
     ) -> None:
         assert storage_block in self._storage_blocks
         if isinstance(value, GBufferView):
-            exit_stack.enter_context(bind_g_buffer_view_shader_storage_buffer_unit(value))
+            storage_block._set_binding(
+                self,
+                exit_stack.enter_context(bind_g_buffer_view_shader_storage_buffer_unit(value)),
+            )
         elif isinstance(value, GBuffer):
             view = GBufferView(value, ctypes.c_uint8, offset=0, length=len(value))
-            exit_stack.enter_context(bind_g_buffer_view_shader_storage_buffer_unit(view))
+            storage_block._set_binding(
+                self, exit_stack.enter_context(bind_g_buffer_view_shader_storage_buffer_unit(view))
+            )
         else:
             raise ValueError(
                 f"expected {GBuffer} or {GBufferView} for {storage_block.name} (got {type(value)})"
@@ -655,9 +661,17 @@ class ShaderUniform(Generic[_T]):
 
 
 class ShaderStorageBlock:
-    def __init__(self, name: str, gl_program: Any):
+    _binding: int | None = None
+
+    def __init__(self, name: str, index: int):
         self._name = name
-        self._gl_program = gl_program
+        self._index = index
+
+    def _set_binding(self, shader: _CoreShader, binding: int) -> None:
+        if self._binding == binding:
+            return
+        set_program_shader_storage_block_binding(shader._gl_program, self._index, binding)
+        self._binding = binding
 
     @property
     def name(self) -> str:

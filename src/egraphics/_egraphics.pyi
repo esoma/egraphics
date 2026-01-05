@@ -297,6 +297,7 @@ __all__ = [
     "set_gl_memory_barrier",
     "set_image_unit",
     "set_shader_storage_buffer_unit",
+    "set_program_shader_storage_block_binding",
     "set_gl_execution_state",
     "get_gl_version",
     "set_gl_clip",
@@ -713,6 +714,9 @@ def set_gl_memory_barrier(barriers: GlBarrier, /) -> None: ...
 def set_image_unit(unit: int, texture: GlTexture, format: GlTextureComponents, /) -> None: ...
 def set_shader_storage_buffer_unit(
     index: int, buffer: GlBuffer, offset: int, size: int, /
+) -> None: ...
+def set_program_shader_storage_block_binding(
+    program: GlProgram, storage_block_index: int, storage_block_binding: int, /
 ) -> None: ...
 def set_gl_execution_state(
     depth_write: bool,
