@@ -282,12 +282,6 @@ class GBufferView(Generic[_BVT]):
         self._acquire_shader_storage_buffer_unit()
 
     def _bind_shader_storage_buffer_unit(self) -> int:
-        if self._stride != self.data_type_size:
-            raise RuntimeError(
-                f"stride must match data_type_size for shader storage buffer binding"
-            )
-        if self._instancing_divisor is not None:
-            raise RuntimeError("instancing_divisor must be None for shader storage buffer binding")
         if self._shader_storage_buffer_unit is None:
             self._acquire_shader_storage_buffer_unit()
         assert self._shader_storage_buffer_unit is not None

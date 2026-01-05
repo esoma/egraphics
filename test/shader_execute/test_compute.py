@@ -1,14 +1,15 @@
 import ctypes
-from pathlib import Path
 
 import pytest
 from egeometry import IRectangle
 from emath import FVector2
 from emath import FVector2Array
+from emath import FVector3
 from emath import FVector4
 from emath import IVector2
 
 from egraphics import ComputeShader
+from egraphics import GBuffer
 from egraphics import GBufferView
 from egraphics import GBufferViewMap
 from egraphics import PrimitiveMode
@@ -19,12 +20,11 @@ from egraphics import clear_cache
 from egraphics import clear_render_target
 from egraphics import read_color_from_render_target
 
-DIR = Path(__file__).parent
-
 
 def test_compute(render_target, gl_version, is_kinda_close):
     if gl_version < (4, 3):
-        pytest.xfail("Compute shaders require OpenGL 4.3+")
+        pytest.xfail()
+
     size = render_target.size
     clear_render_target(render_target, color=FVector4(0, 0, 0, 1), depth=True)
 
@@ -32,10 +32,17 @@ def test_compute(render_target, gl_version, is_kinda_close):
         size.to_u(), TextureComponents.XYZW, ctypes.c_float, b"\x00" * (4 * 4 * size.x * size.y)
     )
 
+    ssbo_buffer = GBuffer(ctypes.sizeof(ctypes.c_float) * 4 * size.x * size.y)
+    ssbo_view = GBufferView(ssbo_buffer, FVector3, stride=ctypes.sizeof(ctypes.c_float) * 4)
+
     compute_shader = ComputeShader(
         compute=f"""#version 430 core
 layout (local_size_x=1, local_size_y=1, local_size_z=1) in;
 layout (rgba32f) uniform image2D result;
+layout(std430) buffer ColorBuffer
+{{
+    vec3 rgb[];
+}} color_buffer;
 
 void main()
 {{
@@ -51,11 +58,16 @@ void main()
     float green = float(coord.y) / float(size.y - 1);
 
     imageStore(result, coord, vec4(red, green, 0.0, 1.0));
+    color_buffer.rgb[
+        gl_GlobalInvocationID.y * size.x + gl_GlobalInvocationID.x
+    ] = vec3(red, green, 1);
 }}
 """.encode("utf-8")
     )
 
-    compute_shader.execute({"result": compute_texture}, size.x, size.y, 1)
+    compute_shader.execute(
+        {"result": compute_texture, "ColorBuffer": ssbo_view}, size.x, size.y, 1
+    )
 
     clear_cache(image=True, texture=True)
 
@@ -104,6 +116,7 @@ void main()
     colors = read_color_from_render_target(
         render_target, IRectangle(IVector2(0, 0), render_target.size)
     )
+    buffer_colors = list(GBufferView(ssbo_buffer, FVector4))
     for y in range(size.y):
         for x in range(size.x):
             i = y * size.x + x
@@ -114,3 +127,8 @@ void main()
             assert is_kinda_close(color.g, expected_green)
             assert is_kinda_close(color.b, 0.0)
             assert is_kinda_close(color.a, 1.0)
+            buffer_color = buffer_colors[i]
+            assert is_kinda_close(buffer_color.r, expected_red)
+            assert is_kinda_close(buffer_color.g, expected_green)
+            assert is_kinda_close(buffer_color.b, 1.0)
+            assert is_kinda_close(buffer_color.a, 0.0)
