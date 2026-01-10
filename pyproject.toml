@@ -52,4 +52,4 @@ venv = ".venv"
 
 [tool.cibuildwheel]
 enable = ["cpython-prerelease"]
-skip = ["cp3??t-*"]
+skip = ["cp3??t-*", "*-win32"]
