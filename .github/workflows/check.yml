@@ -61,6 +61,7 @@ jobs:
       if: runner.os == 'macOS'
       run: |
         brew install molten-vk
+        echo "VK_ICD_FILENAMES=$HOMEBREW_PREFIX/opt/molten-vk/share/vulkan/icd.d/MoltenVK_icd.json" >> $GITHUB_ENV
 
     - name: Build SDL
       working-directory: vendor/SDL
