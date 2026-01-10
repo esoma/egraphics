@@ -57,6 +57,11 @@ jobs:
       if: runner.os == 'Windows'
       uses: ssciwr/setup-mesa-dist-win@v2
 
+    - name: Prepare MacOs Environment
+      if: runner.os == 'macOS'
+      run: |
+        brew install molten-vk
+
     - name: Build SDL
       working-directory: vendor/SDL
       run: |
