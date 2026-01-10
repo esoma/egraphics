@@ -187,27 +187,14 @@ files = [
 
 [[package]]
 name = "eplatform"
-version = "0.19.1"
+version = "0.20.0"
 description = "Operating System Library"
 optional = false
-python-versions = ">=3.12"
+python-versions = ">=3.14"
 groups = ["main", "dev"]
 files = [
-    {file = "eplatform-0.19.1-cp312-cp312-macosx_15_0_arm64.whl", hash = "sha256:f90b1793fe2af6c5e019d8567b3bdb45f2cf939b9be5d2326e5398931560e75f"},
-    {file = "eplatform-0.19.1-cp312-cp312-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl", hash = "sha256:40a411ca786916ed4756b39e08000b0d72047d4f36cd14afefd11263f324eb69"},
-    {file = "eplatform-0.19.1-cp312-cp312-musllinux_1_2_x86_64.whl", hash = "sha256:e63ca4362b963eb2dffce1efd0fdc4bd8ba51a5e7146809efe471b0d157ce061"},
-    {file = "eplatform-0.19.1-cp312-cp312-win32.whl", hash = "sha256:33ac6e88c0228893a00f2a97aa61314d7c04a6157d1fc2eff9e6178e72ea225f"},
-    {file = "eplatform-0.19.1-cp312-cp312-win_amd64.whl", hash = "sha256:afdb566984f5adc832eca3316f14f5c470b845c29e7273af96c357638a150342"},
-    {file = "eplatform-0.19.1-cp313-cp313-macosx_15_0_arm64.whl", hash = "sha256:8419d777d96bf7151ddf70603748dc0eb69f99d93250d1f55d19b72a63f65245"},
-    {file = "eplatform-0.19.1-cp313-cp313-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl", hash = "sha256:969d4eb019df309a83fabece15455afe48fd34187cdbb137e59fa5174fb2cc47"},
-    {file = "eplatform-0.19.1-cp313-cp313-musllinux_1_2_x86_64.whl", hash = "sha256:707a23314c35dbb7688cc02d71b577b30573207c6c2cf33d4e8390ccde4435c5"},
-    {file = "eplatform-0.19.1-cp313-cp313-win32.whl", hash = "sha256:9bebb35722aca280cedf787025b0ef3c5d0150ca540ba8aa1927a41788848a98"},
-    {file = "eplatform-0.19.1-cp313-cp313-win_amd64.whl", hash = "sha256:da8412007e1c723c47b508ef09d967515b4b49828d8bce4302c60bed3edc35fd"},
-    {file = "eplatform-0.19.1-cp314-cp314-macosx_15_0_arm64.whl", hash = "sha256:4c82adf6a4a77d4f0310466516ab72a5853e3cf86c20a2e17efe730e3c7cc2dd"},
-    {file = "eplatform-0.19.1-cp314-cp314-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl", hash = "sha256:a33d7add1f13fea4781a2e65205d552fb1d52df1cea46a7f63d37f0b57dd0357"},
-    {file = "eplatform-0.19.1-cp314-cp314-musllinux_1_2_x86_64.whl", hash = "sha256:14bab2046aae3c46e26a7d119307ae3f5830978c604487062647ab3a5d92f95d"},
-    {file = "eplatform-0.19.1-cp314-cp314-win32.whl", hash = "sha256:54b06d65d9811d93ab69e0716217888124a4704f003afbe9ee3c2c3bb9279eb8"},
-    {file = "eplatform-0.19.1-cp314-cp314-win_amd64.whl", hash = "sha256:1e4ab328a0c974d10b96c50082a8679e67fa3e9547396e5fa695f3f85592d950"},
+    {file = "eplatform-0.20.0-cp314-cp314-macosx_15_0_arm64.whl", hash = "sha256:44beaead095aec50a833fa179dac68a09b6752fd255fd7de6aa1b39afff5c48c"},
+    {file = "eplatform-0.20.0-cp314-cp314-win_amd64.whl", hash = "sha256:3cada7e30a851da1b49cd34c5d835515af34d0e2d15a0c07544f5753510a18e5"},
 ]
 
 [package.dependencies]
@@ -434,5 +421,5 @@ testing = ["fields", "hunter", "process-tests", "pytest-xdist", "six", "virtuale
 
 [metadata]
 lock-version = "2.1"
-python-versions = "^3.12"
-content-hash = "bb0e1bac939acdc06ca8e13a4c10370f246872e58491ae5506922710b3ac6fcc"
+python-versions = "^3.14"
+content-hash = "7a1eac6a8504f9e94365c303364903a97329db7284025d22d59d59a84318a4d7"

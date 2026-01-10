@@ -55,9 +55,9 @@ if hasattr(os, "add_dll_directory"):
     os.add_dll_directory(os.getcwd() + "/vendor/SDL")
 
 from egraphics import clip_space, ClipOrigin, ClipDepth
-from eplatform import Platform
+from eplatform import Platform, OpenGlWindow
 
-with Platform(open_gl_version_max={open_gl_version_max}):
+with Platform(open_gl_version_max={open_gl_version_max}, window_cls=OpenGlWindow):
     with clip_space(ClipOrigin.TOP_LEFT, ClipDepth.ZERO_TO_ONE):
         pass
     """.encode("utf8")
@@ -81,9 +81,9 @@ if hasattr(os, "add_dll_directory"):
     os.add_dll_directory(os.getcwd() + "/vendor/SDL")
 
 from egraphics import clip_space, ClipOrigin, ClipDepth
-from eplatform import Platform
+from eplatform import Platform, OpenGlWindow
 
-with Platform():
+with Platform(window_cls=OpenGlWindow):
     ex = None
     try:
         with clip_space(ClipOrigin.TOP_LEFT, ClipDepth.ZERO_TO_ONE):

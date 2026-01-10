@@ -2236,12 +2236,41 @@ PyInit__egraphics()
         PyObject *eplatform = PyImport_ImportModule("eplatform");
         if (!eplatform){ return 0; }
 
+        PyObject *open_gl_window = PyObject_GetAttrString(eplatform, "OpenGlWindow");
+        if (!open_gl_window)
+        {
+            Py_DECREF(eplatform);
+            return 0;
+        }
+
         PyObject *platform_cls = PyObject_GetAttrString(eplatform, "Platform");
         Py_DECREF(eplatform);
-        if (!platform_cls){ return 0; }
+        if (!platform_cls)
+        {
+            Py_DECREF(open_gl_window);
+            return 0;
+        }
 
-        PyObject *platform = PyObject_CallNoArgs(platform_cls);
+        PyObject *kwargs = Py_BuildValue("{s:O}", "window_cls", open_gl_window);
+        Py_DECREF(open_gl_window);
+        if (!kwargs)
+        {
+            Py_DECREF(platform_cls);
+            return 0;
+        }
+
+        PyObject *args = PyTuple_New(0);
+        if (!args)
+        {
+            Py_DECREF(platform_cls);
+            Py_DECREF(kwargs);
+            return 0;
+        }
+
+        PyObject *platform = PyObject_Call(platform_cls, args, kwargs);
         Py_DECREF(platform_cls);
+        Py_DECREF(args);
+        Py_DECREF(kwargs);
         if (!platform){ return 0; }
 
         PyObject *context = PyObject_CallMethod(platform, "__enter__", "");

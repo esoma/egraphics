@@ -15,8 +15,8 @@ from emath import FVector4
 from emath import IVector2
 from emath import UVector2
 from eplatform import EventLoop
+from eplatform import OpenGlWindow
 from eplatform import Platform
-from eplatform import Window
 from eplatform import get_window
 
 from egraphics import clear_render_target
@@ -30,7 +30,7 @@ from egraphics._texture_2d import TextureComponents
 from . import resources
 
 
-class TestWindow(Window, WindowRenderTargetMixin):
+class TestWindow(OpenGlWindow, WindowRenderTargetMixin):
     pass
 
 

@@ -1,6 +1,6 @@
 [project]
 name = "egraphics"
-requires-python = ">=3.12"
+requires-python = ">=3.14"
 version = "0.26.0"
 description = "Graphics Library"
 authors = [
@@ -18,11 +18,11 @@ generate-setup-file = false
 script = "buildscript.py"
 
 [tool.poetry.dependencies]
-python = "^3.12"
+python = "^3.14"
 emath = "^0"
 egeometry = "^0"
 pillow = ">=10.4,<12"
-eplatform = "^0.19.0"
+eplatform = "^0.20.0"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "7.4.3"
