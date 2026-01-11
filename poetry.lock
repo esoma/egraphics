@@ -187,17 +187,17 @@ files = [
 
 [[package]]
 name = "eplatform"
-version = "0.20.0"
+version = "0.20.1"
 description = "Operating System Library"
 optional = false
 python-versions = ">=3.14"
 groups = ["main", "dev"]
 files = [
-    {file = "eplatform-0.20.0-cp314-cp314-macosx_15_0_arm64.whl", hash = "sha256:44beaead095aec50a833fa179dac68a09b6752fd255fd7de6aa1b39afff5c48c"},
-    {file = "eplatform-0.20.0-cp314-cp314-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:a593afe083153d28baf16718b89aac3551e6b1ec9a58317e7e4360753efaadf4"},
-    {file = "eplatform-0.20.0-cp314-cp314-musllinux_1_2_x86_64.whl", hash = "sha256:3525060a6a5bab70e47cb6b940f593556f653f7d5471f94f1735191672acad96"},
-    {file = "eplatform-0.20.0-cp314-cp314-win_amd64.whl", hash = "sha256:3cada7e30a851da1b49cd34c5d835515af34d0e2d15a0c07544f5753510a18e5"},
-    {file = "eplatform-0.20.0.tar.gz", hash = "sha256:beb1318afb18156f8a840f6dc25b2ebdcef30542f8741c69b0fad0ad8f745b7d"},
+    {file = "eplatform-0.20.1-cp314-cp314-macosx_15_0_arm64.whl", hash = "sha256:afbb88a24147c308bdecbb08e6fdb0422a5c61b87084c006f58f09a5edf36ca2"},
+    {file = "eplatform-0.20.1-cp314-cp314-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl", hash = "sha256:9e7b759de375ee579bef86064727183eb16281d3655a4b03d3137d3fdd8e2900"},
+    {file = "eplatform-0.20.1-cp314-cp314-musllinux_1_2_x86_64.whl", hash = "sha256:2926aa98501e02a4f4e374f67cddf894805a985f1d803d14c9edac5f97a10f70"},
+    {file = "eplatform-0.20.1-cp314-cp314-win_amd64.whl", hash = "sha256:598e876b6326175775c8d280d8a8efe58c3bc2d6278dd9bc814a02ca7f58db6b"},
+    {file = "eplatform-0.20.1.tar.gz", hash = "sha256:968570ee97845c840502e42b2d3260913a3b93150f1a78ac2cd4aadc8a44173e"},
 ]
 
 [package.dependencies]
@@ -425,4 +425,4 @@ testing = ["fields", "hunter", "process-tests", "pytest-xdist", "six", "virtuale
 [metadata]
 lock-version = "2.1"
 python-versions = "^3.14"
-content-hash = "7a1eac6a8504f9e94365c303364903a97329db7284025d22d59d59a84318a4d7"
+content-hash = "f9be3f843774f10cbe20e6e33d3269ff983fd70d4abaf415dd35b6bb1d3a1e34"
