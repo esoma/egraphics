@@ -1,8 +1,11 @@
 __all__ = ["VkInstance", "use_vulkan_instance", "get_vulkan_instance"]
 
 from contextlib import contextmanager
+from logging import getLogger
 from typing import Generator
 from typing import NewType
+
+_message_log = getLogger("e16.vulkan")
 
 VkInstance = NewType("VkInstance", int)
 

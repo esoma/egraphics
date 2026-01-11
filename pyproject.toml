@@ -1,7 +1,7 @@
 [project]
 name = "egraphics"
 requires-python = ">=3.14"
-version = "0.27.0"
+version = "0.27.1"
 description = "Graphics Library"
 authors = [
     {name = "Erik Soma", email= "stillusingirc@gmail.com"}
@@ -22,7 +22,7 @@ python = "^3.14"
 emath = "^0"
 egeometry = "^0"
 pillow = ">=10.4,<12"
-eplatform = "^0.20.1"
+eplatform = "^0"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "7.4.3"
