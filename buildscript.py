@@ -24,7 +24,10 @@ if os.environ.get("EGRAPHICS_BUILD_WITH_COVERAGE", "0") == "1":
 
 libraries: list[str] = ["SDL3"]
 extra_link_args: list[str] = []
-define_macros: list[tuple[str, None]] = []
+define_macros: list[tuple[str, None | str]] = [
+    ("VMA_STATIC_VULKAN_FUNCTIONS", "0"),
+    ("VMA_DYNAMIC_VULKAN_FUNCTIONS", "1"),
+]
 if system() == "Windows":
     libraries.extend(["opengl32", "glu32"])
 elif system() == "Darwin":
@@ -42,8 +45,9 @@ _egraphics = Extension(
         "vendor/glew/include",
         "vendor/emath/include",
         "vendor/SDL/include",
+        "vendor/VulkanMemoryAllocator/include",
     ],
-    sources=["src/egraphics/_egraphics.c", "vendor/glew/src/glew.c"],
+    sources=["src/egraphics/_egraphics.c", "vendor/glew/src/glew.c", "src/egraphics/_vma.cpp"],
     extra_compile_args=_coverage_compile_args,
     extra_link_args=_coverage_links_args + extra_link_args,
     define_macros=[("GLEW_STATIC", None)] + define_macros,

@@ -1,6 +1,7 @@
 #include "GL/glew.h"
 #define VK_NO_PROTOTYPES
 #include <vulkan/vulkan.h>
+#include <vk_mem_alloc.h>
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_vulkan.h>
 #define PY_SSIZE_T_CLEAN
@@ -152,6 +153,8 @@ typedef struct ModuleState
     PFN_vkCreateDevice vkCreateDevice;
     PFN_vkDestroyDevice vkDestroyDevice;
     PFN_vkGetDeviceQueue vkGetDeviceQueue;
+
+    VmaAllocator vma_allocator;
 } ModuleState;
 
 static PyObject *
@@ -2443,7 +2446,7 @@ setup_vk_device_(ModuleState *state)
             };
         }
 
-        VkPhysicalDeviceFeatures vk_physical_device_features = {};
+        VkPhysicalDeviceFeatures vk_physical_device_features;
 
         const char* vk_device_extension_names[] = {
             VK_KHR_SWAPCHAIN_EXTENSION_NAME
@@ -2468,6 +2471,42 @@ setup_vk_device_(ModuleState *state)
 
         state->vkGetDeviceQueue(state->vk_device, chosen_graphics_queue_family, 0, &state->vk_graphics_queue);
         state->vkGetDeviceQueue(state->vk_device, chosen_present_queue_family, 0, &state->vk_present_queue);
+
+        {
+            PFN_vkGetInstanceProcAddr vkGetInstanceProcAddr =
+                (PFN_vkGetInstanceProcAddr)SDL_Vulkan_GetVkGetInstanceProcAddr();
+            if (!vkGetInstanceProcAddr)
+            {
+                RAISE_SDL_ERROR();
+            }
+
+            PFN_vkGetDeviceProcAddr vkGetDeviceProcAddr =
+                (PFN_vkGetDeviceProcAddr)vkGetInstanceProcAddr(
+                    state->vk_instance,
+                    "vkGetDeviceProcAddr"
+                );
+            if (!vkGetDeviceProcAddr)
+            {
+                PyErr_Format(
+                    PyExc_RuntimeError,
+                    "failed to get vkGetDeviceProcAddr function pointer"
+                );
+                goto error;
+            }
+
+            VmaVulkanFunctions vma_vulkan_functions = {};
+            vma_vulkan_functions.vkGetInstanceProcAddr = vkGetInstanceProcAddr;
+            vma_vulkan_functions.vkGetDeviceProcAddr = vkGetDeviceProcAddr;
+
+            VmaAllocatorCreateInfo vma_allocator_info = {};
+            vma_allocator_info.instance = state->vk_instance;
+            vma_allocator_info.physicalDevice = chosen_physical_device;
+            vma_allocator_info.device = state->vk_device;
+            vma_allocator_info.pVulkanFunctions = &vma_vulkan_functions;
+
+            VkResult vk_result = vmaCreateAllocator(&vma_allocator_info, &state->vma_allocator);
+            CHECK_VK_RESULT(vk_result);
+        }
     }
 
     return 1;
@@ -2475,7 +2514,12 @@ error:
     if (physical_devices){ free(physical_devices); }
     if (vk_physical_devices){ free(vk_physical_devices); }
     if (queue_families){ free(queue_families); }
-    if (state->vk_device)
+    if (state->vma_allocator != VK_NULL_HANDLE)
+    {
+        vmaDestroyAllocator(state->vma_allocator);
+        state->vma_allocator = VK_NULL_HANDLE;
+    }
+    if (state->vk_device != VK_NULL_HANDLE)
     {
         state->vkDestroyDevice(state->vk_device, 0);
         state->vk_device = VK_NULL_HANDLE;
@@ -2535,12 +2579,17 @@ shutdown_vulkan(PyObject *module, PyObject *unused)
     ModuleState *state = (ModuleState *)PyModule_GetState(module);
     CHECK_UNEXPECTED_PYTHON_ERROR();
 
-    if (state->vk_instance){ SDL_Vulkan_UnloadLibrary(); }
+    if (state->vma_allocator != VK_NULL_HANDLE)
+    {
+        vmaDestroyAllocator(state->vma_allocator);
+        state->vma_allocator = VK_NULL_HANDLE;
+    }
     if (state->vk_device)
     {
         state->vkDestroyDevice(state->vk_device, 0);
         state->vk_device = VK_NULL_HANDLE;
     }
+    if (state->vk_instance){ SDL_Vulkan_UnloadLibrary(); }
     state->vk_instance = VK_NULL_HANDLE;
     state->vk_surface = VK_NULL_HANDLE;
     state->vk_graphics_queue = VK_NULL_HANDLE;
