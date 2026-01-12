@@ -2609,6 +2609,265 @@ error:
     return 0;
 }
 
+static PyObject *
+create_vk_buffer(PyObject *module, PyObject **args, Py_ssize_t nargs)
+{
+    VkBuffer vk_buffer = VK_NULL_HANDLE;
+    VmaAllocation vma_allocation = VK_NULL_HANDLE;
+
+    CHECK_UNEXPECTED_ARG_COUNT_ERROR(3);
+
+    ModuleState *state = (ModuleState *)PyModule_GetState(module);
+    CHECK_UNEXPECTED_PYTHON_ERROR();
+
+    if (state->vma_allocator == VK_NULL_HANDLE)
+    {
+        PyErr_Format(PyExc_RuntimeError, "no vulkan context");
+        goto error;
+    }
+
+    Py_ssize_t size = PyLong_AsSsize_t(args[0]);
+    CHECK_UNEXPECTED_PYTHON_ERROR();
+    if (size < 1)
+    {
+        PyErr_Format(PyExc_ValueError, "size must be 1 or more");
+        goto error;
+    }
+
+    VkBufferUsageFlags usage = PyLong_AsUnsignedLong(args[1]);
+    CHECK_UNEXPECTED_PYTHON_ERROR();
+
+    VmaAllocationCreateFlags vma_flags = PyLong_AsUnsignedLong(args[2]);
+    CHECK_UNEXPECTED_PYTHON_ERROR();
+
+    VkBufferCreateInfo buffer_create_info = {
+        .sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
+        .size = size,
+        .usage = usage
+    };
+
+    VmaAllocationCreateInfo allocation_create_info = {
+        .usage = VMA_MEMORY_USAGE_AUTO,
+        .flags = vma_flags
+    };
+
+    VkResult result = vmaCreateBuffer(
+        state->vma_allocator,
+        &buffer_create_info,
+        &allocation_create_info,
+        &vk_buffer,
+        &vma_allocation,
+        0
+    );
+    CHECK_VK_RESULT(result);
+
+    return Py_BuildValue("(KK)", (unsigned long long)vk_buffer, (unsigned long long)vma_allocation);
+error:
+    if (vk_buffer != VK_NULL_HANDLE)
+    {
+        vmaDestroyBuffer(state->vma_allocator, vk_buffer, vma_allocation);
+    }
+    return 0;
+}
+
+static PyObject *
+delete_vk_buffer(PyObject *module, PyObject **args, Py_ssize_t nargs)
+{
+    CHECK_UNEXPECTED_ARG_COUNT_ERROR(2);
+
+    ModuleState *state = (ModuleState *)PyModule_GetState(module);
+    CHECK_UNEXPECTED_PYTHON_ERROR();
+
+    if (state->vma_allocator == VK_NULL_HANDLE)
+    {
+        PyErr_Format(PyExc_RuntimeError, "no vulkan context");
+        goto error;
+    }
+
+    VkBuffer vk_buffer = (VkBuffer)PyLong_AsVoidPtr(args[0]);
+    CHECK_UNEXPECTED_PYTHON_ERROR();
+
+    VmaAllocation vma_allocation = (VmaAllocation)PyLong_AsVoidPtr(args[1]);
+    CHECK_UNEXPECTED_PYTHON_ERROR();
+
+    vmaDestroyBuffer(state->vma_allocator, vk_buffer, vma_allocation);
+
+    Py_RETURN_NONE;
+error:
+    return 0;
+}
+
+static PyObject *
+overwrite_vk_buffer(PyObject *module, PyObject **args, Py_ssize_t nargs)
+{
+    Py_buffer buffer = {0};
+
+    CHECK_UNEXPECTED_ARG_COUNT_ERROR(4);
+
+    ModuleState *state = (ModuleState *)PyModule_GetState(module);
+    CHECK_UNEXPECTED_PYTHON_ERROR();
+
+    if (state->vma_allocator == VK_NULL_HANDLE)
+    {
+        PyErr_Format(PyExc_RuntimeError, "no vulkan context");
+        goto error;
+    }
+
+    VkBuffer vk_buffer = (VkBuffer)PyLong_AsVoidPtr(args[0]);
+    CHECK_UNEXPECTED_PYTHON_ERROR();
+
+    VmaAllocation vma_allocation = (VmaAllocation)PyLong_AsVoidPtr(args[1]);
+    CHECK_UNEXPECTED_PYTHON_ERROR();
+
+    VkDeviceSize offset = PyLong_AsUnsignedLongLong(args[2]);
+    CHECK_UNEXPECTED_PYTHON_ERROR();
+
+    if (PyObject_GetBuffer(args[3], &buffer, PyBUF_CONTIG_RO) == -1)
+    {
+        goto error;
+    }
+
+    VkResult result = vmaCopyMemoryToAllocation(
+        state->vma_allocator,
+        buffer.buf,
+        vma_allocation,
+        offset,
+        buffer.len
+    );
+    CHECK_VK_RESULT(result);
+
+    PyBuffer_Release(&buffer);
+    Py_RETURN_NONE;
+error:
+    if (buffer.obj != 0)
+    {
+        PyBuffer_Release(&buffer);
+    }
+    return 0;
+}
+
+static PyObject *
+create_vk_buffer_memory_view(PyObject *module, PyObject **args, Py_ssize_t nargs)
+{
+    CHECK_UNEXPECTED_ARG_COUNT_ERROR(3);
+
+    ModuleState *state = (ModuleState *)PyModule_GetState(module);
+    CHECK_UNEXPECTED_PYTHON_ERROR();
+
+    if (state->vma_allocator == VK_NULL_HANDLE)
+    {
+        PyErr_Format(PyExc_RuntimeError, "no vulkan context");
+        goto error;
+    }
+
+    VkBuffer vk_buffer = (VkBuffer)PyLong_AsVoidPtr(args[0]);
+    CHECK_UNEXPECTED_PYTHON_ERROR();
+
+    VmaAllocation vma_allocation = (VmaAllocation)PyLong_AsVoidPtr(args[1]);
+    CHECK_UNEXPECTED_PYTHON_ERROR();
+
+    Py_ssize_t length = PyLong_AsSsize_t(args[2]);
+    CHECK_UNEXPECTED_PYTHON_ERROR();
+
+    void *memory = 0;
+    VkResult result = vmaMapMemory(state->vma_allocator, vma_allocation, &memory);
+    CHECK_VK_RESULT(result);
+
+    PyObject *memory_view = PyMemoryView_FromMemory(memory, length, PyBUF_WRITE);
+    if (!memory_view)
+    {
+        vmaUnmapMemory(state->vma_allocator, vma_allocation);
+        goto error;
+    }
+
+    return memory_view;
+error:
+    return 0;
+}
+
+static PyObject *
+delete_vk_buffer_memory_view(PyObject *module, PyObject **args, Py_ssize_t nargs)
+{
+    CHECK_UNEXPECTED_ARG_COUNT_ERROR(2);
+
+    ModuleState *state = (ModuleState *)PyModule_GetState(module);
+    CHECK_UNEXPECTED_PYTHON_ERROR();
+
+    if (state->vma_allocator == VK_NULL_HANDLE)
+    {
+        PyErr_Format(PyExc_RuntimeError, "no vulkan context");
+        goto error;
+    }
+
+    VkBuffer vk_buffer = (VkBuffer)PyLong_AsVoidPtr(args[0]);
+    CHECK_UNEXPECTED_PYTHON_ERROR();
+
+    VmaAllocation vma_allocation = (VmaAllocation)PyLong_AsVoidPtr(args[1]);
+    CHECK_UNEXPECTED_PYTHON_ERROR();
+
+    vmaUnmapMemory(state->vma_allocator, vma_allocation);
+
+    Py_RETURN_NONE;
+error:
+    return 0;
+}
+
+static PyObject *
+flush_vk_buffer(PyObject *module, PyObject **args, Py_ssize_t nargs)
+{
+    CHECK_UNEXPECTED_ARG_COUNT_ERROR(2);
+
+    ModuleState *state = (ModuleState *)PyModule_GetState(module);
+    CHECK_UNEXPECTED_PYTHON_ERROR();
+
+    if (state->vma_allocator == VK_NULL_HANDLE)
+    {
+        PyErr_Format(PyExc_RuntimeError, "no vulkan context");
+        goto error;
+    }
+
+    VkBuffer vk_buffer = (VkBuffer)PyLong_AsVoidPtr(args[0]);
+    CHECK_UNEXPECTED_PYTHON_ERROR();
+
+    VmaAllocation vma_allocation = (VmaAllocation)PyLong_AsVoidPtr(args[1]);
+    CHECK_UNEXPECTED_PYTHON_ERROR();
+
+    VkResult result = vmaFlushAllocation(state->vma_allocator, vma_allocation, 0, VK_WHOLE_SIZE);
+    CHECK_VK_RESULT(result);
+
+    Py_RETURN_NONE;
+error:
+    return 0;
+}
+
+static PyObject *
+invalidate_vk_buffer(PyObject *module, PyObject **args, Py_ssize_t nargs)
+{
+    CHECK_UNEXPECTED_ARG_COUNT_ERROR(2);
+
+    ModuleState *state = (ModuleState *)PyModule_GetState(module);
+    CHECK_UNEXPECTED_PYTHON_ERROR();
+
+    if (state->vma_allocator == VK_NULL_HANDLE)
+    {
+        PyErr_Format(PyExc_RuntimeError, "no vulkan context");
+        goto error;
+    }
+
+    VkBuffer vk_buffer = (VkBuffer)PyLong_AsVoidPtr(args[0]);
+    CHECK_UNEXPECTED_PYTHON_ERROR();
+
+    VmaAllocation vma_allocation = (VmaAllocation)PyLong_AsVoidPtr(args[1]);
+    CHECK_UNEXPECTED_PYTHON_ERROR();
+
+    VkResult result = vmaInvalidateAllocation(state->vma_allocator, vma_allocation, 0, VK_WHOLE_SIZE);
+    CHECK_VK_RESULT(result);
+
+    Py_RETURN_NONE;
+error:
+    return 0;
+}
+
 static PyMethodDef module_PyMethodDef[] = {
     {"reset_module_state", reset_module_state, METH_NOARGS, 0},
     {"debug_gl", debug_gl, METH_O, 0},
@@ -2695,6 +2954,13 @@ static PyMethodDef module_PyMethodDef[] = {
     {"get_gl_clip", (PyCFunction)get_gl_clip, METH_NOARGS, 0},
     {"setup_vulkan", (PyCFunction)setup_vulkan, METH_FASTCALL, 0},
     {"shutdown_vulkan", shutdown_vulkan, METH_NOARGS, 0},
+    {"create_vk_buffer", (PyCFunction)create_vk_buffer, METH_FASTCALL, 0},
+    {"delete_vk_buffer", (PyCFunction)delete_vk_buffer, METH_FASTCALL, 0},
+    {"overwrite_vk_buffer", (PyCFunction)overwrite_vk_buffer, METH_FASTCALL, 0},
+    {"create_vk_buffer_memory_view", (PyCFunction)create_vk_buffer_memory_view, METH_FASTCALL, 0},
+    {"delete_vk_buffer_memory_view", (PyCFunction)delete_vk_buffer_memory_view, METH_FASTCALL, 0},
+    {"flush_vk_buffer", (PyCFunction)flush_vk_buffer, METH_FASTCALL, 0},
+    {"invalidate_vk_buffer", (PyCFunction)invalidate_vk_buffer, METH_FASTCALL, 0},
     {0},
 };
 
@@ -2915,6 +3181,10 @@ PyInit__egraphics()
     ADD_ALIAS("GlTextureTarget", PyLong_Type);
     ADD_ALIAS("GlTextureWrap", PyLong_Type);
     ADD_ALIAS("GlVertexArray", PyLong_Type);
+    ADD_ALIAS("VkBuffer", PyLong_Type);
+    ADD_ALIAS("VkBufferUsageFlags", PyLong_Type);
+    ADD_ALIAS("VmaAllocation", PyLong_Type);
+    ADD_ALIAS("VmaAllocationCreateFlagBits", PyLong_Type);
 
 #define ADD_CONSTANT(n)\
     {\
@@ -3156,6 +3426,14 @@ PyInit__egraphics()
 
     ADD_CONSTANT(GL_NEGATIVE_ONE_TO_ONE);
     ADD_CONSTANT(GL_ZERO_TO_ONE);
+
+    ADD_CONSTANT(VK_BUFFER_USAGE_INDEX_BUFFER_BIT);
+    ADD_CONSTANT(VK_BUFFER_USAGE_VERTEX_BUFFER_BIT);
+    ADD_CONSTANT(VK_BUFFER_USAGE_TRANSFER_SRC_BIT);
+    ADD_CONSTANT(VK_BUFFER_USAGE_TRANSFER_DST_BIT);
+
+    ADD_CONSTANT(VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT);
+    ADD_CONSTANT(VMA_ALLOCATION_CREATE_HOST_ACCESS_RANDOM_BIT);
 
     {
         PyObject *eplatform = PyImport_ImportModule("eplatform");

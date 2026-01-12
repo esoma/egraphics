@@ -18,6 +18,7 @@ __all__ = [
     "GBufferNature",
     "GBufferView",
     "GBufferViewMap",
+    "IndexGBuffer",
     "IndexGBufferView",
     "Image",
     "ImageInvalidError",
@@ -25,12 +26,15 @@ __all__ = [
     "PrimitiveMode",
     "read_color_from_render_target",
     "read_depth_from_render_target",
+    "ReadWriteGBuffer",
     "RenderTarget",
     "reset_state",
     "Shader",
     "ShaderAttribute",
     "ShaderStorageBlock",
     "ShaderUniform",
+    "ShaderInputMap",
+    "ShaderUniformValue",
     "Texture",
     "Texture2d",
     "TextureComponents",
@@ -39,9 +43,10 @@ __all__ = [
     "TextureRenderTarget",
     "TextureType",
     "TextureWrap",
-    "ShaderInputMap",
-    "ShaderUniformValue",
+    "use_vulkan",
+    "VertexGBuffer",
     "WindowRenderTargetMixin",
+    "WriteGBuffer",
 ]
 
 from ._cache import clear_cache
@@ -49,6 +54,10 @@ from ._g_buffer import EditGBuffer
 from ._g_buffer import GBuffer
 from ._g_buffer import GBufferFrequency
 from ._g_buffer import GBufferNature
+from ._g_buffer import IndexGBuffer
+from ._g_buffer import ReadWriteGBuffer
+from ._g_buffer import VertexGBuffer
+from ._g_buffer import WriteGBuffer
 from ._g_buffer_view import GBufferView
 from ._g_buffer_view_map import GBufferViewMap
 from ._g_buffer_view_map import IndexGBufferView
@@ -85,3 +94,4 @@ from ._texture import TextureFilter
 from ._texture import TextureType
 from ._texture import TextureWrap
 from ._texture_2d import Texture2d
+from ._vulkan import use_vulkan

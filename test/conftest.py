@@ -15,11 +15,12 @@ from emath import FVector4
 from emath import IVector2
 from emath import UVector2
 from eplatform import EventLoop
-from eplatform import OpenGlWindow
 from eplatform import Platform
+from eplatform import VulkanWindow
 from eplatform import get_window
 
 from egraphics import clear_render_target
+from egraphics import use_vulkan
 from egraphics._render_target import TextureRenderTarget
 from egraphics._render_target import WindowRenderTargetMixin
 from egraphics._state import get_gl_version
@@ -30,7 +31,7 @@ from egraphics._texture_2d import TextureComponents
 from . import resources
 
 
-class TestWindow(OpenGlWindow, WindowRenderTargetMixin):
+class TestWindow(VulkanWindow, WindowRenderTargetMixin):
     pass
 
 
@@ -45,7 +46,14 @@ def _reset_state():
 def platform():
     with Platform(window_cls=TestWindow):
         yield
-    gc.collect()
+        gc.collect()
+
+
+@pytest.fixture
+def vulkan(window):
+    with use_vulkan(window.vk_instance, window.vk_surface):
+        yield
+        gc.collect()
 
 
 @pytest.fixture

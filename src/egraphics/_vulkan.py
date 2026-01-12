@@ -19,9 +19,11 @@ def use_vulkan(instance: int, surface: int) -> Generator[None, None, None]:
         raise RuntimeError("a vulkan instance is already set")
     setup_vulkan(instance, surface)
     _vulkan_instance = VkInstance(instance)
-    yield
-    _vulkan_instance = None
-    shutdown_vulkan()
+    try:
+        yield
+    finally:
+        _vulkan_instance = None
+        shutdown_vulkan()
 
 
 def get_vulkan_instance() -> VkInstance:

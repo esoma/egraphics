@@ -5,6 +5,9 @@ __all__ = [
     "GlBuffer",
     "GlBufferTarget",
     "GlBufferUsage",
+    "VkBuffer",
+    "VmaAllocation",
+    "VmaAllocationCreateFlagBits",
     "GlCull",
     "GlDepthMode",
     "GlFunc",
@@ -221,6 +224,12 @@ __all__ = [
     "GL_UPPER_LEFT",
     "GL_NEGATIVE_ONE_TO_ONE",
     "GL_ZERO_TO_ONE",
+    "VK_BUFFER_USAGE_INDEX_BUFFER_BIT",
+    "VK_BUFFER_USAGE_VERTEX_BUFFER_BIT",
+    "VK_BUFFER_USAGE_TRANSFER_SRC_BIT",
+    "VK_BUFFER_USAGE_TRANSFER_DST_BIT",
+    "VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT",
+    "VMA_ALLOCATION_CREATE_HOST_ACCESS_RANDOM_BIT",
     "debug_gl",
     "activate_gl_vertex_array",
     "set_gl_buffer_target",
@@ -304,6 +313,13 @@ __all__ = [
     "get_gl_clip",
     "setup_vulkan",
     "shutdown_vulkan",
+    "create_vk_buffer",
+    "delete_vk_buffer",
+    "overwrite_vk_buffer",
+    "create_vk_buffer_memory_view",
+    "delete_vk_buffer_memory_view",
+    "flush_vk_buffer",
+    "invalidate_vk_buffer",
 ]
 
 from collections.abc import Buffer
@@ -323,6 +339,10 @@ GlBlendFunction = NewType("GlBlendFunction", int)
 GlBuffer = NewType("GlBuffer", int)
 GlBufferTarget = NewType("GlBufferTarget", int)
 GlBufferUsage = NewType("GlBufferUsage", int)
+VkBufferUsageFlags = NewType("VkBufferUsageFlags", int)
+VkBuffer = NewType("VkBuffer", int)
+VmaAllocation = NewType("VmaAllocation", int)
+VmaAllocationCreateFlagBits = NewType("VmaAllocationCreateFlagBits", int)
 GlCull = NewType("GlCull", int)
 GlDepthMode = NewType("GlDepthMode", int)
 GlFunc = NewType("GlFunc", int)
@@ -570,6 +590,14 @@ GL_UPPER_LEFT: GlOrigin
 GL_NEGATIVE_ONE_TO_ONE: GlDepthMode
 GL_ZERO_TO_ONE: GlDepthMode
 
+VK_BUFFER_USAGE_INDEX_BUFFER_BIT: VkBufferUsageFlags
+VK_BUFFER_USAGE_VERTEX_BUFFER_BIT: VkBufferUsageFlags
+VK_BUFFER_USAGE_TRANSFER_SRC_BIT: VkBufferUsageFlags
+VK_BUFFER_USAGE_TRANSFER_DST_BIT: VkBufferUsageFlags
+
+VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT: VmaAllocationCreateFlagBits
+VMA_ALLOCATION_CREATE_HOST_ACCESS_RANDOM_BIT: VmaAllocationCreateFlagBits
+
 def debug_gl(callback: Callable[[int, int, int, int, str], None], /) -> None: ...
 def activate_gl_vertex_array(gl_vertex_array: GlVertexArray | None, /) -> None: ...
 def set_gl_buffer_target(target: GlBufferTarget, gl_buffer: GlBuffer | None, /) -> None: ...
@@ -747,3 +775,16 @@ def set_gl_clip(origin: GlOrigin, depth: GlDepthMode) -> None: ...
 def get_gl_clip() -> tuple[GlOrigin, GlDepthMode]: ...
 def setup_vulkan(vk_instance: int, vk_surface: int, /) -> None: ...
 def shutdown_vulkan() -> None: ...
+def create_vk_buffer(
+    size: int, usage: VkBufferUsageFlags, vma_flags: VmaAllocationCreateFlagBits, /
+) -> tuple[VkBuffer, VmaAllocation]: ...
+def delete_vk_buffer(buffer: VkBuffer, allocation: VmaAllocation, /) -> None: ...
+def overwrite_vk_buffer(
+    buffer: VkBuffer, allocation: VmaAllocation, offset: int, data: Buffer, /
+) -> None: ...
+def create_vk_buffer_memory_view(
+    buffer: VkBuffer, allocation: VmaAllocation, length: int, /
+) -> memoryview: ...
+def delete_vk_buffer_memory_view(buffer: VkBuffer, allocation: VmaAllocation, /) -> None: ...
+def flush_vk_buffer(buffer: VkBuffer, allocation: VmaAllocation, /) -> None: ...
+def invalidate_vk_buffer(buffer: VkBuffer, allocation: VmaAllocation, /) -> None: ...
