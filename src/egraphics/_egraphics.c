@@ -1,8 +1,12 @@
 #include "GL/glew.h"
-
+#define VK_NO_PROTOTYPES
+#include <vulkan/vulkan.h>
+#include <SDL3/SDL.h>
+#include <SDL3/SDL_vulkan.h>
 #define PY_SSIZE_T_CLEAN
 #include <Python.h>
 #include <stdio.h>
+#include <string.h>
 
 #include "emath.h"
 
@@ -35,6 +39,70 @@
             goto error;\
         }\
     }
+
+#define RAISE_SDL_ERROR()\
+    {\
+        PyObject *cause = PyErr_GetRaisedException();\
+        PyErr_Format(\
+            PyExc_RuntimeError,\
+            "sdl error: %s\nfile: %s\nfunction: %s\nline: %i",\
+            SDL_GetError(),\
+            __FILE__,\
+            __func__,\
+            __LINE__\
+        );\
+        if (cause)\
+        {\
+            PyObject *ex = PyErr_GetRaisedException();\
+            PyErr_SetRaisedException(ex);\
+            PyException_SetCause(ex, cause);\
+            if (cause){ Py_DECREF(cause); cause = 0; }\
+        }\
+        goto error;\
+    }
+
+#define CHECK_VK_RESULT(result)\
+    {\
+        if (result != VK_SUCCESS)\
+        {\
+            PyErr_Format(\
+                PyExc_RuntimeError,\
+                "vulkan error: result %i\nfile: %s\nfunction: %s\nline: %i",\
+                result,\
+                __FILE__,\
+                __func__,\
+                __LINE__\
+            );\
+            goto error;\
+        }\
+    }
+
+#define LOAD_VK_FUNCTION(func)\
+    {\
+        PFN_vkGetInstanceProcAddr vkGetInstanceProcAddr = \
+            (PFN_vkGetInstanceProcAddr)SDL_Vulkan_GetVkGetInstanceProcAddr();\
+        if (!vkGetInstanceProcAddr){ RAISE_SDL_ERROR(); }\
+        state->func = (PFN_##func)vkGetInstanceProcAddr(vk_instance, #func);\
+        if (!state->func)\
+        {\
+            PyErr_Format(\
+                PyExc_RuntimeError,\
+                "failed to get %s function pointer",\
+                #func\
+            );\
+            goto error;\
+        }\
+    }
+
+#define NO_QUEUE_FAMILY UINT32_MAX
+
+typedef struct PhysicalDevice
+{
+    int score;
+    uint32_t present_capable_queue_family;
+    uint32_t graphics_capable_queue_family;
+    bool supports_vk_khr_swapchain;
+} PhysicalDevice;
 
 typedef struct ModuleState
 {
@@ -69,6 +137,21 @@ typedef struct ModuleState
     int clip_distances;
     GLenum clip_origin;
     GLenum clip_depth;
+
+    VkInstance vk_instance;
+    VkSurfaceKHR vk_surface;
+    VkDevice vk_device;
+    VkQueue vk_graphics_queue;
+    VkQueue vk_present_queue;
+    PFN_vkEnumeratePhysicalDevices vkEnumeratePhysicalDevices;
+    PFN_vkGetPhysicalDeviceProperties vkGetPhysicalDeviceProperties;
+    PFN_vkGetPhysicalDeviceFeatures vkGetPhysicalDeviceFeatures;
+    PFN_vkGetPhysicalDeviceQueueFamilyProperties vkGetPhysicalDeviceQueueFamilyProperties;
+    PFN_vkGetPhysicalDeviceSurfaceSupportKHR vkGetPhysicalDeviceSurfaceSupportKHR;
+    PFN_vkEnumerateDeviceExtensionProperties vkEnumerateDeviceExtensionProperties;
+    PFN_vkCreateDevice vkCreateDevice;
+    PFN_vkDestroyDevice vkDestroyDevice;
+    PFN_vkGetDeviceQueue vkGetDeviceQueue;
 } ModuleState;
 
 static PyObject *
@@ -117,6 +200,20 @@ reset_module_state(PyObject *module, PyObject *unused)
     state->clip_distances = 0;
     state->clip_origin = GL_LOWER_LEFT;
     state->clip_depth = GL_NEGATIVE_ONE_TO_ONE;
+    state->vk_instance = VK_NULL_HANDLE;
+    state->vk_surface = VK_NULL_HANDLE;
+    state->vk_device = VK_NULL_HANDLE;
+    state->vk_graphics_queue = VK_NULL_HANDLE;
+    state->vk_present_queue = VK_NULL_HANDLE;
+    state->vkEnumeratePhysicalDevices = 0;
+    state->vkGetPhysicalDeviceProperties = 0;
+    state->vkGetPhysicalDeviceFeatures = 0;
+    state->vkGetPhysicalDeviceQueueFamilyProperties = 0;
+    state->vkGetPhysicalDeviceSurfaceSupportKHR = 0;
+    state->vkEnumerateDeviceExtensionProperties = 0;
+    state->vkCreateDevice = 0;
+    state->vkDestroyDevice = 0;
+    state->vkGetDeviceQueue = 0;
 
     state->texture_filter_anisotropic_supported = GLEW_EXT_texture_filter_anisotropic;
     Py_RETURN_NONE;
@@ -2127,6 +2224,342 @@ error:
     return 0;
 }
 
+static int
+setup_vk_device_(ModuleState *state)
+{
+    uint32_t physical_device_count = 0;
+    VkPhysicalDevice *vk_physical_devices = 0;
+    PhysicalDevice *physical_devices = 0;
+    VkQueueFamilyProperties *queue_families = 0;
+    VkResult result;
+
+    result = state->vkEnumeratePhysicalDevices(
+        state->vk_instance,
+        &physical_device_count,
+        0
+    );
+    CHECK_VK_RESULT(result);
+
+    if (physical_device_count == 0)
+    {
+        PyErr_SetString(PyExc_RuntimeError, "no vulkan devices");
+        goto error;
+    }
+
+    vk_physical_devices = malloc(sizeof(VkPhysicalDevice) * physical_device_count);
+    if (!vk_physical_devices)
+    {
+        PyErr_NoMemory();
+        goto error;
+    }
+
+    result = state->vkEnumeratePhysicalDevices(
+        state->vk_instance,
+        &physical_device_count,
+        vk_physical_devices
+    );
+    CHECK_VK_RESULT(result);
+
+    physical_devices = malloc(sizeof(PhysicalDevice) * physical_device_count);
+    memset(physical_devices, 0, sizeof(PhysicalDevice) * physical_device_count);
+    if (!physical_devices)
+    {
+        PyErr_NoMemory();
+        goto error;
+    }
+
+    for (uint32_t i = 0; i < physical_device_count; i++)
+    {
+        VkPhysicalDeviceProperties properties;
+        VkPhysicalDeviceFeatures features;
+        uint32_t queue_family_count = 0;
+        uint32_t present_capable_queue_family = NO_QUEUE_FAMILY;
+        uint32_t graphics_capable_queue_family = NO_QUEUE_FAMILY;
+
+        state->vkGetPhysicalDeviceProperties(vk_physical_devices[i], &properties);
+        state->vkGetPhysicalDeviceFeatures(vk_physical_devices[i], &features);
+        state->vkGetPhysicalDeviceQueueFamilyProperties(
+            vk_physical_devices[i],
+            &queue_family_count,
+            0
+        );
+
+        if (queue_family_count > 0)
+        {
+            queue_families = malloc(sizeof(VkQueueFamilyProperties) * queue_family_count);
+            if (!queue_families)
+            {
+                PyErr_NoMemory();
+                goto error;
+            }
+
+            state->vkGetPhysicalDeviceQueueFamilyProperties(
+                vk_physical_devices[i],
+                &queue_family_count,
+                queue_families
+            );
+
+            for (uint32_t j = 0; j < queue_family_count; j++)
+            {
+                VkBool32 surface_supported = VK_FALSE;
+                VkResult result = state->vkGetPhysicalDeviceSurfaceSupportKHR(
+                    vk_physical_devices[i],
+                    j,
+                    state->vk_surface,
+                    &surface_supported
+                );
+                CHECK_VK_RESULT(result);
+
+                bool is_graphics_capable = (queue_families[j].queueFlags & VK_QUEUE_GRAPHICS_BIT) != 0;
+                bool is_present_capable = (surface_supported == VK_TRUE);
+                bool supports_both = is_graphics_capable && is_present_capable;
+
+                if (supports_both)
+                {
+                    present_capable_queue_family = j;
+                    graphics_capable_queue_family = j;
+                }
+                else
+                {
+                    if (is_present_capable && present_capable_queue_family == NO_QUEUE_FAMILY)
+                    {
+                        present_capable_queue_family = j;
+                    }
+                    if (is_graphics_capable && graphics_capable_queue_family == NO_QUEUE_FAMILY)
+                    {
+                        graphics_capable_queue_family = j;
+                    }
+                }
+            }
+
+            free(queue_families);
+            queue_families = 0;
+        }
+
+        physical_devices[i].present_capable_queue_family = present_capable_queue_family;
+        physical_devices[i].graphics_capable_queue_family = graphics_capable_queue_family;
+
+        uint32_t extension_count = 0;
+        VkExtensionProperties *extensions = 0;
+        bool supports_swapchain = false;
+
+        VkResult result = state->vkEnumerateDeviceExtensionProperties(
+            vk_physical_devices[i],
+            0,
+            &extension_count,
+            0
+        );
+        CHECK_VK_RESULT(result);
+
+        if (extension_count > 0)
+        {
+            extensions = malloc(sizeof(VkExtensionProperties) * extension_count);
+            if (!extensions)
+            {
+                PyErr_NoMemory();
+                goto error;
+            }
+
+            result = state->vkEnumerateDeviceExtensionProperties(
+                vk_physical_devices[i],
+                0,
+                &extension_count,
+                extensions
+            );
+            CHECK_VK_RESULT(result);
+
+            for (uint32_t k = 0; k < extension_count; k++)
+            {
+                if (strcmp(extensions[k].extensionName, VK_KHR_SWAPCHAIN_EXTENSION_NAME) == 0)
+                {
+                    supports_swapchain = true;
+                    break;
+                }
+            }
+
+            free(extensions);
+            extensions = 0;
+        }
+
+        physical_devices[i].supports_vk_khr_swapchain = supports_swapchain;
+        physical_devices[i].score = (
+            present_capable_queue_family == graphics_capable_queue_family ? 1 : 0
+        );
+        if (
+            present_capable_queue_family == NO_QUEUE_FAMILY ||
+            graphics_capable_queue_family == NO_QUEUE_FAMILY ||
+            !supports_swapchain
+        )
+        {
+            physical_devices[i].score = -1;
+        }
+    }
+
+    uint32_t chosen_physical_device_index = UINT32_MAX;
+    {
+        int best_score = -1;
+        for (uint32_t i = 0; i < physical_device_count; i++)
+        {
+            if (physical_devices[i].score > best_score)
+            {
+                best_score = physical_devices[i].score;
+                chosen_physical_device_index = i;
+            }
+        }
+        if (chosen_physical_device_index == UINT32_MAX || best_score < 0)
+        {
+            PyErr_SetString(PyExc_RuntimeError, "no suitable vulkan device found");
+            goto error;
+        }
+    }
+
+    VkPhysicalDevice chosen_physical_device = vk_physical_devices[chosen_physical_device_index];
+    uint32_t chosen_present_queue_family = physical_devices[chosen_physical_device_index].present_capable_queue_family;
+    uint32_t chosen_graphics_queue_family = physical_devices[chosen_physical_device_index].graphics_capable_queue_family;
+
+    free(physical_devices);
+    physical_devices = 0;
+    free(vk_physical_devices);
+    vk_physical_devices = 0;
+
+    {
+        float queue_priority = 1.0f;
+        VkDeviceQueueCreateInfo vk_device_queue_create_infos[2];
+        size_t vk_device_queue_create_infos_count = 0;
+
+        vk_device_queue_create_infos[vk_device_queue_create_infos_count++] = (VkDeviceQueueCreateInfo){
+            .sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO,
+            .queueFamilyIndex = chosen_graphics_queue_family,
+            .queueCount = 1,
+            .pQueuePriorities = &queue_priority
+        };
+
+        if (chosen_present_queue_family != chosen_graphics_queue_family) {
+            vk_device_queue_create_infos[vk_device_queue_create_infos_count++] = (VkDeviceQueueCreateInfo){
+                .sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO,
+                .queueFamilyIndex = chosen_present_queue_family,
+                .queueCount = 1,
+                .pQueuePriorities = &queue_priority
+            };
+        }
+
+        VkPhysicalDeviceFeatures vk_physical_device_features = {};
+
+        const char* vk_device_extension_names[] = {
+            VK_KHR_SWAPCHAIN_EXTENSION_NAME
+        };
+
+        VkDeviceCreateInfo vk_device_create_info = {
+            .sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO,
+            .queueCreateInfoCount = vk_device_queue_create_infos_count,
+            .pQueueCreateInfos = vk_device_queue_create_infos,
+            .pEnabledFeatures = &vk_physical_device_features,
+            .enabledExtensionCount = 1,
+            .ppEnabledExtensionNames = vk_device_extension_names
+        };
+
+        VkResult vk_result = state->vkCreateDevice(
+            chosen_physical_device,
+            &vk_device_create_info,
+            0,
+            &state->vk_device
+        );
+        CHECK_VK_RESULT(vk_result);
+
+        state->vkGetDeviceQueue(state->vk_device, chosen_graphics_queue_family, 0, &state->vk_graphics_queue);
+        state->vkGetDeviceQueue(state->vk_device, chosen_present_queue_family, 0, &state->vk_present_queue);
+    }
+
+    return 1;
+error:
+    if (physical_devices){ free(physical_devices); }
+    if (vk_physical_devices){ free(vk_physical_devices); }
+    if (queue_families){ free(queue_families); }
+    if (state->vk_device)
+    {
+        state->vkDestroyDevice(state->vk_device, 0);
+        state->vk_device = VK_NULL_HANDLE;
+    }
+    return 0;
+}
+
+static PyObject *
+setup_vulkan(PyObject *module, PyObject **args, Py_ssize_t nargs)
+{
+    bool vulkan_library_loaded = false;
+
+    CHECK_UNEXPECTED_ARG_COUNT_ERROR(2);
+
+    ModuleState *state = (ModuleState *)PyModule_GetState(module);
+    CHECK_UNEXPECTED_PYTHON_ERROR();
+
+    VkInstance vk_instance = (VkInstance)PyLong_AsVoidPtr(args[0]);
+    CHECK_UNEXPECTED_PYTHON_ERROR();
+
+    VkSurfaceKHR vk_surface = (VkSurfaceKHR)PyLong_AsVoidPtr(args[1]);
+    CHECK_UNEXPECTED_PYTHON_ERROR();
+
+    if (!state->vk_instance)
+    {
+        if (!SDL_Vulkan_LoadLibrary(0)){ RAISE_SDL_ERROR(); }
+        vulkan_library_loaded = true;
+        LOAD_VK_FUNCTION(vkEnumeratePhysicalDevices);
+        LOAD_VK_FUNCTION(vkGetPhysicalDeviceProperties);
+        LOAD_VK_FUNCTION(vkGetPhysicalDeviceFeatures);
+        LOAD_VK_FUNCTION(vkGetPhysicalDeviceQueueFamilyProperties);
+        LOAD_VK_FUNCTION(vkGetPhysicalDeviceSurfaceSupportKHR);
+        LOAD_VK_FUNCTION(vkEnumerateDeviceExtensionProperties);
+        LOAD_VK_FUNCTION(vkCreateDevice);
+        LOAD_VK_FUNCTION(vkDestroyDevice);
+        LOAD_VK_FUNCTION(vkGetDeviceQueue);
+    }
+    state->vk_instance = vk_instance;
+    state->vk_surface = vk_surface;
+    if (!setup_vk_device_(state))
+    {
+        state->vk_instance = VK_NULL_HANDLE;
+        state->vk_surface = VK_NULL_HANDLE;
+        goto error;
+    }
+    CHECK_UNEXPECTED_PYTHON_ERROR();
+
+    Py_RETURN_NONE;
+error:
+    if (vulkan_library_loaded){ SDL_Vulkan_UnloadLibrary(); }
+    return 0;
+}
+
+static PyObject *
+shutdown_vulkan(PyObject *module, PyObject *unused)
+{
+    ModuleState *state = (ModuleState *)PyModule_GetState(module);
+    CHECK_UNEXPECTED_PYTHON_ERROR();
+
+    if (state->vk_instance){ SDL_Vulkan_UnloadLibrary(); }
+    if (state->vk_device)
+    {
+        state->vkDestroyDevice(state->vk_device, 0);
+        state->vk_device = VK_NULL_HANDLE;
+    }
+    state->vk_instance = VK_NULL_HANDLE;
+    state->vk_surface = VK_NULL_HANDLE;
+    state->vk_graphics_queue = VK_NULL_HANDLE;
+    state->vk_present_queue = VK_NULL_HANDLE;
+    state->vkEnumeratePhysicalDevices = 0;
+    state->vkGetPhysicalDeviceProperties = 0;
+    state->vkGetPhysicalDeviceFeatures = 0;
+    state->vkGetPhysicalDeviceQueueFamilyProperties = 0;
+    state->vkGetPhysicalDeviceSurfaceSupportKHR = 0;
+    state->vkEnumerateDeviceExtensionProperties = 0;
+    state->vkCreateDevice = 0;
+    state->vkDestroyDevice = 0;
+    state->vkGetDeviceQueue = 0;
+
+    Py_RETURN_NONE;
+error:
+    return 0;
+}
+
 static PyMethodDef module_PyMethodDef[] = {
     {"reset_module_state", reset_module_state, METH_NOARGS, 0},
     {"debug_gl", debug_gl, METH_O, 0},
@@ -2211,6 +2644,8 @@ static PyMethodDef module_PyMethodDef[] = {
     {"get_gl_version", (PyCFunction)get_gl_version, METH_NOARGS, 0},
     {"set_gl_clip", (PyCFunction)set_gl_clip, METH_FASTCALL, 0},
     {"get_gl_clip", (PyCFunction)get_gl_clip, METH_NOARGS, 0},
+    {"setup_vulkan", (PyCFunction)setup_vulkan, METH_FASTCALL, 0},
+    {"shutdown_vulkan", shutdown_vulkan, METH_NOARGS, 0},
     {0},
 };
 

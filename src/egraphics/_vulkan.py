@@ -1,11 +1,11 @@
-__all__ = ["VkInstance", "use_vulkan_instance", "get_vulkan_instance"]
+__all__ = ["VkInstance", "use_vulkan", "get_vulkan_instance"]
 
 from contextlib import contextmanager
-from logging import getLogger
 from typing import Generator
 from typing import NewType
 
-_message_log = getLogger("e16.vulkan")
+from ._egraphics import setup_vulkan
+from ._egraphics import shutdown_vulkan
 
 VkInstance = NewType("VkInstance", int)
 
@@ -13,13 +13,15 @@ _vulkan_instance: VkInstance | None = None
 
 
 @contextmanager
-def use_vulkan_instance(instance: VkInstance) -> Generator[None, None, None]:
+def use_vulkan(instance: int, surface: int) -> Generator[None, None, None]:
     global _vulkan_instance
     if _vulkan_instance is not None:
         raise RuntimeError("a vulkan instance is already set")
-    _vulkan_instance = instance
+    setup_vulkan(instance, surface)
+    _vulkan_instance = VkInstance(instance)
     yield
     _vulkan_instance = None
+    shutdown_vulkan()
 
 
 def get_vulkan_instance() -> VkInstance:
