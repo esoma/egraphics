@@ -80,10 +80,15 @@
 
 #define LOAD_VK_FUNCTION(func)\
     {\
-        PFN_vkGetInstanceProcAddr vkGetInstanceProcAddr = \
-            (PFN_vkGetInstanceProcAddr)SDL_Vulkan_GetVkGetInstanceProcAddr();\
-        if (!vkGetInstanceProcAddr){ RAISE_SDL_ERROR(); }\
-        state->func = (PFN_##func)vkGetInstanceProcAddr(vk_instance, #func);\
+        if (!state->vkGetInstanceProcAddr)\
+        {\
+            PyErr_Format(\
+                PyExc_RuntimeError,\
+                "vkGetInstanceProcAddr not initialized"\
+            );\
+            goto error;\
+        }\
+        state->func = (PFN_##func)state->vkGetInstanceProcAddr(vk_instance, #func);\
         if (!state->func)\
         {\
             PyErr_Format(\
@@ -104,6 +109,14 @@ typedef struct PhysicalDevice
     uint32_t graphics_capable_queue_family;
     bool supports_vk_khr_swapchain;
 } PhysicalDevice;
+
+typedef struct {
+    VkQueue queue;
+    uint32_t queue_family_index;
+    uint32_t queue_index_in_family;
+    bool is_graphics;
+    bool is_present;
+} Queue;
 
 typedef struct ModuleState
 {
@@ -142,8 +155,8 @@ typedef struct ModuleState
     VkInstance vk_instance;
     VkSurfaceKHR vk_surface;
     VkDevice vk_device;
-    VkQueue vk_graphics_queue;
-    VkQueue vk_present_queue;
+    Queue *vk_queues;
+    uint32_t vk_queues_count;
     PFN_vkEnumeratePhysicalDevices vkEnumeratePhysicalDevices;
     PFN_vkGetPhysicalDeviceProperties vkGetPhysicalDeviceProperties;
     PFN_vkGetPhysicalDeviceFeatures vkGetPhysicalDeviceFeatures;
@@ -153,6 +166,8 @@ typedef struct ModuleState
     PFN_vkCreateDevice vkCreateDevice;
     PFN_vkDestroyDevice vkDestroyDevice;
     PFN_vkGetDeviceQueue vkGetDeviceQueue;
+    PFN_vkGetInstanceProcAddr vkGetInstanceProcAddr;
+    PFN_vkGetDeviceProcAddr vkGetDeviceProcAddr;
 
     VmaAllocator vma_allocator;
 } ModuleState;
@@ -206,8 +221,8 @@ reset_module_state(PyObject *module, PyObject *unused)
     state->vk_instance = VK_NULL_HANDLE;
     state->vk_surface = VK_NULL_HANDLE;
     state->vk_device = VK_NULL_HANDLE;
-    state->vk_graphics_queue = VK_NULL_HANDLE;
-    state->vk_present_queue = VK_NULL_HANDLE;
+    state->vk_queues = 0;
+    state->vk_queues_count = 0;
     state->vkEnumeratePhysicalDevices = 0;
     state->vkGetPhysicalDeviceProperties = 0;
     state->vkGetPhysicalDeviceFeatures = 0;
@@ -217,6 +232,8 @@ reset_module_state(PyObject *module, PyObject *unused)
     state->vkCreateDevice = 0;
     state->vkDestroyDevice = 0;
     state->vkGetDeviceQueue = 0;
+    state->vkGetInstanceProcAddr = 0;
+    state->vkGetDeviceProcAddr = 0;
 
     state->texture_filter_anisotropic_supported = GLEW_EXT_texture_filter_anisotropic;
     Py_RETURN_NONE;
@@ -2227,14 +2244,15 @@ error:
     return 0;
 }
 
-static int
-setup_vk_device_(ModuleState *state)
+static VkPhysicalDevice
+find_best_vk_physical_device_(ModuleState *state)
 {
     uint32_t physical_device_count = 0;
     VkPhysicalDevice *vk_physical_devices = 0;
     PhysicalDevice *physical_devices = 0;
     VkQueueFamilyProperties *queue_families = 0;
     VkResult result;
+    VkPhysicalDevice chosen_physical_device = VK_NULL_HANDLE;
 
     result = state->vkEnumeratePhysicalDevices(
         state->vk_instance,
@@ -2416,37 +2434,176 @@ setup_vk_device_(ModuleState *state)
         }
     }
 
-    VkPhysicalDevice chosen_physical_device = vk_physical_devices[chosen_physical_device_index];
-    uint32_t chosen_present_queue_family = physical_devices[chosen_physical_device_index].present_capable_queue_family;
-    uint32_t chosen_graphics_queue_family = physical_devices[chosen_physical_device_index].graphics_capable_queue_family;
+    chosen_physical_device = vk_physical_devices[chosen_physical_device_index];
 
     free(physical_devices);
     physical_devices = 0;
     free(vk_physical_devices);
     vk_physical_devices = 0;
 
+    return chosen_physical_device;
+error:
+    if (physical_devices){ free(physical_devices); }
+    if (vk_physical_devices){ free(vk_physical_devices); }
+    if (queue_families){ free(queue_families); }
+    return VK_NULL_HANDLE;
+}
+
+static int
+gather_vk_queues_data_(ModuleState *state, VkPhysicalDevice physical_device)
+{
+    VkQueueFamilyProperties *queue_families = 0;
+    uint32_t queue_family_count = 0;
+
+    if (!state->vkGetPhysicalDeviceQueueFamilyProperties)
     {
-        float queue_priority = 1.0f;
-        VkDeviceQueueCreateInfo vk_device_queue_create_infos[2];
-        size_t vk_device_queue_create_infos_count = 0;
+        PyErr_SetString(PyExc_RuntimeError, "vkGetPhysicalDeviceQueueFamilyProperties not loaded");
+        goto error;
+    }
 
-        vk_device_queue_create_infos[vk_device_queue_create_infos_count++] = (VkDeviceQueueCreateInfo){
-            .sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO,
-            .queueFamilyIndex = chosen_graphics_queue_family,
-            .queueCount = 1,
-            .pQueuePriorities = &queue_priority
-        };
+    state->vkGetPhysicalDeviceQueueFamilyProperties(
+        physical_device,
+        &queue_family_count,
+        0
+    );
 
-        if (chosen_present_queue_family != chosen_graphics_queue_family) {
-            vk_device_queue_create_infos[vk_device_queue_create_infos_count++] = (VkDeviceQueueCreateInfo){
+    if (queue_family_count == 0)
+    {
+        PyErr_SetString(PyExc_RuntimeError, "no queue families available");
+        goto error;
+    }
+
+    queue_families = malloc(sizeof(VkQueueFamilyProperties) * queue_family_count);
+    if (!queue_families)
+    {
+        PyErr_NoMemory();
+        goto error;
+    }
+
+    state->vkGetPhysicalDeviceQueueFamilyProperties(
+        physical_device,
+        &queue_family_count,
+        queue_families
+    );
+
+    uint32_t total_queues = 0;
+    for (uint32_t i = 0; i < queue_family_count; i++)
+    {
+        uint32_t queue_count = queue_families[i].queueCount;
+        if (queue_count == 0) continue;
+        total_queues += queue_count;
+    }
+
+    state->vk_queues = malloc(sizeof(Queue) * total_queues);
+    if (!state->vk_queues)
+    {
+        PyErr_NoMemory();
+        goto error;
+    }
+
+    uint32_t queue_index = 0;
+    for (uint32_t i = 0; i < queue_family_count; i++)
+    {
+        uint32_t queue_count = queue_families[i].queueCount;
+        if (queue_count == 0) continue;
+
+        VkBool32 surface_supported = VK_FALSE;
+        if (!state->vkGetPhysicalDeviceSurfaceSupportKHR)
+        {
+            PyErr_SetString(PyExc_RuntimeError, "vkGetPhysicalDeviceSurfaceSupportKHR not loaded");
+            goto error;
+        }
+        VkResult result = state->vkGetPhysicalDeviceSurfaceSupportKHR(
+            physical_device,
+            i,
+            state->vk_surface,
+            &surface_supported
+        );
+        CHECK_VK_RESULT(result);
+
+        bool is_graphics = (queue_families[i].queueFlags & VK_QUEUE_GRAPHICS_BIT) != 0;
+        bool is_present = (surface_supported == VK_TRUE);
+        if (!is_graphics && !is_present){ continue; }
+
+        for (uint32_t j = 0; j < queue_count; j++)
+        {
+            uint32_t queue_index_in_family = 0;
+            if (queue_index > 0)
+            {
+                for (uint32_t k = 0; k < queue_index; k++)
+                {
+                    if (state->vk_queues[k].queue_family_index == i)
+                    {
+                        queue_index_in_family++;
+                    }
+                }
+            }
+            state->vk_queues[queue_index].queue = VK_NULL_HANDLE;
+            state->vk_queues[queue_index].queue_family_index = i;
+            state->vk_queues[queue_index].queue_index_in_family = queue_index_in_family;
+            state->vk_queues[queue_index].is_graphics = is_graphics;
+            state->vk_queues[queue_index].is_present = is_present;
+            queue_index++;
+        }
+    }
+
+    state->vk_queues_count = queue_index;
+
+    if (state->vk_queues_count < total_queues)
+    {
+        Queue *reallocated_queues = realloc(state->vk_queues, sizeof(Queue) * state->vk_queues_count);
+        if (!reallocated_queues)
+        {
+            PyErr_NoMemory();
+            goto error;
+        }
+        state->vk_queues = reallocated_queues;
+    }
+
+    free(queue_families);
+    queue_families = 0;
+    return 1;
+error:
+    if (queue_families){ free(queue_families); }
+    return 0;
+}
+
+static int
+setup_vk_device_(ModuleState *state)
+{
+    VkPhysicalDevice chosen_physical_device = find_best_vk_physical_device_(state);
+    if (chosen_physical_device == VK_NULL_HANDLE){ goto error; }
+
+    {
+        if (!gather_vk_queues_data_(state, chosen_physical_device))
+        {
+            goto error;
+        }
+
+        if (state->vk_queues_count == 0)
+        {
+            PyErr_SetString(PyExc_RuntimeError, "no queues available");
+            goto error;
+        }
+
+        VkDeviceQueueCreateInfo *vk_device_queue_create_infos = malloc(sizeof(VkDeviceQueueCreateInfo) * state->vk_queues_count);
+        if (!vk_device_queue_create_infos)
+        {
+            PyErr_NoMemory();
+            goto error;
+        }
+        float queue_priority = 1.0;
+        for (uint32_t i = 0; i < state->vk_queues_count; i++)
+        {
+            vk_device_queue_create_infos[i] = (VkDeviceQueueCreateInfo){
                 .sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO,
-                .queueFamilyIndex = chosen_present_queue_family,
+                .queueFamilyIndex = state->vk_queues[i].queue_family_index,
                 .queueCount = 1,
                 .pQueuePriorities = &queue_priority
             };
         }
 
-        VkPhysicalDeviceFeatures vk_physical_device_features;
+        VkPhysicalDeviceFeatures vk_physical_device_features = {0};
 
         const char* vk_device_extension_names[] = {
             VK_KHR_SWAPCHAIN_EXTENSION_NAME
@@ -2454,13 +2611,18 @@ setup_vk_device_(ModuleState *state)
 
         VkDeviceCreateInfo vk_device_create_info = {
             .sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO,
-            .queueCreateInfoCount = vk_device_queue_create_infos_count,
+            .queueCreateInfoCount = state->vk_queues_count,
             .pQueueCreateInfos = vk_device_queue_create_infos,
             .pEnabledFeatures = &vk_physical_device_features,
             .enabledExtensionCount = 1,
             .ppEnabledExtensionNames = vk_device_extension_names
         };
 
+        if (!state->vkCreateDevice)
+        {
+            PyErr_SetString(PyExc_RuntimeError, "vkCreateDevice not loaded");
+            goto error;
+        }
         VkResult vk_result = state->vkCreateDevice(
             chosen_physical_device,
             &vk_device_create_info,
@@ -2469,34 +2631,30 @@ setup_vk_device_(ModuleState *state)
         );
         CHECK_VK_RESULT(vk_result);
 
-        state->vkGetDeviceQueue(state->vk_device, chosen_graphics_queue_family, 0, &state->vk_graphics_queue);
-        state->vkGetDeviceQueue(state->vk_device, chosen_present_queue_family, 0, &state->vk_present_queue);
+        free(vk_device_queue_create_infos);
+        vk_device_queue_create_infos = 0;
 
         {
-            PFN_vkGetInstanceProcAddr vkGetInstanceProcAddr =
-                (PFN_vkGetInstanceProcAddr)SDL_Vulkan_GetVkGetInstanceProcAddr();
-            if (!vkGetInstanceProcAddr)
+            if (!state->vkGetDeviceQueue)
             {
-                RAISE_SDL_ERROR();
-            }
-
-            PFN_vkGetDeviceProcAddr vkGetDeviceProcAddr =
-                (PFN_vkGetDeviceProcAddr)vkGetInstanceProcAddr(
-                    state->vk_instance,
-                    "vkGetDeviceProcAddr"
-                );
-            if (!vkGetDeviceProcAddr)
-            {
-                PyErr_Format(
-                    PyExc_RuntimeError,
-                    "failed to get vkGetDeviceProcAddr function pointer"
-                );
+                PyErr_SetString(PyExc_RuntimeError, "vkGetDeviceQueue not loaded");
                 goto error;
             }
+            for (uint32_t i = 0; i < state->vk_queues_count; i++)
+            {
+                state->vkGetDeviceQueue(
+                    state->vk_device,
+                    state->vk_queues[i].queue_family_index,
+                    state->vk_queues[i].queue_index_in_family,
+                    &state->vk_queues[i].queue
+                );
+            }
+        }
 
+        {
             VmaVulkanFunctions vma_vulkan_functions = {};
-            vma_vulkan_functions.vkGetInstanceProcAddr = vkGetInstanceProcAddr;
-            vma_vulkan_functions.vkGetDeviceProcAddr = vkGetDeviceProcAddr;
+            vma_vulkan_functions.vkGetInstanceProcAddr = state->vkGetInstanceProcAddr;
+            vma_vulkan_functions.vkGetDeviceProcAddr = state->vkGetDeviceProcAddr;
 
             VmaAllocatorCreateInfo vma_allocator_info = {};
             vma_allocator_info.instance = state->vk_instance;
@@ -2511,9 +2669,12 @@ setup_vk_device_(ModuleState *state)
 
     return 1;
 error:
-    if (physical_devices){ free(physical_devices); }
-    if (vk_physical_devices){ free(vk_physical_devices); }
-    if (queue_families){ free(queue_families); }
+    if (state->vk_queues)
+    {
+        free(state->vk_queues);
+        state->vk_queues = 0;
+        state->vk_queues_count = 0;
+    }
     if (state->vma_allocator != VK_NULL_HANDLE)
     {
         vmaDestroyAllocator(state->vma_allocator);
@@ -2547,6 +2708,10 @@ setup_vulkan(PyObject *module, PyObject **args, Py_ssize_t nargs)
     {
         if (!SDL_Vulkan_LoadLibrary(0)){ RAISE_SDL_ERROR(); }
         vulkan_library_loaded = true;
+
+        state->vkGetInstanceProcAddr = (PFN_vkGetInstanceProcAddr)SDL_Vulkan_GetVkGetInstanceProcAddr();
+        if (!state->vkGetInstanceProcAddr){ RAISE_SDL_ERROR(); }
+
         LOAD_VK_FUNCTION(vkEnumeratePhysicalDevices);
         LOAD_VK_FUNCTION(vkGetPhysicalDeviceProperties);
         LOAD_VK_FUNCTION(vkGetPhysicalDeviceFeatures);
@@ -2556,6 +2721,7 @@ setup_vulkan(PyObject *module, PyObject **args, Py_ssize_t nargs)
         LOAD_VK_FUNCTION(vkCreateDevice);
         LOAD_VK_FUNCTION(vkDestroyDevice);
         LOAD_VK_FUNCTION(vkGetDeviceQueue);
+        LOAD_VK_FUNCTION(vkGetDeviceProcAddr);
     }
     state->vk_instance = vk_instance;
     state->vk_surface = vk_surface;
@@ -2589,11 +2755,15 @@ shutdown_vulkan(PyObject *module, PyObject *unused)
         state->vkDestroyDevice(state->vk_device, 0);
         state->vk_device = VK_NULL_HANDLE;
     }
+    if (state->vk_queues)
+    {
+        free(state->vk_queues);
+        state->vk_queues = 0;
+        state->vk_queues_count = 0;
+    }
     if (state->vk_instance){ SDL_Vulkan_UnloadLibrary(); }
     state->vk_instance = VK_NULL_HANDLE;
     state->vk_surface = VK_NULL_HANDLE;
-    state->vk_graphics_queue = VK_NULL_HANDLE;
-    state->vk_present_queue = VK_NULL_HANDLE;
     state->vkEnumeratePhysicalDevices = 0;
     state->vkGetPhysicalDeviceProperties = 0;
     state->vkGetPhysicalDeviceFeatures = 0;
@@ -2603,6 +2773,8 @@ shutdown_vulkan(PyObject *module, PyObject *unused)
     state->vkCreateDevice = 0;
     state->vkDestroyDevice = 0;
     state->vkGetDeviceQueue = 0;
+    state->vkGetInstanceProcAddr = 0;
+    state->vkGetDeviceProcAddr = 0;
 
     Py_RETURN_NONE;
 error:
