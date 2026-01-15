@@ -28,7 +28,9 @@ from ._egraphics import VK_BUFFER_USAGE_INDEX_BUFFER_BIT
 from ._egraphics import VK_BUFFER_USAGE_VERTEX_BUFFER_BIT
 from ._egraphics import VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT
 from ._egraphics import GlBuffer
+from ._egraphics import VkBuffer
 from ._egraphics import VkBufferUsageFlags
+from ._egraphics import VmaAllocation
 from ._egraphics import VmaAllocationCreateFlagBits
 from ._egraphics import create_vk_buffer
 from ._egraphics import create_vk_buffer_memory_view
@@ -38,6 +40,7 @@ from ._egraphics import flush_vk_buffer
 from ._egraphics import invalidate_vk_buffer
 from ._egraphics import overwrite_vk_buffer
 from ._state import register_reset_state_callback
+from ._vulkan import VulkanObject
 
 
 class GBufferFrequency(Enum):
@@ -98,11 +101,16 @@ def _reset_g_buffer_target_state() -> None:
     pass
 
 
-class GBuffer:
-    _buffer: memoryview | None = None
-    _buffer_refs: int = 0
+class GBufferVk(NamedTuple):
+    buffer: VkBuffer
+    allocation: VmaAllocation
+
+
+class GBuffer(VulkanObject):
     __usage: ClassVar[VkBufferUsageFlags] = 0  # type: ignore
     __vma_flags: ClassVar[VmaAllocationCreateFlagBits] = 0  # type: ignore
+
+    _GBuffer__vk: GBufferVk | None = None
 
     def __init_subclass__(cls, **kwargs: Any):
         super().__init_subclass__(**kwargs)
@@ -113,19 +121,26 @@ class GBuffer:
     def __init__(self, length: int):
         if self.__usage == 0:
             raise RuntimeError(f"{self.__class__.__name__} cannot be instantiated")
-        self._vk_buffer, self._vma_allocation = create_vk_buffer(
-            length, self.__usage, self.__vma_flags
-        )
+        self._GBuffer__vk = GBufferVk(*create_vk_buffer(length, self.__usage, self.__vma_flags))
         self._length = length
-
-    def __del__(self) -> None:
-        if not hasattr(self, "_vk_buffer"):
-            return
-        delete_vk_buffer(self._vk_buffer, self._vma_allocation)
-        del self._vk_buffer
+        super().__init__()
 
     def __len__(self) -> int:
         return self._length
+
+    def close(self) -> None:
+        if self._GBuffer__vk is None:
+            return
+        delete_vk_buffer(self._GBuffer__vk.buffer, self._GBuffer__vk.allocation)
+        self._GBuffer__vk = None
+        super().close()
+
+
+def get_g_buffer_vk(g_buffer: GBuffer) -> GBufferVk:
+    if not g_buffer.is_open:
+        raise RuntimeError("GBuffer is closed")
+    assert g_buffer._GBuffer__vk is not None
+    return g_buffer._GBuffer__vk
 
 
 class IndexGBuffer(GBuffer):
@@ -148,9 +163,11 @@ class WriteGBuffer(GBuffer):
             length = len(memoryview(data))
         super().__init__(length)
         if not isinstance(data, int):
-            overwrite_vk_buffer(self._vk_buffer, self._vma_allocation, 0, data)
+            vk = get_g_buffer_vk(self)
+            overwrite_vk_buffer(vk.buffer, vk.allocation, 0, data)
 
     def write(self, data: Buffer, *, offset: int = 0) -> None:
+        vk = get_g_buffer_vk(self)
         data_length = len(memoryview(data))
         if data_length == 0:
             return
@@ -158,7 +175,7 @@ class WriteGBuffer(GBuffer):
             raise ValueError("underflow")
         if offset + data_length > len(self):
             raise ValueError("overflow")
-        overwrite_vk_buffer(self._vk_buffer, self._vma_allocation, offset, data)
+        overwrite_vk_buffer(vk.buffer, vk.allocation, offset, data)
 
 
 class ReadWriteGBuffer(WriteGBuffer):
@@ -169,6 +186,7 @@ class ReadWriteGBuffer(WriteGBuffer):
     _buffer_refs: int = 0
 
     def __buffer__(self, flags: int) -> memoryview:
+        vk = get_g_buffer_vk(self)
         if self._buffer_refs:
             assert self._buffer is not None
             self._buffer_refs += 1
@@ -177,26 +195,32 @@ class ReadWriteGBuffer(WriteGBuffer):
         assert self._buffer is None
         assert self._buffer_refs == 0
 
-        self._buffer = create_vk_buffer_memory_view(
-            self._vk_buffer, self._vma_allocation, self._length
-        )
+        self._buffer = create_vk_buffer_memory_view(vk.buffer, vk.allocation, self._length)
         self._buffer_refs += 1
         return self._buffer
 
     def __release_buffer__(self, view: memoryview) -> None:
+        vk = get_g_buffer_vk(self)
         self._buffer_refs -= 1
         assert self._buffer_refs >= 0
         if self._buffer_refs != 0:
             return
 
         self._buffer = None
-        delete_vk_buffer_memory_view(self._vk_buffer, self._vma_allocation)
+        delete_vk_buffer_memory_view(vk.buffer, vk.allocation)
 
     def flush(self) -> None:
-        flush_vk_buffer(self._vk_buffer, self._vma_allocation)
+        vk = get_g_buffer_vk(self)
+        flush_vk_buffer(vk.buffer, vk.allocation)
 
     def clear_cache(self) -> None:
-        invalidate_vk_buffer(self._vk_buffer, self._vma_allocation)
+        vk = get_g_buffer_vk(self)
+        invalidate_vk_buffer(vk.buffer, vk.allocation)
+
+    def close(self) -> None:
+        if self._buffer is not None:
+            self._buffer.release()
+        super().close()
 
 
 def get_g_buffer_gl_buffer(g_buffer: GBuffer) -> GlBuffer:
@@ -220,6 +244,7 @@ class EditGBuffer:
         if not self._write_buffer:
             return
 
+        vk = get_g_buffer_vk(self._g_buffer)
         self._write_buffer.sort(key=lambda w: w.offset)
         data = bytearray(self._write_buffer[0].data)
         offset = self._write_buffer[0].offset
@@ -227,14 +252,10 @@ class EditGBuffer:
             if write.offset == offset + len(data):
                 data += write.data
             else:
-                overwrite_vk_buffer(
-                    self._g_buffer._vk_buffer, self._g_buffer._vma_allocation, offset, data
-                )
+                overwrite_vk_buffer(vk.buffer, vk.allocation, offset, data)
                 data = bytearray(write.data)
                 offset = write.offset
-        overwrite_vk_buffer(
-            self._g_buffer._vk_buffer, self._g_buffer._vma_allocation, offset, data
-        )
+        overwrite_vk_buffer(vk.buffer, vk.allocation, offset, data)
         self._write_buffer.clear()
 
     def clear(self) -> None:
