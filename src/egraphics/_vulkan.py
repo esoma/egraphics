@@ -26,6 +26,7 @@ class VulkanObject:
             _open_objects.remove(self)
         except KeyError:
             pass
+        self.__is_open = False
 
     def __enter__(self) -> Self:
         return self

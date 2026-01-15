@@ -10,6 +10,7 @@ from typing import ClassVar
 from typing import Final
 from typing import NamedTuple
 from typing import Self
+from warnings import warn
 from weakref import ref
 
 from ._egraphics import GL_ARRAY_BUFFER
@@ -129,10 +130,9 @@ class GBuffer(VulkanObject):
         return self._length
 
     def close(self) -> None:
-        if self._GBuffer__vk is None:
-            return
-        delete_vk_buffer(self._GBuffer__vk.buffer, self._GBuffer__vk.allocation)
-        self._GBuffer__vk = None
+        if self._GBuffer__vk is not None:
+            delete_vk_buffer(self._GBuffer__vk.buffer, self._GBuffer__vk.allocation)
+            self._GBuffer__vk = None
         super().close()
 
 
@@ -182,31 +182,39 @@ class ReadWriteGBuffer(WriteGBuffer):
     _egraphics__g_buffer_vma_flags: ClassVar = (
         VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT
     )
-    _buffer: memoryview | None = None
+    _buffer: ref[memoryview] | None = None
     _buffer_refs: int = 0
 
     def __buffer__(self, flags: int) -> memoryview:
-        vk = get_g_buffer_vk(self)
         if self._buffer_refs:
             assert self._buffer is not None
             self._buffer_refs += 1
-            return self._buffer
+            buffer = self._buffer()
+            assert buffer is not None
+            return buffer
 
         assert self._buffer is None
         assert self._buffer_refs == 0
 
-        self._buffer = create_vk_buffer_memory_view(vk.buffer, vk.allocation, self._length)
+        vk = get_g_buffer_vk(self)
+        buffer = create_vk_buffer_memory_view(vk.buffer, vk.allocation, self._length)
         self._buffer_refs += 1
-        return self._buffer
+        self._buffer = ref(buffer)
+        return buffer
 
     def __release_buffer__(self, view: memoryview) -> None:
-        vk = get_g_buffer_vk(self)
+        if not self.is_open or self._buffer is None:
+            assert self._buffer is None
+            assert self._buffer_refs == 0
+            return
+
         self._buffer_refs -= 1
         assert self._buffer_refs >= 0
         if self._buffer_refs != 0:
             return
 
         self._buffer = None
+        vk = get_g_buffer_vk(self)
         delete_vk_buffer_memory_view(vk.buffer, vk.allocation)
 
     def flush(self) -> None:
@@ -218,9 +226,14 @@ class ReadWriteGBuffer(WriteGBuffer):
         invalidate_vk_buffer(vk.buffer, vk.allocation)
 
     def close(self) -> None:
-        if self._buffer is not None:
-            self._buffer.release()
+        if self._buffer_refs > 0:
+            warn(f"{self!r} will be closed, but has an open memoryview", RuntimeWarning)
+            vk = get_g_buffer_vk(self)
+            self._buffer = None
+            self._buffer_refs = 0
+            delete_vk_buffer_memory_view(vk.buffer, vk.allocation)
         super().close()
+        assert not self.is_open
 
 
 def get_g_buffer_gl_buffer(g_buffer: GBuffer) -> GlBuffer:
