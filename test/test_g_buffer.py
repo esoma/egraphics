@@ -30,7 +30,7 @@ def test_cannot_initialize(vulkan, cls):
 
 
 @pytest.mark.parametrize("cls", [IndexGBuffer, VertexGBuffer])
-def test_initialize_no_vulkan_instance(cls):
+def test_initialize_no_vulkan_instance(no_vulkan, cls):
     with pytest.raises(RuntimeError) as excinfo:
         cls(1)
     assert str(excinfo.value) == f"no vulkan context"

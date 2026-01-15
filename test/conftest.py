@@ -5,6 +5,7 @@ if hasattr(os, "add_dll_directory"):
 
 import asyncio
 import gc
+from contextlib import ExitStack
 from ctypes import c_float
 from ctypes import c_uint8
 from math import isclose
@@ -49,11 +50,26 @@ def platform():
         gc.collect()
 
 
+@pytest.fixture(scope="session")
+def _vulkan(platform):
+    stack = ExitStack()
+    yield {"stack": stack, "is_active": False}
+    stack.close()
+
+
 @pytest.fixture
-def vulkan(window):
-    with use_vulkan(window.vk_instance, window.vk_surface):
-        yield
-        gc.collect()
+def vulkan(window, _vulkan):
+    if not _vulkan["is_active"]:
+        _vulkan["stack"].enter_context(use_vulkan(window.vk_instance, window.vk_surface))
+        _vulkan["is_active"] = True
+    yield
+
+
+@pytest.fixture
+def no_vulkan(_vulkan):
+    _vulkan["stack"].pop_all()
+    _vulkan["is_active"] = False
+    pass
 
 
 @pytest.fixture
