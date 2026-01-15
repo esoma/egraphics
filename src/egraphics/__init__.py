@@ -18,6 +18,9 @@ __all__ = [
     "GBufferNature",
     "GBufferView",
     "GBufferViewMap",
+    "GCommandQueue",
+    "GraphicsGCommandQueue",
+    "PresentationGCommandQueue",
     "IndexGBuffer",
     "IndexGBufferView",
     "Image",
@@ -61,6 +64,9 @@ from ._g_buffer import WriteGBuffer
 from ._g_buffer_view import GBufferView
 from ._g_buffer_view_map import GBufferViewMap
 from ._g_buffer_view_map import IndexGBufferView
+from ._g_command_queue import GCommandQueue
+from ._g_command_queue import GraphicsGCommandQueue
+from ._g_command_queue import PresentationGCommandQueue
 from ._image import Image
 from ._image import ImageInvalidError
 from ._render_target import RenderTarget

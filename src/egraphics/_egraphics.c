@@ -116,6 +116,7 @@ typedef struct {
     uint32_t queue_index_in_family;
     bool is_graphics;
     bool is_present;
+    bool is_acquired;
 } Queue;
 
 typedef struct ModuleState
@@ -2532,6 +2533,7 @@ gather_vk_queues_data_(ModuleState *state, VkPhysicalDevice physical_device)
             state->vk_queues[queue_index].queue_index_in_family = queue_index_in_family;
             state->vk_queues[queue_index].is_graphics = is_graphics;
             state->vk_queues[queue_index].is_present = is_present;
+            state->vk_queues[queue_index].is_acquired = false;
             queue_index++;
         }
     }
@@ -2810,6 +2812,59 @@ shutdown_vulkan(PyObject *module, PyObject *unused)
     state->vkGetDeviceProcAddr = 0;
 
     Py_RETURN_NONE;
+error:
+    return 0;
+}
+
+static PyObject *
+acquire_vk_queue(PyObject *module, PyObject **args, Py_ssize_t nargs)
+{
+    CHECK_UNEXPECTED_ARG_COUNT_ERROR(2);
+
+    ModuleState *state = (ModuleState *)PyModule_GetState(module);
+    CHECK_UNEXPECTED_PYTHON_ERROR();
+
+    int require_graphics = PyObject_IsTrue(args[0]);
+    CHECK_UNEXPECTED_PYTHON_ERROR();
+
+    int require_present = PyObject_IsTrue(args[1]);
+    CHECK_UNEXPECTED_PYTHON_ERROR();
+
+    for (uint32_t i = 0; i < state->vk_queues_count; i++)
+    {
+        Queue *q = &state->vk_queues[i];
+        if (q->is_acquired){ continue; }
+        if (require_graphics && !q->is_graphics){ continue; }
+        if (require_present && !q->is_present){ continue; }
+
+        q->is_acquired = true;
+        return PyLong_FromUnsignedLongLong((uintptr_t)q->queue);
+    }
+
+    PyErr_SetString(PyExc_RuntimeError, "no available queue with requested capabilities");
+error:
+    return 0;
+}
+
+static PyObject *
+release_vk_queue(PyObject *module, PyObject *arg)
+{
+    ModuleState *state = (ModuleState *)PyModule_GetState(module);
+    CHECK_UNEXPECTED_PYTHON_ERROR();
+
+    VkQueue queue = (VkQueue)PyLong_AsUnsignedLongLong(arg);
+    CHECK_UNEXPECTED_PYTHON_ERROR();
+
+    for (uint32_t i = 0; i < state->vk_queues_count; i++)
+    {
+        if (state->vk_queues[i].queue == queue)
+        {
+            state->vk_queues[i].is_acquired = false;
+            Py_RETURN_NONE;
+        }
+    }
+
+    PyErr_SetString(PyExc_RuntimeError, "queue not found");
 error:
     return 0;
 }
@@ -3159,6 +3214,8 @@ static PyMethodDef module_PyMethodDef[] = {
     {"get_gl_clip", (PyCFunction)get_gl_clip, METH_NOARGS, 0},
     {"setup_vulkan", (PyCFunction)setup_vulkan, METH_FASTCALL, 0},
     {"shutdown_vulkan", shutdown_vulkan, METH_NOARGS, 0},
+    {"acquire_vk_queue", (PyCFunction)acquire_vk_queue, METH_FASTCALL, 0},
+    {"release_vk_queue", release_vk_queue, METH_O, 0},
     {"create_vk_buffer", (PyCFunction)create_vk_buffer, METH_FASTCALL, 0},
     {"delete_vk_buffer", (PyCFunction)delete_vk_buffer, METH_FASTCALL, 0},
     {"overwrite_vk_buffer", (PyCFunction)overwrite_vk_buffer, METH_FASTCALL, 0},
@@ -3388,6 +3445,7 @@ PyInit__egraphics()
     ADD_ALIAS("GlVertexArray", PyLong_Type);
     ADD_ALIAS("VkBuffer", PyLong_Type);
     ADD_ALIAS("VkBufferUsageFlags", PyLong_Type);
+    ADD_ALIAS("VkQueue", PyLong_Type);
     ADD_ALIAS("VmaAllocation", PyLong_Type);
     ADD_ALIAS("VmaAllocationCreateFlagBits", PyLong_Type);
 
