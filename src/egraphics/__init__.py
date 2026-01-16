@@ -8,8 +8,8 @@ __all__ = [
     "ClipDepth",
     "ClipOrigin",
     "clip_space",
+    "ComputeGCommand",
     "ComputeShader",
-    "ComputeGCommandQueue",
     "DepthTest",
     "EditGBuffer",
     "FaceCull",
@@ -19,15 +19,16 @@ __all__ = [
     "GBufferNature",
     "GBufferView",
     "GBufferViewMap",
-    "GeneralGCommandQueue",
+    "GCommand",
     "GCommandQueue",
-    "GraphicsGCommandQueue",
-    "PresentationGCommandQueue",
+    "GeneralGCommand",
+    "GraphicsGCommand",
     "IndexGBuffer",
     "IndexGBufferView",
     "Image",
     "ImageInvalidError",
     "MipmapSelection",
+    "PresentationGCommand",
     "PrimitiveMode",
     "read_color_from_render_target",
     "read_depth_from_render_target",
@@ -48,7 +49,7 @@ __all__ = [
     "TextureRenderTarget",
     "TextureType",
     "TextureWrap",
-    "TransferGCommandQueue",
+    "TransferGCommand",
     "use_vulkan",
     "VertexGBuffer",
     "WindowRenderTargetMixin",
@@ -67,12 +68,13 @@ from ._g_buffer import WriteGBuffer
 from ._g_buffer_view import GBufferView
 from ._g_buffer_view_map import GBufferViewMap
 from ._g_buffer_view_map import IndexGBufferView
-from ._g_command_queue import ComputeGCommandQueue
+from ._g_command import ComputeGCommand
+from ._g_command import GCommand
+from ._g_command import GeneralGCommand
+from ._g_command import GraphicsGCommand
+from ._g_command import PresentationGCommand
+from ._g_command import TransferGCommand
 from ._g_command_queue import GCommandQueue
-from ._g_command_queue import GeneralGCommandQueue
-from ._g_command_queue import GraphicsGCommandQueue
-from ._g_command_queue import PresentationGCommandQueue
-from ._g_command_queue import TransferGCommandQueue
 from ._image import Image
 from ._image import ImageInvalidError
 from ._render_target import RenderTarget
