@@ -113,8 +113,9 @@ typedef struct PhysicalDevice
 typedef struct {
     VkQueue queue;
     uint32_t queue_family_index;
-    uint32_t queue_index_in_family;
     bool is_graphics;
+    bool is_compute;
+    bool is_transfer;
     bool is_present;
     bool is_acquired;
 } Queue;
@@ -2481,15 +2482,7 @@ gather_vk_queues_data_(ModuleState *state, VkPhysicalDevice physical_device)
         queue_families
     );
 
-    uint32_t total_queues = 0;
-    for (uint32_t i = 0; i < queue_family_count; i++)
-    {
-        uint32_t queue_count = queue_families[i].queueCount;
-        if (queue_count == 0) continue;
-        total_queues += queue_count;
-    }
-
-    state->vk_queues = malloc(sizeof(Queue) * total_queues);
+    state->vk_queues = malloc(sizeof(Queue) * queue_family_count);
     if (!state->vk_queues)
     {
         PyErr_NoMemory();
@@ -2500,7 +2493,7 @@ gather_vk_queues_data_(ModuleState *state, VkPhysicalDevice physical_device)
     for (uint32_t i = 0; i < queue_family_count; i++)
     {
         uint32_t queue_count = queue_families[i].queueCount;
-        if (queue_count == 0) continue;
+        if (queue_count == 0){ continue; }
 
         VkBool32 surface_supported = VK_FALSE;
         VkResult result = state->vkGetPhysicalDeviceSurfaceSupportKHR(
@@ -2512,35 +2505,24 @@ gather_vk_queues_data_(ModuleState *state, VkPhysicalDevice physical_device)
         CHECK_VK_RESULT(result);
 
         bool is_graphics = (queue_families[i].queueFlags & VK_QUEUE_GRAPHICS_BIT) != 0;
+        bool is_compute = (queue_families[i].queueFlags & VK_QUEUE_COMPUTE_BIT) != 0;
+        bool is_transfer = (queue_families[i].queueFlags & VK_QUEUE_TRANSFER_BIT) != 0 || is_graphics || is_compute;
         bool is_present = (surface_supported == VK_TRUE);
         if (!is_graphics && !is_present){ continue; }
 
-        for (uint32_t j = 0; j < queue_count; j++)
-        {
-            uint32_t queue_index_in_family = 0;
-            if (queue_index > 0)
-            {
-                for (uint32_t k = 0; k < queue_index; k++)
-                {
-                    if (state->vk_queues[k].queue_family_index == i)
-                    {
-                        queue_index_in_family++;
-                    }
-                }
-            }
-            state->vk_queues[queue_index].queue = VK_NULL_HANDLE;
-            state->vk_queues[queue_index].queue_family_index = i;
-            state->vk_queues[queue_index].queue_index_in_family = queue_index_in_family;
-            state->vk_queues[queue_index].is_graphics = is_graphics;
-            state->vk_queues[queue_index].is_present = is_present;
-            state->vk_queues[queue_index].is_acquired = false;
-            queue_index++;
-        }
+        state->vk_queues[queue_index].queue = VK_NULL_HANDLE;
+        state->vk_queues[queue_index].queue_family_index = i;
+        state->vk_queues[queue_index].is_graphics = is_graphics;
+        state->vk_queues[queue_index].is_compute = is_compute;
+        state->vk_queues[queue_index].is_transfer = is_transfer;
+        state->vk_queues[queue_index].is_present = is_present;
+        state->vk_queues[queue_index].is_acquired = false;
+        queue_index++;
     }
 
     state->vk_queues_count = queue_index;
 
-    if (state->vk_queues_count < total_queues)
+    if (state->vk_queues_count < queue_family_count)
     {
         Queue *reallocated_queues = realloc(state->vk_queues, sizeof(Queue) * state->vk_queues_count);
         if (!reallocated_queues)
@@ -2578,72 +2560,24 @@ setup_vk_device_(ModuleState *state)
         }
 
         {
-            uint32_t unique_family_count = 0;
-            VkDeviceQueueCreateInfo *vk_device_queue_create_infos = 0;
-            float *queue_priorities = 0;
+            float queue_priority = 1.0f;
+            VkDeviceQueueCreateInfo *vk_device_queue_create_infos = malloc(
+                sizeof(VkDeviceQueueCreateInfo) * state->vk_queues_count
+            );
+            if (!vk_device_queue_create_infos)
             {
-                uint32_t *family_indices = malloc(sizeof(uint32_t) * state->vk_queues_count);
-                uint32_t *family_queue_counts = malloc(sizeof(uint32_t) * state->vk_queues_count);
-                if (!family_indices || !family_queue_counts)
-                {
-                    if (family_indices) free(family_indices);
-                    if (family_queue_counts) free(family_queue_counts);
-                    PyErr_NoMemory();
-                    goto error;
-                }
+                PyErr_NoMemory();
+                goto error;
+            }
 
-                for (uint32_t i = 0; i < state->vk_queues_count; i++)
-                {
-                    uint32_t family_index = state->vk_queues[i].queue_family_index;
-                    bool found = false;
-                    for (uint32_t j = 0; j < unique_family_count; j++)
-                    {
-                        if (family_indices[j] == family_index)
-                        {
-                            family_queue_counts[j]++;
-                            found = true;
-                            break;
-                        }
-                    }
-                    if (!found)
-                    {
-                        family_indices[unique_family_count] = family_index;
-                        family_queue_counts[unique_family_count] = 1;
-                        unique_family_count++;
-                    }
-                }
-
-                vk_device_queue_create_infos = malloc(sizeof(VkDeviceQueueCreateInfo) * unique_family_count);
-                queue_priorities = malloc(sizeof(float) * state->vk_queues_count);
-                if (!vk_device_queue_create_infos || !queue_priorities)
-                {
-                    free(family_indices);
-                    free(family_queue_counts);
-                    if (vk_device_queue_create_infos) free(vk_device_queue_create_infos);
-                    if (queue_priorities) free(queue_priorities);
-                    PyErr_NoMemory();
-                    goto error;
-                }
-
-                for (uint32_t i = 0; i < state->vk_queues_count; i++)
-                {
-                    queue_priorities[i] = 1.0f;
-                }
-
-                uint32_t priority_offset = 0;
-                for (uint32_t i = 0; i < unique_family_count; i++)
-                {
-                    vk_device_queue_create_infos[i] = (VkDeviceQueueCreateInfo){
-                        .sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO,
-                        .queueFamilyIndex = family_indices[i],
-                        .queueCount = family_queue_counts[i],
-                        .pQueuePriorities = &queue_priorities[priority_offset]
-                    };
-                    priority_offset += family_queue_counts[i];
-                }
-
-                free(family_indices);
-                free(family_queue_counts);
+            for (uint32_t i = 0; i < state->vk_queues_count; i++)
+            {
+                vk_device_queue_create_infos[i] = (VkDeviceQueueCreateInfo){
+                    .sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO,
+                    .queueFamilyIndex = state->vk_queues[i].queue_family_index,
+                    .queueCount = 1,
+                    .pQueuePriorities = &queue_priority
+                };
             }
 
             VkPhysicalDeviceFeatures vk_physical_device_features = {0};
@@ -2654,7 +2588,7 @@ setup_vk_device_(ModuleState *state)
 
             VkDeviceCreateInfo vk_device_create_info = {
                 .sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO,
-                .queueCreateInfoCount = unique_family_count,
+                .queueCreateInfoCount = state->vk_queues_count,
                 .pQueueCreateInfos = vk_device_queue_create_infos,
                 .pEnabledFeatures = &vk_physical_device_features,
                 .enabledExtensionCount = 1,
@@ -2669,21 +2603,18 @@ setup_vk_device_(ModuleState *state)
             );
 
             free(vk_device_queue_create_infos);
-            free(queue_priorities);
 
             CHECK_VK_RESULT(vk_result);
         }
 
+        for (uint32_t i = 0; i < state->vk_queues_count; i++)
         {
-            for (uint32_t i = 0; i < state->vk_queues_count; i++)
-            {
-                state->vkGetDeviceQueue(
-                    state->vk_device,
-                    state->vk_queues[i].queue_family_index,
-                    state->vk_queues[i].queue_index_in_family,
-                    &state->vk_queues[i].queue
-                );
-            }
+            state->vkGetDeviceQueue(
+                state->vk_device,
+                state->vk_queues[i].queue_family_index,
+                0,
+                &state->vk_queues[i].queue
+            );
         }
 
         {
@@ -2819,7 +2750,7 @@ error:
 static PyObject *
 acquire_vk_queue(PyObject *module, PyObject **args, Py_ssize_t nargs)
 {
-    CHECK_UNEXPECTED_ARG_COUNT_ERROR(2);
+    CHECK_UNEXPECTED_ARG_COUNT_ERROR(4);
 
     ModuleState *state = (ModuleState *)PyModule_GetState(module);
     CHECK_UNEXPECTED_PYTHON_ERROR();
@@ -2827,7 +2758,13 @@ acquire_vk_queue(PyObject *module, PyObject **args, Py_ssize_t nargs)
     int require_graphics = PyObject_IsTrue(args[0]);
     CHECK_UNEXPECTED_PYTHON_ERROR();
 
-    int require_present = PyObject_IsTrue(args[1]);
+    int require_compute = PyObject_IsTrue(args[1]);
+    CHECK_UNEXPECTED_PYTHON_ERROR();
+
+    int require_transfer = PyObject_IsTrue(args[2]);
+    CHECK_UNEXPECTED_PYTHON_ERROR();
+
+    int require_present = PyObject_IsTrue(args[3]);
     CHECK_UNEXPECTED_PYTHON_ERROR();
 
     for (uint32_t i = 0; i < state->vk_queues_count; i++)
@@ -2835,6 +2772,8 @@ acquire_vk_queue(PyObject *module, PyObject **args, Py_ssize_t nargs)
         Queue *q = &state->vk_queues[i];
         if (q->is_acquired){ continue; }
         if (require_graphics && !q->is_graphics){ continue; }
+        if (require_compute && !q->is_compute){ continue; }
+        if (require_transfer && !q->is_transfer){ continue; }
         if (require_present && !q->is_present){ continue; }
 
         q->is_acquired = true;

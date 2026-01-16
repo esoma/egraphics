@@ -9,6 +9,7 @@ __all__ = [
     "ClipOrigin",
     "clip_space",
     "ComputeShader",
+    "ComputeGCommandQueue",
     "DepthTest",
     "EditGBuffer",
     "FaceCull",
@@ -18,6 +19,7 @@ __all__ = [
     "GBufferNature",
     "GBufferView",
     "GBufferViewMap",
+    "GeneralGCommandQueue",
     "GCommandQueue",
     "GraphicsGCommandQueue",
     "PresentationGCommandQueue",
@@ -46,6 +48,7 @@ __all__ = [
     "TextureRenderTarget",
     "TextureType",
     "TextureWrap",
+    "TransferGCommandQueue",
     "use_vulkan",
     "VertexGBuffer",
     "WindowRenderTargetMixin",
@@ -64,9 +67,12 @@ from ._g_buffer import WriteGBuffer
 from ._g_buffer_view import GBufferView
 from ._g_buffer_view_map import GBufferViewMap
 from ._g_buffer_view_map import IndexGBufferView
+from ._g_command_queue import ComputeGCommandQueue
 from ._g_command_queue import GCommandQueue
+from ._g_command_queue import GeneralGCommandQueue
 from ._g_command_queue import GraphicsGCommandQueue
 from ._g_command_queue import PresentationGCommandQueue
+from ._g_command_queue import TransferGCommandQueue
 from ._image import Image
 from ._image import ImageInvalidError
 from ._render_target import RenderTarget

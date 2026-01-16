@@ -1,17 +1,33 @@
 import pytest
 
+from egraphics import ComputeGCommandQueue
 from egraphics import GCommandQueue
+from egraphics import GeneralGCommandQueue
 from egraphics import GraphicsGCommandQueue
 from egraphics import PresentationGCommandQueue
+from egraphics import TransferGCommandQueue
 from egraphics import use_vulkan
 
-BASIC_COMMAND_QUEUE_CLS = (GCommandQueue, GraphicsGCommandQueue, PresentationGCommandQueue)
-COMPLEX_COMMAND_QUEUE_CLS = (
+BASIC_COMMAND_QUEUE_CLS = (
+    GCommandQueue,
+    GraphicsGCommandQueue,
+    PresentationGCommandQueue,
+    ComputeGCommandQueue,
+    TransferGCommandQueue,
+    GeneralGCommandQueue,
+)
+ODD_COMMAND_QUEUE_CLS = (
     type(
         "GraphicsPresentationGCommandQueue", (GraphicsGCommandQueue, PresentationGCommandQueue), {}
     ),
+    type(
+        "ComputePresentationGCommandQueue", (ComputeGCommandQueue, PresentationGCommandQueue), {}
+    ),
+    type(
+        "TransferPresentationGCommandQueue", (TransferGCommandQueue, PresentationGCommandQueue), {}
+    ),
 )
-COMMAND_QUEUE_CLS = (*BASIC_COMMAND_QUEUE_CLS, *COMPLEX_COMMAND_QUEUE_CLS)
+COMMAND_QUEUE_CLS = (*BASIC_COMMAND_QUEUE_CLS, *ODD_COMMAND_QUEUE_CLS)
 
 
 @pytest.mark.parametrize("cls", COMMAND_QUEUE_CLS)

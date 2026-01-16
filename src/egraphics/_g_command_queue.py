@@ -1,4 +1,11 @@
-__all__ = ["GCommandQueue", "GraphicsGCommandQueue", "PresentationGCommandQueue"]
+__all__ = [
+    "GCommandQueue",
+    "ComputeGCommandQueue",
+    "GeneralGCommandQueue",
+    "GraphicsGCommandQueue",
+    "PresentationGCommandQueue",
+    "TransferGCommandQueue",
+]
 
 from typing import Any
 from typing import ClassVar
@@ -10,6 +17,8 @@ from ._vulkan import VulkanObject
 
 
 class GCommandQueue(VulkanObject):
+    __supports_transfer: ClassVar[bool] = False
+    __supports_compute: ClassVar[bool] = False
     __supports_graphics: ClassVar[bool] = False
     __supports_presentation: ClassVar[bool] = False
 
@@ -18,6 +27,10 @@ class GCommandQueue(VulkanObject):
     def __init_subclass__(cls, **kwargs: Any):
         super().__init_subclass__(**kwargs)
         for c in cls.__mro__:
+            if getattr(c, "_egraphics_GCommandQueue__supports_transfer", False):
+                cls.__supports_transfer = True
+            if getattr(c, "_egraphics_GCommandQueue__supports_compute", False):
+                cls.__supports_compute = True
             if getattr(c, "_egraphics_GCommandQueue__supports_graphics", False):
                 cls.__supports_graphics = True
             if getattr(c, "_egraphics_GCommandQueue__supports_presentation", False):
@@ -25,7 +38,10 @@ class GCommandQueue(VulkanObject):
 
     def __init__(self):
         self._GCommandQueue__vk = acquire_vk_queue(
-            self.__supports_graphics, self.__supports_presentation
+            self.__supports_graphics,
+            self.__supports_compute,
+            self.__supports_transfer,
+            self.__supports_presentation,
         )
         super().__init__()
 
@@ -36,9 +52,21 @@ class GCommandQueue(VulkanObject):
         super().close()
 
 
-class GraphicsGCommandQueue(GCommandQueue):
+class TransferGCommandQueue(GCommandQueue):
+    _egraphics_GCommandQueue__supports_transfer: ClassVar = True
+
+
+class ComputeGCommandQueue(TransferGCommandQueue):
+    _egraphics_GCommandQueue__supports_compute: ClassVar = True
+
+
+class GraphicsGCommandQueue(TransferGCommandQueue):
     _egraphics_GCommandQueue__supports_graphics: ClassVar = True
 
 
 class PresentationGCommandQueue(GCommandQueue):
     _egraphics_GCommandQueue__supports_presentation: ClassVar = True
+
+
+class GeneralGCommandQueue(ComputeGCommandQueue, GraphicsGCommandQueue, PresentationGCommandQueue):
+    pass
