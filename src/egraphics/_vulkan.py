@@ -1,19 +1,16 @@
 __all__ = ["VkInstance", "use_vulkan", "VulkanObject"]
 
 from contextlib import contextmanager
-from typing import Any
 from typing import Generator
 from typing import NewType
-from typing import Self
 from weakref import WeakSet
 
 from ._egraphics import setup_vulkan
 from ._egraphics import shutdown_vulkan
+from ._lifetime import Lifetime
 
 
-class VulkanObject:
-    __is_open: bool = True
-
+class VulkanObject(Lifetime):
     def __init__(self) -> None:
         assert _vulkan_instance is not None
         _open_objects.add(self)
@@ -26,20 +23,11 @@ class VulkanObject:
             _open_objects.remove(self)
         except KeyError:
             pass
-        self.__is_open = False
-
-    def __enter__(self) -> Self:
-        return self
-
-    def __exit__(self, *args: Any, **kwargs: Any) -> None:
-        self.close()
-
-    @property
-    def is_open(self):
-        return self.__is_open
+        super().close()
 
 
 _open_objects: WeakSet[VulkanObject] = WeakSet()
+
 
 VkInstance = NewType("VkInstance", int)
 
